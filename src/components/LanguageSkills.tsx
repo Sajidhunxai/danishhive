@@ -1,0 +1,308 @@
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger,
+  DropdownMenuSeparator 
+} from '@/components/ui/dropdown-menu';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { Languages, Plus, Trash2, ChevronDown } from 'lucide-react';
+
+interface LanguageSkill {
+  id: string;
+  language_code: string;
+  language_name: string;
+  proficiency_level: string;
+  created_at?: string;
+  updated_at?: string;
+  user_id?: string;
+}
+
+const AVAILABLE_LANGUAGES = [
+  { code: 'da', name: 'Dansk', flag: '🇩🇰' },
+  { code: 'en', name: 'English', flag: '🇬🇧' },
+  { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
+  { code: 'fr', name: 'Français', flag: '🇫🇷' },
+  { code: 'es', name: 'Español', flag: '🇪🇸' },
+  { code: 'it', name: 'Italiano', flag: '🇮🇹' },
+  { code: 'nl', name: 'Nederlands', flag: '🇳🇱' },
+  { code: 'sv', name: 'Svenska', flag: '🇸🇪' },
+  { code: 'no', name: 'Norsk', flag: '🇳🇴' },
+  { code: 'fi', name: 'Suomi', flag: '🇫🇮' },
+];
+
+export const LanguageSkills = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const { t } = useLanguage();
+  
+  const [languageSkills, setLanguageSkills] = useState<LanguageSkill[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showAddLanguage, setShowAddLanguage] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      fetchLanguageSkills();
+    }
+  }, [user]);
+
+  const fetchLanguageSkills = async () => {
+    console.log('LanguageSkills: Fetching language skills for user:', user?.id);
+    try {
+      const { data, error } = await supabase
+        .from('language_skills')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('LanguageSkills: Supabase error fetching language skills:', error);
+        throw error;
+      }
+      
+      console.log('LanguageSkills: Fetched language skills:', data);
+      setLanguageSkills(data || []);
+    } catch (error) {
+      console.error('Error fetching language skills:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addLanguageSkill = async (languageCode: string, languageName: string) => {
+    if (!user) {
+      console.log('LanguageSkills: No user found');
+      return;
+    }
+
+    console.log('LanguageSkills: Adding language skill', { languageCode, languageName, userId: user.id });
+
+    try {
+      const { error } = await supabase
+        .from('language_skills')
+        .insert({
+          user_id: user.id,
+          language_code: languageCode,
+          language_name: languageName,
+          proficiency_level: 'beginner'
+        });
+
+      if (error) {
+        console.error('LanguageSkills: Supabase error adding language skill:', error);
+        throw error;
+      }
+
+      console.log('LanguageSkills: Successfully added language skill');
+      await fetchLanguageSkills();
+      setShowAddLanguage(false);
+      
+      toast({
+        title: "Sprog tilføjet",
+        description: `${languageName} blev tilføjet til dine sprogfærdigheder`,
+      });
+    } catch (error) {
+      console.error('Error adding language skill:', error);
+      toast({
+        title: "Fejl",
+        description: "Kunne ikke tilføje sprog",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const updateProficiencyLevel = async (skillId: string, level: string) => {
+    try {
+      const { error } = await supabase
+        .from('language_skills')
+        .update({ proficiency_level: level })
+        .eq('id', skillId);
+
+      if (error) throw error;
+
+        setLanguageSkills(prev => 
+          prev.map(skill => 
+            skill.id === skillId 
+              ? { ...skill, proficiency_level: level }
+              : skill
+          )
+        );
+
+      toast({
+        title: "Niveau opdateret",
+        description: "Sprog niveau blev opdateret",
+      });
+    } catch (error) {
+      console.error('Error updating proficiency level:', error);
+      toast({
+        title: "Fejl",
+        description: "Kunne ikke opdatere niveau",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const removeLanguageSkill = async (skillId: string) => {
+    try {
+      const { error } = await supabase
+        .from('language_skills')
+        .delete()
+        .eq('id', skillId);
+
+      if (error) throw error;
+
+      setLanguageSkills(prev => prev.filter(skill => skill.id !== skillId));
+      
+      toast({
+        title: "Sprog fjernet",
+        description: "Sprog blev fjernet fra dine færdigheder",
+      });
+    } catch (error) {
+      console.error('Error removing language skill:', error);
+      toast({
+        title: "Fejl",
+        description: "Kunne ikke fjerne sprog",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const getProficiencyColor = (level: string) => {
+    switch (level) {
+      case 'beginner': return 'bg-red-100 text-red-800 border-red-200';
+      case 'intermediate': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'advanced': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'native': return 'bg-green-100 text-green-800 border-green-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const availableLanguages = AVAILABLE_LANGUAGES.filter(
+    lang => !languageSkills.some(skill => skill.language_code === lang.code)
+  );
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Languages className="h-5 w-5" />
+            {t('profile.language_skills')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="animate-pulse">Indlæser sprog...</div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Languages className="h-5 w-5" />
+          {t('profile.language_skills')}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Language Skills List */}
+        <div className="space-y-3">
+          {languageSkills.map((skill) => {
+            const languageInfo = AVAILABLE_LANGUAGES.find(lang => lang.code === skill.language_code);
+            return (
+              <div key={skill.id} className="flex items-center justify-between p-3 border rounded-lg bg-background">
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">{languageInfo?.flag}</span>
+                  <span className="font-medium">{skill.language_name}</span>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Select 
+                    value={skill.proficiency_level} 
+                    onValueChange={(value) => updateProficiencyLevel(skill.id, value)}
+                  >
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border shadow-lg z-50">
+                      <SelectItem value="beginner">
+                        <Badge className={getProficiencyColor('beginner')}>
+                          {t('language.beginner')}
+                        </Badge>
+                      </SelectItem>
+                      <SelectItem value="intermediate">
+                        <Badge className={getProficiencyColor('intermediate')}>
+                          {t('language.intermediate')}
+                        </Badge>
+                      </SelectItem>
+                      <SelectItem value="advanced">
+                        <Badge className={getProficiencyColor('advanced')}>
+                          {t('language.advanced')}
+                        </Badge>
+                      </SelectItem>
+                      <SelectItem value="native">
+                        <Badge className={getProficiencyColor('native')}>
+                          {t('language.native')}
+                        </Badge>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeLanguageSkill(skill.id)}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Add Language Button */}
+        {availableLanguages.length > 0 && (
+          <DropdownMenu open={showAddLanguage} onOpenChange={setShowAddLanguage}>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="w-full justify-center">
+                <Plus className="h-4 w-4 mr-2" />
+                Tilføj sprog
+                <ChevronDown className="h-4 w-4 ml-2" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56 bg-background border shadow-lg z-50" align="center">
+              {availableLanguages.map((language) => (
+                <DropdownMenuItem
+                  key={language.code}
+                  onClick={() => addLanguageSkill(language.code, language.name)}
+                  className="cursor-pointer hover:bg-muted"
+                >
+                  <span className="flex items-center gap-3">
+                    <span className="text-lg">{language.flag}</span>
+                    <span>{language.name}</span>
+                  </span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </CardContent>
+    </Card>
+  );
+};

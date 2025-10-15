@@ -1,0 +1,287 @@
+// Prisma Schema for Talent Forge Platform with MySQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// User Authentication
+model User {
+  id                String    @id @default(uuid())
+  email             String    @unique
+  password          String
+  emailVerified     Boolean   @default(false)
+  emailVerifiedAt   DateTime?
+  phoneNumber       String?   @unique
+  phoneVerified     Boolean   @default(false)
+  phoneVerifiedAt   DateTime?
+  userType          UserType  @default(FREELANCER)
+  isAdmin           Boolean   @default(false)
+  isActive          Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  profile           Profile?
+  jobs              Job[]
+  jobApplications   JobApplication[]
+  sentMessages      Message[]      @relation("SentMessages")
+  receivedMessages  Message[]      @relation("ReceivedMessages")
+  contracts         Contract[]     @relation("ClientContracts")
+  freelancerContracts Contract[]   @relation("FreelancerContracts")
+  forumPosts        ForumPost[]
+  forumReplies      ForumReply[]
+  honeyTransactions HoneyTransaction[]
+  
+  @@map("users")
+}
+
+enum UserType {
+  FREELANCER
+  CLIENT
+  ADMIN
+}
+
+// User Profile
+model Profile {
+  id                    String    @id @default(uuid())
+  userId                String    @unique
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName              String
+  companyName           String?
+  cvrNumber             String?
+  bio                   String?   @db.Text
+  skills                Json?
+  hourlyRate            Decimal?  @db.Decimal(10, 2)
+  location              String?
+  avatarUrl             String?
+  birthday              DateTime?
+  paymentVerified       Boolean   @default(false)
+  mollieCustomerId      String?
+  stripeCustomerId      String?
+  honeyDropsBalance     Int       @default(0)
+  platformFeeRate       Decimal?  @db.Decimal(5, 4)
+  reducedFeeUntil       DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  
+  projects              Project[]
+  
+  @@map("profiles")
+}
+
+// Projects/Portfolio
+model Project {
+  id          String    @id @default(uuid())
+  profileId   String
+  profile     Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  title       String
+  description String?   @db.Text
+  clientName  String?
+  projectUrl  String?
+  imageUrl    String?
+  projectType String    @default("portfolio")
+  startDate   DateTime?
+  endDate     DateTime?
+  technologies Json?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  @@map("projects")
+}
+
+// Jobs
+model Job {
+  id              String    @id @default(uuid())
+  clientId        String
+  client          User      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  title           String
+  description     String    @db.Text
+  budget          Decimal?  @db.Decimal(10, 2)
+  hourlyRate      Decimal?  @db.Decimal(10, 2)
+  location        String?
+  skills          Json?
+  status          String    @default("open")
+  deadline        DateTime?
+  attachments     Json?
+  viewCount       Int       @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  applications    JobApplication[]
+  contracts       Contract[]
+  
+  @@map("jobs")
+}
+
+// Job Applications
+model JobApplication {
+  id              String    @id @default(uuid())
+  jobId           String
+  job             Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  freelancerId    String
+  freelancer      User      @relation(fields: [freelancerId], references: [id], onDelete: Cascade)
+  coverLetter     String    @db.Text
+  proposedRate    Decimal?  @db.Decimal(10, 2)
+  status          String    @default("pending")
+  submittedAt     DateTime  @default(now())
+  reviewedAt      DateTime?
+  
+  @@unique([jobId, freelancerId])
+  @@map("job_applications")
+}
+
+// Contracts
+model Contract {
+  id                      String    @id @default(uuid())
+  jobId                   String
+  job                     Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  clientId                String
+  client                  User      @relation("ClientContracts", fields: [clientId], references: [id])
+  freelancerId            String?
+  freelancer              User?     @relation("FreelancerContracts", fields: [freelancerId], references: [id])
+  contractNumber          String    @unique
+  title                   String
+  content                 String    @db.Text
+  terms                   String?   @db.Text
+  paymentTerms            String?   @db.Text
+  deadline                DateTime?
+  totalAmount             Decimal?  @db.Decimal(10, 2)
+  status                  String    @default("draft")
+  fileUrl                 String?
+  clientSignatureDate     DateTime?
+  freelancerSignatureDate DateTime?
+  clientSignatureData     String?   @db.Text
+  freelancerSignatureData String?   @db.Text
+  metadata                Json?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  
+  @@map("contracts")
+}
+
+// Messages
+model Message {
+  id           String    @id @default(uuid())
+  senderId     String
+  sender       User      @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId   String
+  receiver     User      @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  content      String    @db.Text
+  isRead       Boolean   @default(false)
+  readAt       DateTime?
+  conversationId String?
+  createdAt    DateTime  @default(now())
+  
+  @@map("messages")
+  @@index([senderId, receiverId])
+  @@index([conversationId])
+}
+
+// Forum
+model ForumCategory {
+  id          String      @id @default(uuid())
+  name        String
+  description String?     @db.Text
+  icon        String?
+  postCount   Int         @default(0)
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  
+  posts       ForumPost[]
+  
+  @@map("forum_categories")
+}
+
+model ForumPost {
+  id            String        @id @default(uuid())
+  categoryId    String
+  category      ForumCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  authorId      String
+  author        User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  title         String
+  content       String        @db.Text
+  replyCount    Int           @default(0)
+  lastReplyAt   DateTime      @default(now())
+  lastReplyBy   String?
+  isPinned      Boolean       @default(false)
+  isLocked      Boolean       @default(false)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  
+  replies       ForumReply[]
+  
+  @@map("forum_posts")
+}
+
+model ForumReply {
+  id            String      @id @default(uuid())
+  postId        String
+  post          ForumPost   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId      String
+  author        User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  content       String      @db.Text
+  parentReplyId String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  @@map("forum_replies")
+}
+
+// Honey Drops (Virtual Currency)
+model HoneyTransaction {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount      Int
+  type        String    // purchase, spend, refund
+  description String?
+  paymentId   String?
+  metadata    Json?
+  createdAt   DateTime  @default(now())
+  
+  @@map("honey_transactions")
+}
+
+// Phone Verification
+model PhoneVerification {
+  id               String    @id @default(uuid())
+  phoneNumber      String    @unique
+  verificationCode String
+  expiresAt        DateTime
+  createdAt        DateTime  @default(now())
+  
+  @@map("phone_verifications")
+}
+
+// Email Change Requests
+model EmailChangeRequest {
+  id                String    @id @default(uuid())
+  userId            String
+  newEmail          String
+  verificationToken String    @unique
+  expiresAt         DateTime
+  status            String    @default("pending")
+  createdAt         DateTime  @default(now())
+  
+  @@map("email_change_requests")
+}
+
+// Coupons
+model Coupon {
+  id          String    @id @default(uuid())
+  code        String    @unique
+  discount    Decimal   @db.Decimal(5, 2)
+  maxUses     Int?
+  usedCount   Int       @default(0)
+  expiresAt   DateTime?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  
+  @@map("coupons")
+}
+

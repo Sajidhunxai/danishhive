@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Force Clear Supabase - Talent Forge</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            color: #333;
+        }
+        h1 {
+            margin: 0 0 20px 0;
+            color: #667eea;
+        }
+        .alert {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+            margin: 10px 0;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 20px;
+            margin: 20px 0;
+            display: none;
+            border-radius: 5px;
+        }
+        .log {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin: 15px 0;
+        }
+        .step {
+            padding: 10px;
+            margin: 10px 0;
+            background: #e9ecef;
+            border-radius: 5px;
+        }
+        .step.done {
+            background: #d4edda;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧹 Force Clear All Supabase Data</h1>
+        
+        <div class="alert">
+            <strong>⚠️ This will:</strong>
+            <ul style="margin: 10px 0;">
+                <li>Clear ALL localStorage</li>
+                <li>Clear ALL sessionStorage</li>
+                <li>Clear ALL cookies</li>
+                <li>Clear service workers</li>
+                <li>Force reload the app</li>
+            </ul>
+            <strong>This ensures NO Supabase data remains!</strong>
+        </div>
+
+        <button onclick="forceClear()">🚀 FORCE CLEAR EVERYTHING</button>
+
+        <div class="success" id="success">
+            <strong>✅ Success!</strong> All data cleared. Redirecting in <span id="countdown">3</span> seconds...
+        </div>
+
+        <div class="log" id="log"></div>
+
+        <div id="steps"></div>
+    </div>
+
+    <script>
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const time = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `[${time}] ${message}<br>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function addStep(text, done = false) {
+            const stepsDiv = document.getElementById('steps');
+            const step = document.createElement('div');
+            step.className = 'step' + (done ? ' done' : '');
+            step.textContent = (done ? '✅ ' : '⏳ ') + text;
+            stepsDiv.appendChild(step);
+            return step;
+        }
+
+        async function forceClear() {
+            document.getElementById('log').innerHTML = '';
+            document.getElementById('steps').innerHTML = '';
+            
+            log('🚀 Starting force clear...');
+
+            // Step 1: Clear localStorage
+            const step1 = addStep('Clearing localStorage...');
+            const localStorageKeys = Object.keys(localStorage);
+            log(`Found ${localStorageKeys.length} items in localStorage`);
+            localStorageKeys.forEach(key => log(`  - Removing: ${key}`));
+            localStorage.clear();
+            step1.className = 'step done';
+            step1.textContent = '✅ Cleared localStorage (' + localStorageKeys.length + ' items)';
+            
+            await sleep(200);
+
+            // Step 2: Clear sessionStorage
+            const step2 = addStep('Clearing sessionStorage...');
+            const sessionStorageKeys = Object.keys(sessionStorage);
+            log(`Found ${sessionStorageKeys.length} items in sessionStorage`);
+            sessionStorage.clear();
+            step2.className = 'step done';
+            step2.textContent = '✅ Cleared sessionStorage (' + sessionStorageKeys.length + ' items)';
+            
+            await sleep(200);
+
+            // Step 3: Clear cookies
+            const step3 = addStep('Clearing cookies...');
+            const cookies = document.cookie.split(';');
+            log(`Found ${cookies.length} cookies`);
+            cookies.forEach(cookie => {
+                const name = cookie.split('=')[0].trim();
+                document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+                log(`  - Removed cookie: ${name}`);
+            });
+            step3.className = 'step done';
+            step3.textContent = '✅ Cleared cookies';
+            
+            await sleep(200);
+
+            // Step 4: Unregister service workers
+            const step4 = addStep('Unregistering service workers...');
+            if ('serviceWorker' in navigator) {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                log(`Found ${registrations.length} service workers`);
+                for (let registration of registrations) {
+                    await registration.unregister();
+                    log(`  - Unregistered service worker`);
+                }
+                step4.className = 'step done';
+                step4.textContent = '✅ Unregistered service workers';
+            } else {
+                step4.className = 'step done';
+                step4.textContent = '✅ No service workers found';
+            }
+            
+            await sleep(200);
+
+            // Step 5: Clear cache storage
+            const step5 = addStep('Clearing cache storage...');
+            if ('caches' in window) {
+                const cacheNames = await caches.keys();
+                log(`Found ${cacheNames.length} caches`);
+                for (let cacheName of cacheNames) {
+                    await caches.delete(cacheName);
+                    log(`  - Deleted cache: ${cacheName}`);
+                }
+                step5.className = 'step done';
+                step5.textContent = '✅ Cleared cache storage';
+            } else {
+                step5.className = 'step done';
+                step5.textContent = '✅ No cache storage';
+            }
+            
+            await sleep(200);
+
+            // Success!
+            log('✅ All data cleared successfully!');
+            log('🔄 Redirecting to home page...');
+            
+            document.getElementById('success').style.display = 'block';
+            
+            let countdown = 3;
+            const countdownInterval = setInterval(() => {
+                countdown--;
+                document.getElementById('countdown').textContent = countdown;
+                if (countdown === 0) {
+                    clearInterval(countdownInterval);
+                    window.location.href = '/';
+                }
+            }, 1000);
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // Auto-run on load with a delay
+        window.onload = () => {
+            log('Page loaded. Ready to clear all data.');
+            log('Click the button above to start.');
+        };
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,18 @@
+
+# ⚠️ IMPORTANT: Clear Browser Storage
+
+The Supabase client was trying to auto-refresh old tokens.
+This has been disabled, but you MUST clear browser storage:
+
+## In Browser Console (F12):
+localStorage.clear();
+sessionStorage.clear();
+location.reload();
+
+## Or manually:
+1. F12 → Application → Local Storage → Clear
+2. Session Storage → Clear  
+3. Reload (F5)
+
+This removes old Supabase tokens completely.
+

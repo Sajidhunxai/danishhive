@@ -1,0 +1,54 @@
+project_id = "fmgbsampskpmcaabyznk"
+
+[auth]
+enabled = true
+site_url = "https://fmgbsampskpmcaabyznk.lovableproject.com/"
+additional_redirect_urls = ["https://lovable.dev"]
+jwt_expiry = 3600
+refresh_token_rotation_enabled = true
+secure_nonce_enabled = true
+
+[db]
+major_version = 15
+
+[functions.create-admin-user]
+verify_jwt = false
+
+[functions.create-initial-admin]
+verify_jwt = false
+
+[functions.send-sms]
+verify_jwt = false
+
+[functions.verify-sms]
+verify_jwt = false
+
+[functions.send-registration-email]
+verify_jwt = false
+
+[functions.verify-payment-method]
+verify_jwt = true
+
+[functions.check-payment-status]
+verify_jwt = true
+
+[functions.filter-contact-info]
+verify_jwt = true
+
+[functions.delete-user-account]
+verify_jwt = true
+
+[functions.send-message-notification]
+verify_jwt = true
+
+[functions.send-email-verification]
+verify_jwt = true
+
+[functions.verify-email-change]
+verify_jwt = false
+
+[functions.send-password-reset]
+verify_jwt = false
+
+[functions.admin-update-password]
+verify_jwt = true
