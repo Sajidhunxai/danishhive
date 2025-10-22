@@ -9,6 +9,9 @@ router.put('/me', authenticate, profileController.updateMyProfile);
 router.get('/freelancers', profileController.getAllFreelancers);
 router.get('/:id', profileController.getProfileById);
 
+// Image upload
+router.post('/upload-image', authenticate, profileController.uploadImage);
+
 // Projects
 router.post('/projects', authenticate, profileController.createProject);
 router.put('/projects/:id', authenticate, profileController.updateProject);

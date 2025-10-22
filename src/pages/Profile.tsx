@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/services/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -155,44 +155,161 @@ const Profile = () => {
 
   const fetchProfile = async () => {
     try {
-      // Use secure function to get own complete profile (excluding sensitive data)
-      const { data, error } = await supabase
-        .rpc('get_own_profile_complete', { _user_id: user?.id });
-
-      if (error) throw error;
+      console.log('Fetching profile for user:', user);
+      const response = await api.profiles.getMyProfile();
+      console.log('Profile API response:', response);
       
-      // Convert array result to single profile object
-      const profileData = data && data.length > 0 ? data[0] : null;
+      // The API returns { profile: {...} }
+      const profileData = response.profile;
+      
+      console.log('Profile data:', profileData);
       
       if (profileData) {
-        // Extend profile data to match interface with safe defaults for missing fields
+        // Parse skills from JSON string
+        let skills = [];
+        if (profileData.skills && typeof profileData.skills === 'string') {
+          try {
+            skills = JSON.parse(profileData.skills);
+          } catch (e) {
+            console.error('Error parsing skills:', e);
+            skills = [];
+          }
+        } else if (Array.isArray(profileData.skills)) {
+          skills = profileData.skills;
+        }
+        
+        // Map backend profile data to frontend interface
         const completeProfile = {
-          ...profileData,
-          phone: null, // Sensitive data - not included in secure function
-          company: null, // Add company field with null default
-          phone_verification_code: null, // Sensitive data - not included
-          address: null, // Sensitive data - not included
-          city: null, // Sensitive data - not included
-          postal_code: null // Sensitive data - not included
+          id: profileData.id,
+          user_id: profileData.userId,
+          full_name: profileData.fullName,
+          bio: profileData.bio,
+          avatar_url: profileData.avatarUrl,
+          phone: null, // Phone data not in profile response
+          company: profileData.companyName,
+          phone_verified: false, // Phone verification not in profile response
+          phone_verification_code: null, // Not included in API response
+          location: profileData.location,
+          hourly_rate: profileData.hourlyRate ? parseFloat(profileData.hourlyRate) : null,
+          skills: skills,
+          software_skills: [], // Not in current API
+          availability: null, // Not in current API
+          active_status: true, // Default to active
+          total_earnings: profileData.honeyDropsBalance || 0,
+          rating: 0, // Not in current API
+          rating_count: 0, // Not in current API
+          address: profileData.address,
+          city: profileData.city,
+          postal_code: profileData.postalCode,
+          role: 'freelancer', // Default role since not in profile response
+          is_admin: false, // Default admin status since not in profile response
+          created_at: profileData.createdAt,
+          updated_at: profileData.updatedAt,
+          birthday: profileData.birthday,
+          iban: null, // Not in current API
+          bank_name: null, // Not in current API
+          account_holder_name: null, // Not in current API
+          payment_method: null, // Not in current API
+          mitid_verified: false, // Not in current API
+          payment_verified: profileData.paymentVerified || false,
+          platform_fee_rate: profileData.platformFeeRate || 0.15,
+          reduced_fee_until: profileData.reducedFeeUntil
         };
         
+        console.log('Mapped profile data:', completeProfile);
         setProfile(completeProfile);
-        
-        // Calculate and update total earnings
-        const { data: totalEarnings } = await supabase
-          .rpc('calculate_user_total_earnings', { 
-            user_id_param: user?.id 
-          });
-          
-        if (totalEarnings !== null && profileData.total_earnings !== totalEarnings) {
-          setProfile(prev => prev ? { ...prev, total_earnings: totalEarnings } : null);
-        }
+      } else {
+        console.log('No profile data found, creating empty profile');
+        // Create a basic profile structure if no data is found
+        const emptyProfile = {
+          id: user?.id || '',
+          user_id: user?.id || '',
+          full_name: user?.email?.split('@')[0] || 'Unknown User',
+          bio: '',
+          avatar_url: null,
+          phone: null,
+          company: null,
+          phone_verified: false,
+          phone_verification_code: null,
+          location: null,
+          hourly_rate: null,
+          skills: [],
+          software_skills: [],
+          availability: null,
+          active_status: true,
+          total_earnings: 0,
+          rating: 0,
+          rating_count: 0,
+          address: null,
+          city: null,
+          postal_code: null,
+          role: 'freelancer',
+          is_admin: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          birthday: null,
+          iban: null,
+          bank_name: null,
+          account_holder_name: null,
+          payment_method: null,
+          mitid_verified: false,
+          payment_verified: false,
+          platform_fee_rate: 0.15,
+          reduced_fee_until: null
+        };
+        setProfile(emptyProfile);
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        statusText: error.response?.statusText
+      });
+      
+      // Create a fallback profile even if API fails
+      const fallbackProfile = {
+        id: user?.id || '',
+        user_id: user?.id || '',
+        full_name: user?.email?.split('@')[0] || 'Unknown User',
+        bio: '',
+        avatar_url: null,
+        phone: null,
+        company: null,
+        phone_verified: false,
+        phone_verification_code: null,
+        location: null,
+        hourly_rate: null,
+        skills: [],
+        software_skills: [],
+        availability: null,
+        active_status: true,
+        total_earnings: 0,
+        rating: 0,
+        rating_count: 0,
+        address: null,
+        city: null,
+        postal_code: null,
+        role: 'freelancer',
+        is_admin: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        birthday: null,
+        iban: null,
+        bank_name: null,
+        account_holder_name: null,
+        payment_method: null,
+        mitid_verified: false,
+        payment_verified: false,
+        platform_fee_rate: 0.15,
+        reduced_fee_until: null
+      };
+      setProfile(fallbackProfile);
+      
       toast({
-        title: "Fejl",
-        description: "Kunne ikke hente profil",
+        title: "Advarsel",
+        description: `Kunne ikke hente profil fra server. Viser tom profil. ${error.message || 'Ukendt fejl'}`,
         variant: "destructive",
       });
     } finally {
@@ -202,14 +319,9 @@ const Profile = () => {
 
   const fetchProjects = async () => {
     try {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setProjects(data || []);
+      const response = await api.profiles.getMyProfile();
+      const projects = response.profile?.projects || [];
+      setProjects(projects);
     } catch (error) {
       console.error('Error fetching projects:', error);
     }
@@ -217,15 +329,9 @@ const Profile = () => {
 
   const fetchJobHistory = async () => {
     try {
-      const { data, error } = await supabase
-        .from('jobs')
-        .select('*')
-        .eq('freelancer_id', user?.id)
-        .eq('status', 'completed')
-        .order('completed_at', { ascending: false });
-
-      if (error) throw error;
-      setJobHistory(data || []);
+      // For now, set empty array since we don't have a backend API for job history yet
+      // TODO: Implement backend API for job history
+      setJobHistory([]);
     } catch (error) {
       console.error('Error fetching job history:', error);
     }
@@ -244,24 +350,42 @@ const Profile = () => {
 
     setUploadingImage(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+      // Convert file to base64 for backend upload
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const base64Data = e.target?.result as string;
+          
+          // Send to backend API for upload
+          const token = localStorage.getItem('auth_token');
+          const backendUrl = api.getBackendUrl();
+          const response = await fetch(`${backendUrl}/api/profiles/upload-image`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              image: base64Data,
+              imageType: 'project',
+              fileName: file.name,
+              fileSize: file.size,
+              fileType: file.type,
+            }),
+          });
 
-      const { error: uploadError } = await supabase.storage
-        .from('project-images')
-        .upload(fileName, file);
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Upload failed');
+          }
 
-      if (uploadError) throw uploadError;
-
-      const { data } = supabase.storage
-        .from('project-images')
-        .getPublicUrl(fileName);
+          const data = await response.json();
 
       // Update either editing project or new project
       if (editingProject) {
-        setEditingProject(prev => prev ? { ...prev, image_url: data.publicUrl } : null);
+            setEditingProject(prev => prev ? { ...prev, image_url: data.imageUrl } : null);
       } else {
-        setNewProject(prev => ({ ...prev, image_url: data.publicUrl }));
+            setNewProject(prev => ({ ...prev, image_url: data.imageUrl }));
       }
       
       toast({
@@ -276,6 +400,17 @@ const Profile = () => {
         variant: "destructive",
       });
     } finally {
+          setUploadingImage(false);
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('Error uploading project image:', error);
+      toast({
+        title: "Fejl",
+        description: "Kunne ikke uploade projekt billede",
+        variant: "destructive",
+      });
       setUploadingImage(false);
     }
   };
@@ -285,11 +420,22 @@ const Profile = () => {
 
     setSaving(true);
     try {
-      // Use secure update function that only allows safe fields
-      const { error } = await supabase
-        .rpc('update_own_profile_safe', { _updates: updates });
+      // Map frontend profile fields to backend API fields
+      const updateData: any = {};
+      
+      if (updates.full_name !== undefined) updateData.fullName = updates.full_name;
+      if (updates.bio !== undefined) updateData.bio = updates.bio;
+      if (updates.location !== undefined) updateData.location = updates.location;
+      if (updates.hourly_rate !== undefined) updateData.hourlyRate = updates.hourly_rate;
+      if (updates.skills !== undefined) updateData.skills = updates.skills;
+      if (updates.phone !== undefined) updateData.phoneNumber = updates.phone;
+      if (updates.phone_verified !== undefined) updateData.phoneVerified = updates.phone_verified;
+      if (updates.company !== undefined) updateData.companyName = updates.company;
+      if (updates.address !== undefined) updateData.address = updates.address;
+      if (updates.city !== undefined) updateData.city = updates.city;
+      if (updates.postal_code !== undefined) updateData.postalCode = updates.postal_code;
 
-      if (error) throw error;
+      await api.profiles.updateMyProfile(updateData);
 
       // Refresh the profile data after update
       await fetchProfile();
@@ -442,23 +588,18 @@ const Profile = () => {
 
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('projects')
-        .insert({
-          user_id: user.id,
+      await api.profiles.createProject({
           title: newProject.title,
           description: newProject.description || null,
-          client_name: newProject.client_name || null,
-          project_url: newProject.project_url || null,
-          image_url: newProject.image_url || null,
-          project_type: newProject.project_type || "portfolio",
+        clientName: newProject.client_name || null,
+        projectUrl: newProject.project_url || null,
+        imageUrl: newProject.image_url || null,
+        projectType: newProject.project_type || "portfolio",
           technologies: newProject.technologies || null,
-          start_date: newProject.start_date || null,
-          end_date: newProject.still_working_here ? null : (newProject.end_date || null),
-          still_working_here: newProject.still_working_here || false,
-        });
-
-      if (error) throw error;
+        startDate: newProject.start_date || null,
+        endDate: newProject.still_working_here ? null : (newProject.end_date || null),
+        stillWorkingHere: newProject.still_working_here || false,
+      });
 
       await fetchProjects();
       setNewProject({
@@ -495,23 +636,18 @@ const Profile = () => {
 
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('projects')
-        .update({
+      await api.profiles.updateProject(editingProject.id, {
           title: editingProject.title,
           description: editingProject.description || null,
-          client_name: editingProject.client_name || null,
-          project_url: editingProject.project_url || null,
-          image_url: editingProject.image_url || null,
-          project_type: editingProject.project_type || "portfolio",
+        clientName: editingProject.client_name || null,
+        projectUrl: editingProject.project_url || null,
+        imageUrl: editingProject.image_url || null,
+        projectType: editingProject.project_type || "portfolio",
           technologies: editingProject.technologies || null,
-          start_date: editingProject.start_date || null,
-          end_date: editingProject.still_working_here ? null : (editingProject.end_date || null),
-          still_working_here: editingProject.still_working_here || false,
-        })
-        .eq('id', editingProject.id);
-
-      if (error) throw error;
+        startDate: editingProject.start_date || null,
+        endDate: editingProject.still_working_here ? null : (editingProject.end_date || null),
+        stillWorkingHere: editingProject.still_working_here || false,
+      });
 
       await fetchProjects();
       setEditingProject(null);
@@ -541,21 +677,12 @@ const Profile = () => {
 
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('role_change_requests')
-        .insert({
-          user_id: user.id,
-          current_user_role: profile?.role || 'freelancer',
-          requested_role: requestedRole,
-          reason: `Bruger anmoder om rolleændring til ${requestedRole}`,
-          status: 'pending'
-        });
-
-      if (error) throw error;
-
+      // For now, just show a message since we don't have a backend API for role change requests yet
+      // TODO: Implement backend API for role change requests
       toast({
-        title: "Anmodning sendt",
-        description: "Din anmodning om rolleændring er sendt til administratorerne",
+        title: "Funktion under udvikling",
+        description: "Rolleændring anmodninger er ikke tilgængelige endnu",
+        variant: "destructive",
       });
 
       setShowRoleChangeDialog(false);
@@ -574,12 +701,7 @@ const Profile = () => {
 
   const deleteProject = async (projectId: string) => {
     try {
-      const { error } = await supabase
-        .from('projects')
-        .delete()
-        .eq('id', projectId);
-
-      if (error) throw error;
+      await api.profiles.deleteProject(projectId);
 
       setProjects(prev => prev.filter(p => p.id !== projectId));
       toast({
@@ -720,7 +842,10 @@ const Profile = () => {
                    </div>
                    
                    <div className="mt-6">
-                     <ProfileImageUpload onImageUploaded={handleImageUploaded} />
+                     <ProfileImageUpload 
+                       onImageUploaded={handleImageUploaded}
+                       currentImageUrl={profile?.avatar_url}
+                     />
                    </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

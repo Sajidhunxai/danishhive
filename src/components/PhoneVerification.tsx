@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Phone, Shield, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/services/api';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface PhoneVerificationProps {
   countryCode: string;
@@ -40,6 +41,7 @@ export const PhoneVerification: React.FC<PhoneVerificationProps> = ({
   const [loading, setLoading] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   // Countdown timer for resend functionality
   useEffect(() => {
@@ -54,8 +56,8 @@ export const PhoneVerification: React.FC<PhoneVerificationProps> = ({
   const sendVerificationCode = async () => {
     if (!phoneNumber.trim()) {
       toast({
-        title: "Fejl",
-        description: "Indtast venligst et telefonnummer",
+        title: t('phone.invalidNumber'),
+        description: t('phone.invalidNumberDesc'),
         variant: "destructive",
       });
       return;
@@ -69,8 +71,8 @@ export const PhoneVerification: React.FC<PhoneVerificationProps> = ({
 
       if (!phoneAvailable) {
         toast({
-          title: "Telefonnummer allerede registreret",
-          description: "Dette telefonnummer er allerede i brug af en anden bruger",
+          title: t('completeProfile.phoneAlreadyRegistered'),
+          description: t('completeProfile.phoneAlreadyRegistered'),
           variant: "destructive",
         });
         setLoading(false);
@@ -84,24 +86,24 @@ export const PhoneVerification: React.FC<PhoneVerificationProps> = ({
         setResendCooldown(60); // 60 second cooldown
         setVerificationCode(''); // Clear any existing code
         toast({
-          title: "Verificeringskode sendt",
-          description: "En 6-cifret kode er sendt til dit telefonnummer",
+          title: t('phone.codeSent'),
+          description: t('phone.codeSentDesc'),
         });
       } else {
         throw new Error(data.error || 'Failed to send SMS');
       }
     } catch (error: any) {
       console.error('SMS send error:', error);
-      let errorMessage = "Kunne ikke sende verificeringskode";
+      let errorMessage = t('phone.verificationFailedDesc');
       
       if (error.response?.data?.error) {
         errorMessage = error.response.data.error;
       } else if (error.message?.includes('phone_number')) {
-        errorMessage = "Dette telefonnummer er allerede registreret";
+        errorMessage = t('completeProfile.phoneAlreadyRegistered');
       }
       
       toast({
-        title: "Fejl ved SMS afsendelse",
+        title: t('phone.verificationFailed'),
         description: errorMessage,
         variant: "destructive",
       });
@@ -157,8 +159,8 @@ export const PhoneVerification: React.FC<PhoneVerificationProps> = ({
         setIsVerified(true);
         onVerificationComplete?.(true);
         toast({
-          title: "Telefonnummer verificeret!",
-          description: "Dit telefonnummer er nu verificeret",
+          title: t('phone.verificationSuccess'),
+          description: t('phone.verificationSuccessDesc'),
         });
       } else {
         throw new Error(data.error || 'Verification failed');
@@ -179,15 +181,15 @@ export const PhoneVerification: React.FC<PhoneVerificationProps> = ({
     <div className="space-y-4">
       <Label className="text-base font-medium flex items-center gap-2">
         <Phone className="h-4 w-4" />
-        Telefonnummer Verificering *
+        {t('phone.verification')} *
       </Label>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <div>
-          <Label htmlFor="country-code">Landekode</Label>
+          <Label htmlFor="country-code">{t('phone.countryCode')}</Label>
           <Select value={countryCode} onValueChange={onCountryCodeChange}>
             <SelectTrigger>
-              <SelectValue placeholder="Vælg landekode" />
+              <SelectValue placeholder={t('phone.countryCode')} />
             </SelectTrigger>
             <SelectContent>
               {countryCodes.map(({ code, country, flag }) => (
@@ -204,7 +206,7 @@ export const PhoneVerification: React.FC<PhoneVerificationProps> = ({
         </div>
 
         <div className="md:col-span-2">
-          <Label htmlFor="phone">Telefonnummer</Label>
+          <Label htmlFor="phone">{t('phone.number')}</Label>
           <div className="flex gap-2">
             <Input
               id="phone"
@@ -221,7 +223,7 @@ export const PhoneVerification: React.FC<PhoneVerificationProps> = ({
                 disabled={loading || isCodeSent}
                 variant="outline"
               >
-                {loading ? "Sender..." : isCodeSent ? "Sendt" : "Send kode"}
+                {loading ? t('phone.uploading') : isCodeSent ? t('phone.codeSent') : t('phone.sendCode')}
               </Button>
             )}
             {isVerified && (

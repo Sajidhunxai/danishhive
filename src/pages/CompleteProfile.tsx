@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
+import { api } from "@/services/api";
 
 import { BackButton } from "@/components/ui/back-button";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
@@ -231,8 +232,8 @@ const CompleteProfile = () => {
     // Double-check all validations before submission
     if (!user) {
       toast({
-        title: "Fejl",
-        description: "Du skal være logget ind for at fuldføre profilen",
+        title: t('completeProfile.error'),
+        description: t('completeProfile.notLoggedIn'),
         variant: "destructive",
       });
       return;
@@ -248,8 +249,8 @@ const CompleteProfile = () => {
       
       if (!europeanCountries.includes(profileData.country)) {
         toast({
-          title: "Kun Europæiske Freelancere",
-          description: "Beklager, kun freelancere fra Europa kan registrere sig på platformen.",
+          title: t('completeProfile.europeanOnly'),
+          description: t('completeProfile.europeanOnlyDesc'),
           variant: "destructive",
         });
         return;
@@ -258,8 +259,8 @@ const CompleteProfile = () => {
 
     if (!validateStep1()) {
       toast({
-        title: "Manglende Information - Trin 1",
-        description: "Udfyld alle påkrævede felter og verificer dit telefonnummer",
+        title: t('completeProfile.missingInfo1'),
+        description: t('completeProfile.missingInfo1Desc'),
         variant: "destructive",
       });
       setCurrentStep(1);
@@ -269,8 +270,8 @@ const CompleteProfile = () => {
     // Only validate step 2 for clients
     if (userRole === 'client' && !validateStep2()) {
       toast({
-        title: "Manglende Information - Trin 2", 
-        description: "Udfyld alle betalingsoplysninger og verificer din betalingsmetode",
+        title: t('completeProfile.missingInfo2'), 
+        description: t('completeProfile.missingInfo2Desc'),
         variant: "destructive",
       });
       return;
@@ -279,8 +280,8 @@ const CompleteProfile = () => {
     // Additional security check - verify phone and payment verification states
     if (!phoneVerified) {
       toast({
-        title: "Telefon Ikke Verificeret",
-        description: "Du skal verificere dit telefonnummer før du kan fortsætte",
+        title: t('completeProfile.phoneNotVerified'),
+        description: t('completeProfile.phoneNotVerifiedDesc'),
         variant: "destructive",
       });
       setCurrentStep(1);
@@ -290,8 +291,8 @@ const CompleteProfile = () => {
     // Only require payment verification for clients
     if (userRole === 'client' && !paymentVerified) {
       toast({
-        title: "Betaling Ikke Verificeret",
-        description: "Du skal verificere din betalingsmetode før du kan fortsætte",
+        title: t('completeProfile.paymentNotVerified'),
+        description: t('completeProfile.paymentNotVerifiedDesc'),
         variant: "destructive",
       });
       return;
@@ -299,70 +300,35 @@ const CompleteProfile = () => {
 
     setLoading(true);
     try {
+      // Validate all required fields are present and not empty
+      if (!profileData.full_name || !profileData.phone || !profileData.address || 
+          !profileData.city || !profileData.postal_code) {
+        throw new Error(t('completeProfile.allFieldsRequired'));
+      }
+
       // Prepare update data with strict validation
       const updateData: any = {
-        full_name: profileData.full_name.trim(),
-        company: (userRole === 'client' || (userRole === 'freelancer' && profileData.has_cvr)) ? (profileData.company?.trim() || null) : null,
-        phone: `${profileData.country_code} ${profileData.phone.trim()}`,
+        fullName: profileData.full_name.trim(),
+        companyName: (userRole === 'client' || (userRole === 'freelancer' && profileData.has_cvr)) ? (profileData.company?.trim() || null) : null,
+        cvrNumber: profileData.has_cvr ? (profileData.cvr_number?.trim() || null) : null,
+        location: profileData.country, // Store the selected country
         address: profileData.address.trim(),
         city: profileData.city.trim(),
-        postal_code: profileData.postal_code.trim(),
-        location: profileData.country, // Store the selected country
-        phone_verified: phoneVerified,
-        payment_verified: userRole === 'client' ? paymentVerified : true, // Auto-verify payment for freelancers/admins
+        postalCode: profileData.postal_code.trim(),
+        phoneNumber: `${profileData.country_code} ${profileData.phone.trim()}`,
+        phoneVerified: phoneVerified,
+        paymentVerified: userRole === 'client' ? paymentVerified : true, // Auto-verify payment for freelancers
       };
 
-      // Add CVR data for both clients and freelancers
-      if (profileData.has_cvr) {
-        updateData.registration_number = profileData.cvr_number?.trim() || null;
-      } else {
-        updateData.registration_number = null;
-      }
-
-      // Validate all required fields are present and not empty
-      if (!updateData.full_name || !updateData.phone || !updateData.address || 
-          !updateData.city || !updateData.postal_code) {
-        throw new Error("Alle påkrævede felter skal udfyldes");
-      }
-
-      const { error } = await supabase
-        .from('profiles')
-        .update(updateData)
-        .eq('user_id', user.id);
-
-      if (error) {
-        if (error.message?.includes('unique_phone_number') || error.message?.includes('duplicate')) {
-          throw new Error("Dette telefonnummer er allerede registreret hos en anden bruger");
-        }
-        throw error;
-      }
+      // Call backend API to update profile
+      console.log('Sending profile data to backend:', updateData);
+      const result = await api.profiles.updateMyProfile(updateData);
+      console.log('Backend response:', result);
 
       toast({
-        title: "Profil Fuldført!",
-        description: "Din profil er nu oprettet og verificeret. Velkommen til Danish Hive!",
+        title: t('completeProfile.profileCompleted'),
+        description: t('completeProfile.profileCompletedDesc'),
       });
-
-      // Check for January 2025 special offer for clients
-      if (userRole === 'client') {
-        try {
-          const { data: januaryOffer } = await supabase.functions.invoke('check-january-signup', {
-            body: {
-              user_id: user.id,
-              role: userRole
-            }
-          });
-          
-          if (januaryOffer?.applied) {
-            toast({
-              title: "🎉 Særlig velkomstrabat!",
-              description: januaryOffer.message,
-            });
-          }
-        } catch (error) {
-          console.log('January signup check failed:', error);
-          // Don't throw - just log, profile creation succeeded
-        }
-      }
 
       // Redirect based on role
       if (userRole === 'client') {
@@ -374,12 +340,21 @@ const CompleteProfile = () => {
       console.error('Error completing profile:', error);
       
       let errorMessage = "Kunne ikke gemme profil. Prøv igen.";
-      if (error.message.includes("telefonnummer er allerede registreret")) {
+      
+      // Handle API errors
+      if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.message) {
         errorMessage = error.message;
       }
       
+      // Check for specific error types
+      if (errorMessage.includes("telefonnummer") || errorMessage.includes("phone")) {
+        errorMessage = t('completeProfile.phoneAlreadyRegistered');
+      }
+      
       toast({
-        title: "Fejl ved Fuldførelse",
+        title: t('completeProfile.completionError'),
         description: errorMessage,
         variant: "destructive",
       });
@@ -407,33 +382,34 @@ const CompleteProfile = () => {
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2">
                   <Globe className="h-4 w-4" />
-                  <Select value={language} onValueChange={(value: any) => setLanguage(value)}>
+                  <Select value={language} onValueChange={(value) => setLanguage(value as 'da' | 'en' | 'zh' | 'hi')}>
                     <SelectTrigger className="w-20 h-8 text-xs">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="z-[9999]">
                       <SelectItem value="da">🇩🇰 DA</SelectItem>
-                      <SelectItem value="en">🇺🇸 EN</SelectItem>
+                      <SelectItem value="en">🇬🇧 EN</SelectItem>
                       <SelectItem value="zh">🇨🇳 中文</SelectItem>
+                      <SelectItem value="hi">🇮🇳 हिन्दी</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <Button variant="outline" size="sm" onClick={signOut}>
                   <LogOut className="h-4 w-4 mr-2" />
-                  Log ud
+                  {t('nav.logout')}
                 </Button>
               </div>
             </div>
             
             <div className="text-center space-y-3">
               <CardTitle className="text-2xl font-bold">
-                Fuldfør Din {userRole === 'client' ? 'Klient' : 'Freelancer'} Profil
+                {t('completeProfile.title').replace('{role}', userRole === 'client' ? t('completeProfile.client') : t('completeProfile.freelancer'))}
               </CardTitle>
               <p className="text-muted-foreground mt-2">
-                Velkommen til Danish Hive! Udfyld din profil for at komme i gang.
+                {t('completeProfile.welcome')}
               </p>
               {userRole === 'freelancer' && phoneVerified && (
-                <Button onClick={() => navigate('/')}>Gå til Dashboard</Button>
+                <Button onClick={() => navigate('/')}>{t('completeProfile.goToDashboard')}</Button>
               )}
             </div>
           </CardHeader>
@@ -476,7 +452,7 @@ const CompleteProfile = () => {
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">
-                  <Label htmlFor="country">Land *</Label>
+                  <Label htmlFor="country">{t('completeProfile.land')} *</Label>
                   <Select value={profileData.country} onValueChange={(value) => updateProfileData('country', value)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Vælg land" />
@@ -504,12 +480,12 @@ const CompleteProfile = () => {
                 </div>
 
                 <div className="md:col-span-2">
-                  <Label htmlFor="full_name">Fulde Navn *</Label>
+                  <Label htmlFor="full_name">{t('completeProfile.fullName')} *</Label>
                   <Input
                     id="full_name"
                     value={profileData.full_name}
                     onChange={(e) => updateProfileData('full_name', e.target.value)}
-                    placeholder="Dit fulde navn"
+                    placeholder={t('completeProfile.fullNamePlaceholder')}
                   />
                 </div>
 
@@ -577,7 +553,7 @@ const CompleteProfile = () => {
                     onClick={handleNext}
                     disabled={!computeStep1Valid()}
                   >
-                    {userRole === 'freelancer' ? 'Fuldfør Profil' : 'Næste'}
+                    {userRole === 'freelancer' ? t('completeProfile.completeProfile') : t('completeProfile.next')}
                   </Button>
                 </div>
             </CardContent>
@@ -615,14 +591,14 @@ const CompleteProfile = () => {
                   variant="outline"
                   onClick={() => setCurrentStep(1)}
                 >
-                  Tilbage
+                  {t('completeProfile.back')}
                 </Button>
                 <Button 
                   onClick={handleComplete}
                   disabled={loading || !validateStep2()}
                 >
                   <Save className="h-4 w-4 mr-2" />
-                  {loading ? "Gemmer..." : "Fuldfør Profil"}
+                  {loading ? t('completeProfile.saving') : t('completeProfile.completeProfile')}
                 </Button>
               </div>
             </CardContent>

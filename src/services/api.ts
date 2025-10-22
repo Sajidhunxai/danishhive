@@ -2,6 +2,7 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5001';
 
 class ApiService {
   private api: AxiosInstance;
@@ -65,6 +66,11 @@ class ApiService {
     );
   }
 
+  // Get backend URL for static files (images, etc.)
+  getBackendUrl = () => {
+    return BACKEND_URL;
+  };
+
   // Auth endpoints
   auth = {
     register: async (data: {
@@ -126,12 +132,12 @@ class ApiService {
   profiles = {
     getMyProfile: async () => {
       const response = await this.api.get('/profiles/me');
-      return response.data.profile;
+      return response.data;
     },
 
     updateMyProfile: async (data: any) => {
       const response = await this.api.put('/profiles/me', data);
-      return response.data.profile;
+      return response.data;
     },
 
     getProfileById: async (id: string) => {

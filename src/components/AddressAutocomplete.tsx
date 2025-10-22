@@ -5,6 +5,7 @@ import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { MapPin, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Address {
   tekst: string;
@@ -31,9 +32,11 @@ interface AddressAutocompleteProps {
 const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   value = "",
   onAddressSelect,
-  placeholder = "Søg adresse...",
+  placeholder,
   className
 }) => {
+  const { t } = useLanguage();
+  const defaultPlaceholder = t('address.search');
   const [searchQuery, setSearchQuery] = useState(value);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -106,7 +109,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
 
   return (
     <div className="space-y-2">
-      <Label htmlFor="address">Adresse</Label>
+      <Label htmlFor="address">{t('address.label')}</Label>
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
           <div className="relative">
@@ -116,7 +119,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
               className={cn("pl-10", className)}
               value={searchQuery}
               onChange={(e) => handleInputChange(e.target.value)}
-              placeholder={placeholder}
+              placeholder={placeholder || defaultPlaceholder}
               autoComplete="off"
             />
             {isLoading && (
@@ -133,12 +136,12 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
               <CommandEmpty>
                 {searchQuery.length < 3 ? (
                   <div className="p-4 text-sm text-muted-foreground">
-                    Indtast mindst 3 tegn for at søge
+                    {t('address.minLength')}
                   </div>
                 ) : (
                   <div className="p-4 text-sm text-muted-foreground flex items-center gap-2">
                     <Search className="h-4 w-4" />
-                    Ingen adresser fundet
+                    {t('address.noResults')}
                   </div>
                 )}
               </CommandEmpty>

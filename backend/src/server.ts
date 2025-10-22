@@ -70,6 +70,9 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
+// Serve uploaded files
+app.use('/uploads', express.static('uploads'));
+
 // Logging
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
@@ -95,7 +98,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/honey', honeyRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/verify', verificationRoutes);
+app.use('/api/verification', verificationRoutes);
 
 // 404 handler
 app.use((req, res) => {

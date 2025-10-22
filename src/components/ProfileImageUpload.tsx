@@ -6,18 +6,23 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent } from '@/components/ui/card';
 import { Upload, Image, Building2, X, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { useBackendAuth } from '@/hooks/useBackendAuth';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { api } from '@/services/api';
 
 interface ProfileImageUploadProps {
   onImageUploaded?: (imageData: { file_url: string; image_type: 'portrait' | 'logo' }) => void;
+  currentImageUrl?: string | null;
 }
 
-export const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({ onImageUploaded }) => {
+export const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({ onImageUploaded, currentImageUrl }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imageType, setImageType] = useState<'portrait' | 'logo'>('portrait');
   const [uploading, setUploading] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const { toast } = useToast();
+  const { user } = useBackendAuth();
+  const { t } = useLanguage();
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -25,8 +30,8 @@ export const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({ onImageU
       // Validate file type
       if (!file.type.startsWith('image/')) {
         toast({
-          title: "Ugyldig filtype",
-          description: "Vælg venligst en billedfil (JPG, PNG, etc.)",
+          title: t('image.invalidFileType'),
+          description: t('image.invalidFileTypeDesc'),
           variant: "destructive",
         });
         return;
@@ -35,8 +40,8 @@ export const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({ onImageU
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         toast({
-          title: "Fil for stor",
-          description: "Billedet må maksimalt være 5MB",
+          title: t('image.fileTooLarge'),
+          description: t('image.fileTooLargeDesc'),
           variant: "destructive",
         });
         return;
@@ -58,57 +63,72 @@ export const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({ onImageU
 
     setUploading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Bruger ikke logget ind');
+      if (!user) throw new Error('User not logged in');
 
-      // Upload to storage
-      const fileExt = selectedFile.name.split('.').pop();
-      const fileName = `${user.id}/${imageType}_${Date.now()}.${fileExt}`;
-      
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('project-images')
-        .upload(fileName, selectedFile);
+      // Convert image to base64 for backend upload
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const base64Data = e.target?.result as string;
 
-      if (uploadError) throw uploadError;
+          // Send to backend API for upload and approval
+          const token = localStorage.getItem('auth_token');
+          const backendUrl = api.getBackendUrl();
+          const response = await fetch(`${backendUrl}/api/profiles/upload-image`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              image: base64Data,
+              imageType: imageType,
+              fileName: selectedFile.name,
+              fileSize: selectedFile.size,
+              fileType: selectedFile.type,
+            }),
+          });
 
-      // Create signed URL for private bucket access
-      const { data: signed, error: signedError } = await supabase.storage
-        .from('profile-images')
-        .createSignedUrl(fileName, 60 * 60 * 24 * 7); // 7 days
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || t('image.uploadFailed'));
+          }
 
-      if (signedError) throw signedError;
-      const publicUrl = signed?.signedUrl;
+          const data = await response.json();
+          console.log('Image upload response:', data);
 
-      // Save to database for admin approval
-      const { error: dbError } = await supabase
-        .from('profile_images')
-        .insert({
-          user_id: user.id,
-          file_name: selectedFile.name,
-          file_url: publicUrl,
-          file_size: selectedFile.size,
-          file_type: selectedFile.type,
-          image_type: imageType,
-          status: 'pending'
-        });
+          toast({
+            title: t('image.uploadSuccess'),
+            description: t('image.uploadSuccessDesc'),
+          });
 
-      if (dbError) throw dbError;
+          // Update the preview with the uploaded image URL
+          setUploadedImage(data.imageUrl);
+          console.log('Updated uploadedImage to:', data.imageUrl);
+          
+          onImageUploaded?.({ file_url: data.imageUrl, image_type: imageType });
 
-      toast({
-        title: "Billede uploadet!",
-        description: "Dit billede er sendt til godkendelse af admin",
-      });
+        } catch (error: any) {
+          console.error('Upload error:', error);
+          toast({
+            title: t('image.uploadFailed'),
+            description: error.message || t('image.uploadFailedDesc'),
+            variant: "destructive",
+          });
+        } finally {
+          setUploading(false);
+        }
+      };
 
-      onImageUploaded?.({ file_url: publicUrl, image_type: imageType });
+      reader.readAsDataURL(selectedFile);
 
     } catch (error: any) {
       console.error('Upload error:', error);
       toast({
-        title: "Upload fejlede",
-        description: error.message || "Kunne ikke uploade billede",
+        title: t('image.uploadFailed'),
+        description: error.message || t('image.uploadFailedDesc'),
         variant: "destructive",
       });
-    } finally {
       setUploading(false);
     }
   };
@@ -122,12 +142,12 @@ export const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({ onImageU
     <div className="space-y-4">
       <Label className="text-base font-medium flex items-center gap-2">
         <Image className="h-4 w-4" />
-        Profilbillede (valgfrit)
+        {t('image.profileImage')}
       </Label>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="image-type">Bildetype</Label>
+          <Label htmlFor="image-type">{t('image.imageType')}</Label>
           <Select value={imageType} onValueChange={(value: 'portrait' | 'logo') => setImageType(value)}>
             <SelectTrigger>
               <SelectValue />
@@ -136,13 +156,13 @@ export const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({ onImageU
               <SelectItem value="portrait">
                 <span className="flex items-center gap-2">
                   <Image className="h-4 w-4" />
-                  Portræt
+                  {t('image.portrait')}
                 </span>
               </SelectItem>
               <SelectItem value="logo">
                 <span className="flex items-center gap-2">
                   <Building2 className="h-4 w-4" />
-                  Firma logo
+                  {t('image.logo')}
                 </span>
               </SelectItem>
             </SelectContent>
@@ -150,7 +170,7 @@ export const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({ onImageU
         </div>
 
         <div>
-          <Label htmlFor="image-upload">Vælg billede</Label>
+          <Label htmlFor="image-upload">{t('image.selectImage')}</Label>
           <Input
             id="image-upload"
             type="file"
@@ -161,21 +181,24 @@ export const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({ onImageU
         </div>
       </div>
 
-      {uploadedImage && (
+      {(uploadedImage || currentImageUrl) && (
         <Card className="p-4 bg-blue-50 border-blue-200">
           <CardContent className="p-0">
             <div className="flex items-center gap-4">
               <img
-                src={uploadedImage}
+                src={uploadedImage || currentImageUrl || ""}
                 alt="Preview"
                 className="w-20 h-20 object-cover rounded-lg border"
               />
               <div className="flex-1 space-y-2">
                 <p className="text-sm font-medium">
-                  {imageType === 'portrait' ? 'Portræt' : 'Firma logo'}
+                  {imageType === 'portrait' ? t('image.portrait') : t('image.logo')}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {selectedFile?.name} ({(((selectedFile?.size ?? 0) / 1024) / 1024).toFixed(2)} MB)
+                  {uploadedImage ? 
+                    `${selectedFile?.name} (${(((selectedFile?.size ?? 0) / 1024) / 1024).toFixed(2)} MB)` :
+                    t('image.currentImage')
+                  }
                 </p>
                 <div className="flex gap-2">
                   <Button
@@ -184,7 +207,7 @@ export const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({ onImageU
                     disabled={uploading}
                   >
                     <Upload className="h-4 w-4 mr-1" />
-                    {uploading ? "Uploader..." : "Upload til godkendelse"}
+                    {uploading ? t('image.uploading') : t('image.uploadForApproval')}
                   </Button>
                   <Button
                     size="sm"
@@ -202,9 +225,9 @@ export const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({ onImageU
       )}
 
       <div className="text-xs text-muted-foreground bg-amber-50 p-3 rounded border-l-4 border-amber-400">
-        ⚠️ Alle billeder skal godkendes af en administrator før de bliver synlige på din profil.
+        ⚠️ {t('image.approvalNotice')}
         <br />
-        💡 Understøttede formater: JPG, PNG, GIF. Maksimal størrelse: 5MB.
+        💡 {t('image.supportedFormats')}
       </div>
     </div>
   );

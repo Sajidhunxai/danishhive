@@ -83,7 +83,24 @@ export const sendSMS = async (req: AuthRequest, res: Response) => {
     // Send SMS via Twilio
     const sent = await sendVerificationCode(fullPhoneNumber, code);
 
+    // In development mode, allow bypass if SMS fails (log code to console)
     if (!sent) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('─────────────────────────────────────────');
+        console.log('📱 SMS Service Not Available (Development Mode)');
+        console.log(`Phone: ${fullPhoneNumber}`);
+        console.log(`Verification Code: ${code}`);
+        console.log(`Expires: ${expiresAt.toLocaleString()}`);
+        console.log('─────────────────────────────────────────');
+        
+        return res.json({
+          success: true,
+          message: 'Verification code sent successfully (dev mode)',
+          devMode: true,
+          code: code, // Only in development!
+        });
+      }
+      
       return res.status(500).json({
         success: false,
         error: 'Failed to send SMS. Please try again.',

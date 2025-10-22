@@ -1,6 +1,8 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth.middleware';
 import prisma from '../config/database';
+import fs from 'fs/promises';
+import path from 'path';
 
 export const getMyProfile = async (req: AuthRequest, res: Response) => {
   try {
@@ -34,32 +36,115 @@ export const updateMyProfile = async (req: AuthRequest, res: Response) => {
       skills,
       hourlyRate,
       location,
+      address,
+      city,
+      postalCode,
       avatarUrl,
       birthday,
+      phoneNumber,
+      phoneVerified,
+      paymentVerified,
     } = req.body;
     
-    const profile = await prisma.profile.update({
-      where: { userId: req.user!.id },
-      data: {
-        ...(fullName && { fullName }),
-        ...(companyName !== undefined && { companyName }),
-        ...(cvrNumber !== undefined && { cvrNumber }),
-        ...(bio !== undefined && { bio }),
-        ...(skills && { skills: JSON.stringify(skills) }),
-        ...(hourlyRate && { hourlyRate: parseFloat(hourlyRate) }),
-        ...(location !== undefined && { location }),
-        ...(avatarUrl !== undefined && { avatarUrl }),
-        ...(birthday && { birthday: new Date(birthday) }),
-      },
-      include: {
-        projects: true,
-      },
+    console.log('Update profile request:', {
+      userId: req.user!.id,
+      fullName,
+      phoneNumber,
+      phoneVerified,
+      address,
+      city,
+      postalCode,
     });
     
+    // Update user fields if provided (phone verification)
+    if (phoneNumber !== undefined || phoneVerified !== undefined) {
+      try {
+        await prisma.user.update({
+          where: { id: req.user!.id },
+          data: {
+            ...(phoneNumber !== undefined && { phoneNumber }),
+            ...(phoneVerified !== undefined && { 
+              phoneVerified, 
+              ...(phoneVerified && { phoneVerifiedAt: new Date() })
+            }),
+          },
+        });
+        console.log('User updated successfully');
+      } catch (userError: any) {
+        console.error('User update error:', userError);
+        if (userError.code === 'P2002') {
+          return res.status(400).json({ error: 'Dette telefonnummer er allerede registreret' });
+        }
+        throw userError;
+      }
+    }
+    
+    // Check if profile exists, create if not
+    let profile = await prisma.profile.findUnique({
+      where: { userId: req.user!.id },
+    });
+    
+    if (!profile) {
+      console.log('Profile not found, creating new profile');
+      profile = await prisma.profile.create({
+        data: {
+          userId: req.user!.id,
+          fullName: fullName || 'Unknown',
+          companyName,
+          cvrNumber,
+          bio,
+          skills: skills ? JSON.stringify(skills) : undefined,
+          hourlyRate: hourlyRate ? parseFloat(hourlyRate) : undefined,
+          location,
+          address,
+          city,
+          postalCode,
+          avatarUrl,
+          birthday: birthday ? new Date(birthday) : undefined,
+          paymentVerified: paymentVerified || false,
+        },
+        include: {
+          projects: true,
+        },
+      });
+    } else {
+      // Update existing profile
+      profile = await prisma.profile.update({
+        where: { userId: req.user!.id },
+        data: {
+          ...(fullName && { fullName }),
+          ...(companyName !== undefined && { companyName }),
+          ...(cvrNumber !== undefined && { cvrNumber }),
+          ...(bio !== undefined && { bio }),
+          ...(skills && { skills: JSON.stringify(skills) }),
+          ...(hourlyRate && { hourlyRate: parseFloat(hourlyRate) }),
+          ...(location !== undefined && { location }),
+          ...(address !== undefined && { address }),
+          ...(city !== undefined && { city }),
+          ...(postalCode !== undefined && { postalCode }),
+          ...(avatarUrl !== undefined && { avatarUrl }),
+          ...(birthday && { birthday: new Date(birthday) }),
+          ...(paymentVerified !== undefined && { paymentVerified }),
+        },
+        include: {
+          projects: true,
+        },
+      });
+    }
+    
+    console.log('Profile updated successfully');
     res.json({ profile, message: 'Profile updated successfully' });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Update profile error:', error);
-    res.status(500).json({ error: 'Failed to update profile' });
+    console.error('Error details:', {
+      code: error.code,
+      meta: error.meta,
+      message: error.message,
+    });
+    res.status(500).json({ 
+      error: 'Failed to update profile',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
 
@@ -272,6 +357,60 @@ export const deleteProject = async (req: AuthRequest, res: Response) => {
   } catch (error) {
     console.error('Delete project error:', error);
     res.status(500).json({ error: 'Failed to delete project' });
+  }
+};
+
+export const uploadImage = async (req: AuthRequest, res: Response) => {
+  try {
+    const { image, imageType, fileName, fileSize, fileType } = req.body;
+
+    if (!image) {
+      return res.status(400).json({ error: 'No image provided' });
+    }
+
+    // Validate file size (max 5MB)
+    if (fileSize && fileSize > 5 * 1024 * 1024) {
+      return res.status(400).json({ error: 'File size exceeds 5MB limit' });
+    }
+
+    // Extract base64 data
+    const matches = image.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+    if (!matches || matches.length !== 3) {
+      return res.status(400).json({ error: 'Invalid image format' });
+    }
+
+    const imageBuffer = Buffer.from(matches[2], 'base64');
+    const ext = fileName ? fileName.split('.').pop() : 'jpg';
+    const timestamp = Date.now();
+    const imageName = `${req.user!.id}_${imageType}_${timestamp}.${ext}`;
+    
+    // Create uploads directory if it doesn't exist
+    const uploadDir = path.join(process.cwd(), 'uploads', 'profiles');
+    await fs.mkdir(uploadDir, { recursive: true });
+    
+    // Save image file
+    const imagePath = path.join(uploadDir, imageName);
+    await fs.writeFile(imagePath, imageBuffer);
+    
+    // Create full URL for frontend access
+    const baseUrl = process.env.BACKEND_URL || 'http://localhost:5001';
+    const imageUrl = `${baseUrl}/uploads/profiles/${imageName}`;
+    
+    // Update profile with new avatar URL
+    await prisma.profile.update({
+      where: { userId: req.user!.id },
+      data: { avatarUrl: imageUrl },
+    });
+
+    res.json({
+      success: true,
+      message: 'Image uploaded successfully',
+      imageUrl: imageUrl,
+    });
+
+  } catch (error: any) {
+    console.error('Upload image error:', error);
+    res.status(500).json({ error: 'Failed to upload image' });
   }
 };
 

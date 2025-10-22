@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Auth Debug</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        .token { word-break: break-all; background: #f0f0f0; padding: 10px; margin: 10px 0; }
+        button { padding: 10px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Authentication Debug Tool</h1>
+    <div>
+        <h2>Local Storage:</h2>
+        <div id="storage"></div>
+    </div>
+    <div>
+        <h2>Test API:</h2>
+        <button onclick="testAuth()">Test /api/auth/me</button>
+        <button onclick="testVerification()">Test /api/verification/phone/check-availability</button>
+        <div id="result" class="token"></div>
+    </div>
+    
+    <script>
+        // Display localStorage
+        function displayStorage() {
+            const storage = document.getElementById('storage');
+            const token = localStorage.getItem('auth_token');
+            const refreshToken = localStorage.getItem('refresh_token');
+            
+            storage.innerHTML = `
+                <div class="token">
+                    <strong>auth_token:</strong><br>
+                    ${token || '(not found)'}
+                </div>
+                <div class="token">
+                    <strong>refresh_token:</strong><br>
+                    ${refreshToken || '(not found)'}
+                </div>
+            `;
+        }
+        
+        async function testAuth() {
+            const result = document.getElementById('result');
+            const token = localStorage.getItem('auth_token');
+            
+            try {
+                const response = await fetch('http://localhost:5001/api/auth/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const data = await response.json();
+                result.innerHTML = `<strong>Status: ${response.status}</strong><br>${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                result.innerHTML = `<strong>Error:</strong><br>${error.message}`;
+            }
+        }
+        
+        async function testVerification() {
+            const result = document.getElementById('result');
+            const token = localStorage.getItem('auth_token');
+            
+            try {
+                const response = await fetch('http://localhost:5001/api/verification/phone/check-availability', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ phoneNumber: '+4512345678' })
+                });
+                const data = await response.json();
+                result.innerHTML = `<strong>Status: ${response.status}</strong><br>${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                result.innerHTML = `<strong>Error:</strong><br>${error.message}`;
+            }
+        }
+        
+        displayStorage();
+    </script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/services/api";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -80,14 +80,8 @@ const JobsSection = () => {
 
   const fetchUserRole = async () => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('user_id', user?.id)
-        .maybeSingle();
-      
-      if (error) throw error;
-      setUserRole(data?.role || 'freelancer');
+      const profile = await api.profiles.getMyProfile();
+      setUserRole(profile.user?.userType || 'freelancer');
     } catch (error) {
       console.error('Error fetching user role:', error);
       setUserRole('freelancer'); // Default to freelancer
@@ -138,21 +132,9 @@ const JobsSection = () => {
     }
 
     try {
-      let query = supabase.from('jobs').select('*');
-      
-      if (userRole === 'client') {
-        // Klienter ser kun deres egne opgaver
-        query = query.eq('client_id', user.id);
-      } else {
-        // Freelancere ser alle åbne opgaver
-        query = query.eq('status', 'open');
-      }
-      
-      const { data, error } = await query.order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setJobs(data || []);
-      setFilteredJobs(data || []);
+      const jobs = await api.jobs.getAllJobs();
+      setJobs(jobs || []);
+      setFilteredJobs(jobs || []);
     } catch (error) {
       console.error('Error fetching jobs:', error);
       setJobs([]);
@@ -174,22 +156,17 @@ const JobsSection = () => {
 
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('jobs')
-        .insert({
-          client_id: user.id,
-          title: newJob.title,
-          description: newJob.description,
-          budget_min: newJob.budget_min ? parseFloat(newJob.budget_min) : null,
-          budget_max: newJob.budget_max ? parseFloat(newJob.budget_max) : null,
-          skills_required: newJob.skills_required.length > 0 ? newJob.skills_required : null,
-          project_type: newJob.project_type,
-          location: newJob.location || null,
-          is_remote: newJob.is_remote,
-          deadline: newJob.deadline || null,
-        });
-
-      if (error) throw error;
+      await api.jobs.createJob({
+        title: newJob.title,
+        description: newJob.description,
+        budgetMin: newJob.budget_min ? parseFloat(newJob.budget_min) : null,
+        budgetMax: newJob.budget_max ? parseFloat(newJob.budget_max) : null,
+        skillsRequired: newJob.skills_required.length > 0 ? newJob.skills_required : null,
+        projectType: newJob.project_type,
+        location: newJob.location || null,
+        isRemote: newJob.is_remote,
+        deadline: newJob.deadline || null,
+      });
 
       await fetchJobs();
       setNewJob({

@@ -6,6 +6,7 @@ import JobsSection from "@/components/JobsSection";
 import FreelancerSearch from "@/components/FreelancerSearch";
 import { AdminPanel } from "@/components/AdminPanel";
 import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/services/api";
 
 const Index = () => {
   const { user, userRole, loading, signOut } = useAuth();
@@ -28,52 +29,39 @@ useEffect(() => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select(`
-          full_name, 
-          phone, 
-          address, 
-          city, 
-          postal_code, 
-          phone_verified,
-          role,
-          is_admin
-        `)
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (error) throw error;
+      // Use backend API to check profile
+      const profile = await api.profiles.getMyProfile();
+      console.log('Profile from backend:', profile);
 
       // If no profile exists, redirect to complete profile page
-      if (!data) {
+      if (!profile) {
         navigate("/complete-profile");
         return;
       }
 
       // Admin users can bypass ALL profile completion requirements and stay on any page
-      if (data.is_admin === true) {
+      if (profile.user?.isAdmin === true) {
         console.log('Admin user detected - staying on current page');
         return; // Stay on current page, no redirects for admins
       }
 
       // Check basic profile completion for all users
-      const hasBasicProfile = data.full_name && 
-        data.full_name.trim() !== '' &&
-        data.full_name !== 'Incomplete Profile';
+      const hasBasicProfile = profile.fullName && 
+        profile.fullName.trim() !== '' &&
+        profile.fullName !== 'Incomplete Profile';
 
       // For clients (non-admin only), check full profile completion including verifications
-      if (data.role === 'client' && !data.is_admin) {
+      if (profile.user?.userType === 'CLIENT' && !profile.user?.isAdmin) {
         const isClientProfileComplete = hasBasicProfile &&
-          data.phone && 
-          data.phone.trim() !== '' &&
-          data.address && 
-          data.address.trim() !== '' &&
-          data.city && 
-          data.city.trim() !== '' &&
-          data.postal_code && 
-          data.postal_code.trim() !== '' &&
-          data.phone_verified === true;
+          profile.phoneNumber && 
+          profile.phoneNumber.trim() !== '' &&
+          profile.address && 
+          profile.address.trim() !== '' &&
+          profile.city && 
+          profile.city.trim() !== '' &&
+          profile.postalCode && 
+          profile.postalCode.trim() !== '' &&
+          profile.user?.phoneVerified === true;
 
         if (!isClientProfileComplete) {
           navigate("/complete-profile");
@@ -82,30 +70,27 @@ useEffect(() => {
           // Don't auto-redirect when they're just browsing the main page
           console.log('Client profile complete - staying on current page for navigation choice');
         }
-      } else if (data.role === 'freelancer') {
+      } else if (profile.user?.userType === 'FREELANCER') {
         // For freelancers, always allow access to home/dashboard, even if profile is incomplete
         if (!hasBasicProfile) {
           console.log('Freelancer profile incomplete - allowing access to home');
           return;
         }
         
-        // Check if freelancer profile is complete for functionality access (but don't redirect from home)
-        try {
-          const { data: isComplete, error: completeError } = await supabase
-            .rpc('is_freelancer_profile_complete', { 
-              user_id_param: user.id 
-            });
+        // For freelancers, check if profile is complete
+        const isFreelancerProfileComplete = hasBasicProfile &&
+          profile.phoneNumber && 
+          profile.phoneNumber.trim() !== '' &&
+          profile.address && 
+          profile.address.trim() !== '' &&
+          profile.city && 
+          profile.city.trim() !== '' &&
+          profile.postalCode && 
+          profile.postalCode.trim() !== '' &&
+          profile.user?.phoneVerified === true;
 
-          if (completeError) throw completeError;
-          
-          // If not complete, allow staying on home
-          if (!isComplete) {
-            console.log('Freelancer profile not complete - allowing access to home');
-            return;
-          }
-        } catch (error) {
-          console.error('Error checking freelancer profile completion:', error);
-          // Allow access to home on error
+        if (!isFreelancerProfileComplete) {
+          console.log('Freelancer profile not complete - allowing access to home');
           return;
         }
         
