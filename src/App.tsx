@@ -29,6 +29,7 @@ import TermsOfService from "./pages/TermsOfService";
 import Forum from "./pages/Forum";
 import ForumCategory from "./pages/ForumCategory";
 import ForumNewPost from "./pages/ForumNewPost";
+import ForumPostDetail from "./pages/ForumPostDetail";
 import { CookieConsent } from "@/components/CookieConsent";
 import { ContractSystem } from "@/components/ContractSystem";
 
@@ -71,6 +72,7 @@ const App: React.FC = () => {
                  <Route path="/terms-of-service" element={<TermsOfService />} />
                  <Route path="/forum" element={<Forum />} />
                  <Route path="/forum/category/:categoryId" element={<ForumCategory />} />
+                 <Route path="/forum/post/:postId" element={<ForumPostDetail />} />
                  <Route path="/forum/new-post" element={<ForumNewPost />} />
                   <Route path="/forum/category/:categoryId/new-post" element={<ForumNewPost />} />
                  <Route path="/contracts" element={

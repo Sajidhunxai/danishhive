@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,25 +8,33 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ArrowLeft, Pin, Lock, MessageCircle, Plus } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
+import { api } from '@/services/api';
 
 interface ForumPost {
   id: string;
   title: string;
   content: string;
-  reply_count: number;
-  last_reply_at: string;
-  last_reply_by: string | null;
-  is_pinned: boolean;
-  is_locked: boolean;
-  created_at: string;
-  author_id: string;
+  replyCount: number;
+  lastReplyAt: string;
+  lastReplyBy: string | null;
+  isPinned: boolean;
+  isLocked: boolean;
+  createdAt: string;
+  authorId: string;
+  author?: {
+    id: string;
+    profile: {
+      fullName: string;
+      avatarUrl?: string;
+    };
+  };
 }
 
 interface ForumCategory {
   id: string;
   name: string;
   description: string;
-  post_count: number;
+  postCount: number;
 }
 
 const ForumCategory: React.FC = () => {
@@ -35,7 +42,6 @@ const ForumCategory: React.FC = () => {
   const { user, userRole } = useAuth();
   const [category, setCategory] = useState<ForumCategory | null>(null);
   const [posts, setPosts] = useState<ForumPost[]>([]);
-  const [profiles, setProfiles] = useState<Record<string, {full_name: string; avatar_url?: string}>>({});
   const [loading, setLoading] = useState(true);
 
   const hasAccess = userRole === 'freelancer' || userRole === 'admin';
@@ -47,46 +53,18 @@ const ForumCategory: React.FC = () => {
 
   const fetchCategoryData = async () => {
     try {
-      // Fetch category details
-      const { data: categoryData, error: categoryError } = await supabase
-        .from('forum_categories')
-        .select('*')
-        .eq('id', categoryId)
-        .single();
-
-      if (categoryError) throw categoryError;
-
-      // Fetch posts in this category
-      const { data: postsData, error: postsError } = await supabase
-        .from('forum_posts')
-        .select('*')
-        .eq('category_id', categoryId)
-        .order('is_pinned', { ascending: false })
-        .order('last_reply_at', { ascending: false });
-
-      if (postsError) throw postsError;
-
-      // Fetch profiles for all unique user IDs
-      if (postsData?.length) {
-        const userIds = Array.from(new Set([
-          ...postsData.map(p => p.author_id),
-          ...postsData.map(p => p.last_reply_by).filter(Boolean)
-        ]));
-
-        const { data: profilesData } = await supabase
-          .from('profiles')
-          .select('user_id, full_name, avatar_url')
-          .in('user_id', userIds);
-
-        const profileMap = (profilesData || []).reduce((acc, profile) => {
-          acc[profile.user_id] = profile;
-          return acc;
-        }, {} as Record<string, {full_name: string; avatar_url?: string}>);
-
-        setProfiles(profileMap);
+      // Fetch all categories to find the current one
+      const categoriesData = await api.forum.getCategories();
+      const currentCategory = categoriesData.find((c: ForumCategory) => c.id === categoryId);
+      
+      if (!currentCategory) {
+        throw new Error('Category not found');
       }
 
-      setCategory(categoryData);
+      // Fetch posts in this category
+      const postsData = await api.forum.getPosts({ categoryId });
+
+      setCategory(currentCategory);
       setPosts(postsData || []);
     } catch (error) {
       console.error('Error fetching category data:', error);
@@ -165,7 +143,7 @@ const ForumCategory: React.FC = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">{category.name}</h1>
           <p className="text-muted-foreground mb-4">{category.description}</p>
-          <Badge variant="secondary">{category.post_count} indlæg</Badge>
+          <Badge variant="secondary">{category.postCount} indlæg</Badge>
         </div>
 
         {/* Posts */}
@@ -191,17 +169,17 @@ const ForumCategory: React.FC = () => {
                   <CardContent className="p-6">
                     <div className="flex items-start space-x-4">
                       <Avatar className="h-10 w-10">
-                        <AvatarImage src={profiles[post.author_id]?.avatar_url} />
+                        <AvatarImage src={post.author?.profile?.avatarUrl} />
                         <AvatarFallback>
-                          {getInitials(profiles[post.author_id]?.full_name || 'Unknown')}
+                          {getInitials(post.author?.profile?.fullName || 'Unknown')}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center space-x-2 mb-2">
-                          {post.is_pinned && (
+                          {post.isPinned && (
                             <Pin className="h-4 w-4 text-primary" />
                           )}
-                          {post.is_locked && (
+                          {post.isLocked && (
                             <Lock className="h-4 w-4 text-muted-foreground" />
                           )}
                           <h3 className="font-semibold line-clamp-2">{post.title}</h3>
@@ -211,19 +189,14 @@ const ForumCategory: React.FC = () => {
                         </p>
                         <div className="flex items-center justify-between text-sm text-muted-foreground">
                           <div className="flex items-center space-x-4">
-                            <span>{profiles[post.author_id]?.full_name || 'Unknown'}</span>
+                            <span>{post.author?.profile?.fullName || 'Unknown'}</span>
                             <span>
-                              {formatDistanceToNow(new Date(post.created_at))} siden
+                              {formatDistanceToNow(new Date(post.createdAt))} siden
                             </span>
                           </div>
                           <div className="flex items-center space-x-2">
                             <MessageCircle className="h-4 w-4" />
-                            <span>{post.reply_count} svar</span>
-                            {post.last_reply_at && post.last_reply_by && (
-                              <span>
-                                • Seneste af {profiles[post.last_reply_by]?.full_name || 'Unknown'}
-                              </span>
-                            )}
+                            <span>{post.replyCount} svar</span>
                           </div>
                         </div>
                       </div>

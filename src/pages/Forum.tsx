@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,28 +8,43 @@ import { MessageCircle, Users, Briefcase, Lightbulb, HelpCircle, Plus, Pin, Lock
 import { formatDistanceToNow } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import { api } from '@/services/api';
 
 interface ForumCategory {
   id: string;
   name: string;
   description: string;
   icon: string;
-  post_count: number;
-  is_active: boolean;
+  postCount: number;
+  isActive: boolean;
 }
 
 interface ForumPost {
   id: string;
   title: string;
   content: string;
-  reply_count: number;
-  last_reply_at: string;
-  last_reply_by: string | null;
-  is_pinned: boolean;
-  is_locked: boolean;
-  created_at: string;
-  author_id: string;
-  category_id: string;
+  replyCount: number;
+  lastReplyAt: string;
+  lastReplyBy: string | null;
+  isPinned: boolean;
+  isLocked: boolean;
+  createdAt: string;
+  authorId: string;
+  categoryId: string;
+  author?: {
+    id: string;
+    profile: {
+      fullName: string;
+      avatarUrl?: string;
+    };
+  };
+  category?: {
+    id: string;
+    name: string;
+  };
+  _count?: {
+    replies: number;
+  };
 }
 
 const iconMap: Record<string, React.ComponentType<any>> = {
@@ -45,7 +59,6 @@ const Forum: React.FC = () => {
   const { user, userRole } = useAuth();
   const [categories, setCategories] = useState<ForumCategory[]>([]);
   const [recentPosts, setRecentPosts] = useState<ForumPost[]>([]);
-  const [profiles, setProfiles] = useState<Record<string, {full_name: string; avatar_url?: string}>>({});
   const [loading, setLoading] = useState(true);
 
   // Check if user has access (freelancer or admin)
@@ -60,45 +73,13 @@ const Forum: React.FC = () => {
   const fetchData = async () => {
     try {
       // Fetch categories
-      const { data: categoriesData, error: categoriesError } = await supabase
-        .from('forum_categories')
-        .select('*')
-        .eq('is_active', true)
-        .order('name');
-
-      if (categoriesError) throw categoriesError;
+      const categoriesData = await api.forum.getCategories();
 
       // Fetch recent posts
-      const { data: postsData, error: postsError } = await supabase
-        .from('forum_posts')
-        .select('*')
-        .order('last_reply_at', { ascending: false })
-        .limit(10);
-
-      if (postsError) throw postsError;
-
-      // Fetch profiles for all unique user IDs
-      if (postsData?.length) {
-        const userIds = Array.from(new Set([
-          ...postsData.map(p => p.author_id),
-          ...postsData.map(p => p.last_reply_by).filter(Boolean)
-        ]));
-
-        const { data: profilesData } = await supabase
-          .from('profiles')
-          .select('user_id, full_name, avatar_url')
-          .in('user_id', userIds);
-
-        const profileMap = (profilesData || []).reduce((acc, profile) => {
-          acc[profile.user_id] = profile;
-          return acc;
-        }, {} as Record<string, {full_name: string; avatar_url?: string}>);
-
-        setProfiles(profileMap);
-      }
+      const postsData = await api.forum.getPosts();
 
       setCategories(categoriesData || []);
-      setRecentPosts(postsData || []);
+      setRecentPosts(postsData?.slice(0, 10) || []);
     } catch (error) {
       console.error('Error fetching forum data:', error);
       toast.error('Fejl ved indlæsning af forum data');
@@ -195,7 +176,7 @@ const Forum: React.FC = () => {
                           </div>
                           <div className="flex items-center space-x-4">
                             <Badge variant="secondary">
-                              {category.post_count} indlæg
+                              {category.postCount} indlæg
                             </Badge>
                             <ChevronRight className="h-4 w-4 text-muted-foreground" />
                           </div>
@@ -227,17 +208,17 @@ const Forum: React.FC = () => {
                       >
                         <div className="flex items-start space-x-3">
                           <Avatar className="h-8 w-8">
-                            <AvatarImage src={profiles[post.author_id]?.avatar_url} />
+                            <AvatarImage src={post.author?.profile?.avatarUrl} />
                             <AvatarFallback className="text-xs">
-                              {getInitials(profiles[post.author_id]?.full_name || 'Unknown')}
+                              {getInitials(post.author?.profile?.fullName || 'Unknown')}
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center space-x-2 mb-1">
-                              {post.is_pinned && (
+                              {post.isPinned && (
                                 <Pin className="h-3 w-3 text-primary" />
                               )}
-                              {post.is_locked && (
+                              {post.isLocked && (
                                 <Lock className="h-3 w-3 text-muted-foreground" />
                               )}
                             </div>
@@ -245,15 +226,15 @@ const Forum: React.FC = () => {
                               {post.title}
                             </h4>
                             <div className="flex items-center text-xs text-muted-foreground space-x-2">
-                              <span>{profiles[post.author_id]?.full_name || 'Unknown'}</span>
+                              <span>{post.author?.profile?.fullName || 'Unknown'}</span>
                               <span>•</span>
                               <span>
-                                {formatDistanceToNow(new Date(post.last_reply_at || post.created_at))} siden
+                                {formatDistanceToNow(new Date(post.lastReplyAt || post.createdAt))} siden
                               </span>
                             </div>
                             <div className="flex items-center mt-2 text-xs text-muted-foreground">
                               <MessageCircle className="h-3 w-3 mr-1" />
-                              <span>{post.reply_count} svar</span>
+                              <span>{post.replyCount} svar</span>
                             </div>
                           </div>
                         </div>

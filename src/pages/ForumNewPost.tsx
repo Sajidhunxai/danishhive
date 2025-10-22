@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
+import { api } from '@/services/api';
 
 interface ForumCategory {
   id: string;
@@ -36,13 +36,7 @@ const ForumNewPost: React.FC = () => {
 
   const fetchCategories = async () => {
     try {
-      const { data, error } = await supabase
-        .from('forum_categories')
-        .select('id, name, description')
-        .eq('is_active', true)
-        .order('name');
-
-      if (error) throw error;
+      const data = await api.forum.getCategories();
       setCategories(data || []);
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -61,24 +55,20 @@ const ForumNewPost: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      const { data, error } = await supabase
-        .from('forum_posts')
-        .insert({
-          category_id: selectedCategoryId,
-          author_id: user.id,
-          title: title.trim(),
-          content: content.trim(),
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
+      const post = await api.forum.createPost({
+        categoryId: selectedCategoryId,
+        title: title.trim(),
+        content: content.trim(),
+      });
 
       toast.success('Indlæg oprettet!');
-      navigate(`/forum/post/${data.id}`);
+      navigate(`/forum/post/${post.id}`);
     } catch (error) {
       console.error('Error creating post:', error);
-      toast.error('Fejl ved oprettelse af indlæg');
+      const errorMessage = error instanceof Error && 'response' in error 
+        ? (error as { response?: { data?: { error?: string } } }).response?.data?.error 
+        : 'Fejl ved oprettelse af indlæg';
+      toast.error(errorMessage || 'Fejl ved oprettelse af indlæg');
     } finally {
       setIsSubmitting(false);
     }
