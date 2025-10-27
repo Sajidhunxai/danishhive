@@ -8,6 +8,7 @@ import { MessageCircle, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 import { da } from 'date-fns/locale';
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Conversation {
   id: string;
@@ -44,7 +45,7 @@ export const ConversationsList: React.FC<ConversationsListProps> = ({
   const { toast } = useToast();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
-
+  const { t } = useLanguage();
   const fetchConversations = async () => {
     if (!user) return;
 
@@ -193,9 +194,9 @@ export const ConversationsList: React.FC<ConversationsListProps> = ({
       <Card>
         <CardContent className="p-8 text-center">
           <MessageCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-medium mb-2">Ingen beskeder</h3>
+          <h3 className="text-lg font-medium mb-2">{t("messages.noMessagesTitle")}</h3>
           <p className="text-muted-foreground">
-            Du har ingen samtaler endnu. Start en samtale ved at invitere en freelancer.
+          {t("messages.noConversations")}
           </p>
         </CardContent>
       </Card>
@@ -261,7 +262,7 @@ export const ConversationsList: React.FC<ConversationsListProps> = ({
                     </div>
                   ) : (
                     <p className="text-sm text-muted-foreground">
-                      Ingen beskeder endnu
+                      {t("messages.noMessagesDesc")}
                     </p>
                   )}
                 </div>

@@ -308,8 +308,8 @@ const Profile = () => {
       setProfile(fallbackProfile);
       
       toast({
-        title: "Advarsel",
-        description: `Kunne ikke hente profil fra server. Viser tom profil. ${error.message || 'Ukendt fejl'}`,
+        title: t('profile.warning'),
+        description: `${t('profile.could_not_fetch', { error: error.message || t('profile.unknown_error') })}`,
         variant: "destructive",
       });
     } finally {
@@ -338,10 +338,10 @@ const Profile = () => {
   };
 
   const handleImageUploaded = (imageData: { file_url: string; image_type: 'portrait' | 'logo' }) => {
-    toast({
-      title: "Billede sendt til godkendelse",
-      description: "Dit profilbillede bliver gennemgået af en administrator",
-    });
+      toast({
+        title: t('profile.image_sent_approval'),
+        description: t('profile.image_review_admin'),
+      });
   };
 
   const handleProjectImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -389,14 +389,14 @@ const Profile = () => {
       }
       
       toast({
-        title: "Succes",
-        description: "Projekt billede uploadet",
+        title: t('profile.success'),
+        description: t('profile.project_image_uploaded'),
       });
     } catch (error) {
       console.error('Error uploading project image:', error);
       toast({
-        title: "Fejl",
-        description: "Kunne ikke uploade projekt billede",
+        title: t('profile.error'),
+        description: t('profile.project_image_failed'),
         variant: "destructive",
       });
     } finally {
@@ -407,8 +407,8 @@ const Profile = () => {
     } catch (error) {
       console.error('Error uploading project image:', error);
       toast({
-        title: "Fejl",
-        description: "Kunne ikke uploade projekt billede",
+        title: t('profile.error'),
+        description: t('profile.project_image_failed'),
         variant: "destructive",
       });
       setUploadingImage(false);
@@ -441,14 +441,14 @@ const Profile = () => {
       await fetchProfile();
       
       toast({
-        title: "Succes",
-        description: "Profil opdateret",
+        title: t('profile.success'),
+        description: t('profile.profile_updated'),
       });
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
-        title: "Fejl",
-        description: "Kunne ikke opdatere profil",
+        title: t('profile.error'),
+        description: t('profile.update_failed'),
         variant: "destructive",
       });
     } finally {
@@ -459,8 +459,8 @@ const Profile = () => {
   const sendPhoneVerification = async () => {
     if (!profile?.phone) {
       toast({
-        title: "Fejl",
-        description: "Indtast venligst et telefonnummer først",
+        title: t('profile.error'),
+        description: t('profile.enter_phone_first'),
         variant: "destructive",
       });
       return;
@@ -474,14 +474,14 @@ const Profile = () => {
       await updateProfile({ phone_verification_code: code });
       
       toast({
-        title: "Verifikationskode sendt",
-        description: `Koden ${code} er sendt til ${profile.phone}`,
+        title: t('profile.verification_sent'),
+        description: t('profile.code_sent_to', { code, phone: profile.phone }),
       });
     } catch (error) {
       console.error('Error sending verification:', error);
       toast({
-        title: "Fejl",
-        description: "Kunne ikke sende verifikationskode",
+        title: t('profile.error'),
+        description: t('profile.verification_failed'),
         variant: "destructive",
       });
     } finally {
@@ -492,8 +492,8 @@ const Profile = () => {
   const verifyPhone = async () => {
     if (!profile?.phone_verification_code || !verificationCode) {
       toast({
-        title: "Fejl",
-        description: "Indtast venligst verifikationskoden",
+        title: t('profile.error'),
+        description: t('profile.enter_verification_code'),
         variant: "destructive",
       });
       return;
@@ -506,13 +506,13 @@ const Profile = () => {
       });
       setVerificationCode("");
       toast({
-        title: "Succes",
-        description: "Telefonnummer verificeret",
+        title: t('profile.success'),
+        description: t('profile.phone_verified'),
       });
     } else {
       toast({
-        title: "Fejl",
-        description: "Forkert verifikationskode",
+        title: t('profile.error'),
+        description: t('profile.wrong_code'),
         variant: "destructive",
       });
     }
@@ -540,8 +540,8 @@ const Profile = () => {
     // Check max limit
     if (currentSkills.length >= 25) {
       toast({
-        title: "Maks antal kompetencer nået",
-        description: "Du kan højst have 25 kompetencer",
+        title: t('profile.max_skills_reached'),
+        description: t('profile.max_skills_description'),
         variant: "destructive",
       });
       return;
@@ -564,8 +564,8 @@ const Profile = () => {
     // Check max limit
     if (currentSoftware.length >= 30) {
       toast({
-        title: "Maks antal softwareprogrammer nået",
-        description: "Du kan højst have 30 softwareprogrammer",
+        title: t('profile.max_software_reached'),
+        description: t('profile.max_software_description'),
         variant: "destructive",
       });
       return;
@@ -616,14 +616,14 @@ const Profile = () => {
       });
       setShowAddProject(false);
       toast({
-        title: "Succes",
-        description: "Projekt tilføjet",
+        title: t('profile.success'),
+        description: t('profile.project_added'),
       });
     } catch (error) {
       console.error('Error adding project:', error);
       toast({
-        title: "Fejl",
-        description: "Kunne ikke tilføje projekt",
+        title: t('profile.error'),
+        description: t('profile.project_add_failed'),
         variant: "destructive",
       });
     } finally {
@@ -652,14 +652,14 @@ const Profile = () => {
       await fetchProjects();
       setEditingProject(null);
       toast({
-        title: "Succes",
-        description: "Projekt opdateret",
+        title: t('profile.success'),
+        description: t('profile.project_updated'),
       });
     } catch (error) {
       console.error('Error updating project:', error);
       toast({
-        title: "Fejl",
-        description: "Kunne ikke opdatere projekt",
+        title: t('profile.error'),
+        description: t('profile.project_update_failed'),
         variant: "destructive",
       });
     } finally {
@@ -680,8 +680,8 @@ const Profile = () => {
       // For now, just show a message since we don't have a backend API for role change requests yet
       // TODO: Implement backend API for role change requests
       toast({
-        title: "Funktion under udvikling",
-        description: "Rolleændring anmodninger er ikke tilgængelige endnu",
+        title: t('profile.feature_development'),
+        description: t('profile.role_change_unavailable'),
         variant: "destructive",
       });
 
@@ -690,8 +690,8 @@ const Profile = () => {
     } catch (error) {
       console.error('Error requesting role change:', error);
       toast({
-        title: "Fejl",
-        description: "Kunne ikke sende anmodning om rolleændring",
+        title: t('profile.error'),
+        description: t('profile.role_change_failed'),
         variant: "destructive",
       });
     } finally {
@@ -705,14 +705,14 @@ const Profile = () => {
 
       setProjects(prev => prev.filter(p => p.id !== projectId));
       toast({
-        title: "Succes",
-        description: "Projekt slettet",
+        title: t('profile.success'),
+        description: t('profile.project_deleted'),
       });
     } catch (error) {
       console.error('Error deleting project:', error);
       toast({
-        title: "Fejl",
-        description: "Kunne ikke slette projekt",
+        title: t('profile.error'),
+        description: t('profile.project_delete_failed'),
         variant: "destructive",
       });
     }
@@ -723,7 +723,7 @@ const Profile = () => {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground mt-2">Indlæser...</p>
+          <p className="text-muted-foreground mt-2">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -741,7 +741,7 @@ const Profile = () => {
             <LanguageSwitcher />
             <ThemeToggle />
             <Button onClick={() => navigate("/settings")} variant="outline" size="sm" className="w-32">
-              Kontosikkerhed
+              {t('profile.account_security')}
             </Button>
             <BackButton />
           </div>
@@ -750,10 +750,10 @@ const Profile = () => {
         <div className="max-w-4xl mx-auto">
           <Tabs defaultValue="profile" className="w-full">
             <TabsList className={`grid w-full ${profile?.role === 'freelancer' ? 'grid-cols-3' : 'grid-cols-2'} mb-6`}>
-              <TabsTrigger value="profile">Min Profil</TabsTrigger>
-              <TabsTrigger value="projects">Projekter</TabsTrigger>
+              <TabsTrigger value="profile">{t('profile.my_profile')}</TabsTrigger>
+              <TabsTrigger value="projects">{t('profile.projects')}</TabsTrigger>
               {profile?.role === 'freelancer' && (
-                <TabsTrigger value="economy">Min Økonomi</TabsTrigger>
+                <TabsTrigger value="economy">{t('profile.my_economy')}</TabsTrigger>
               )}
             </TabsList>
 
@@ -775,7 +775,7 @@ const Profile = () => {
                       </Avatar>
                     </div>
                      <div className="flex-1 space-y-2">
-                       <h2 className="text-xl font-bold">{profile?.full_name || 'Ufuldendt Profil'}</h2>
+                       <h2 className="text-xl font-bold">{profile?.full_name || t('profile.incomplete_profile')}</h2>
                        <p className="text-muted-foreground flex items-center gap-1">
                          <Mail className="h-3 w-3" />
                          {user?.email}
@@ -789,25 +789,25 @@ const Profile = () => {
                           {profile?.active_status ? (
                             <>
                               <ToggleRight className="h-3 w-3 mr-1" />
-                              Aktiv
+                              {t('profile.active')}
                             </>
                           ) : (
                             <>
                               <ToggleLeft className="h-3 w-3 mr-1" />
-                              Inaktiv
+                              {t('profile.inactive')}
                             </>
                           )}
                         </Badge>
                         {profile?.phone_verified && (
                           <Badge variant="outline" className="text-green-600">
                             <ShieldCheck className="h-3 w-3 mr-1" />
-                            Verificeret
+                            {t('profile.verified')}
                           </Badge>
                         )}
                         {profile?.total_earnings > 0 && (
                           <Badge variant="outline">
                             <Star className="h-3 w-3 mr-1" />
-                            {profile.total_earnings.toLocaleString('da-DK')} kr optjent
+                            {profile.total_earnings.toLocaleString('da-DK')} {t('profile.earned')}
                           </Badge>
                         )}
                         <Badge variant="secondary" className="bg-primary/10 text-primary">
@@ -822,7 +822,7 @@ const Profile = () => {
                             className="h-6 px-2 text-xs"
                           >
                             <Settings className="h-3 w-3 mr-1" />
-                            Ændre rolle
+                            {t('profile.change_role')}
                           </Button>
                         )}
                         <Button
@@ -832,11 +832,11 @@ const Profile = () => {
                           className="h-6 px-2 text-xs"
                         >
                           <User className="h-3 w-3 mr-1" />
-                          Se som andre
+                          {t('profile.view_as_others')}
                         </Button>
                       </div>
                        <p className="text-sm text-muted-foreground">
-                         Klik på din status for at ændre tilgængelighed
+                         {t('profile.click_status')}
                        </p>
                      </div>
                    </div>
@@ -850,7 +850,7 @@ const Profile = () => {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="full_name">{t('profile.name')}</Label>
+                      <Label htmlFor="full_name">{t('profile.full_name')}</Label>
                       <Input
                         id="full_name"
                         value={profile?.full_name || ""}
@@ -892,37 +892,37 @@ const Profile = () => {
                             size="sm"
                             className="h-9 px-4"
                           >
-                            {sendingVerification ? "Sender..." : "Verificer"}
+                            {sendingVerification ? t('profile.sending') : t('profile.verify')}
                           </Button>
                         )}
                       </div>
                       {profile?.phone_verified ? (
                         <p className="text-sm text-green-600 mt-1 flex items-center">
                           <ShieldCheck className="h-3 w-3 mr-1" />
-                          Verificeret
+                          {t('profile.verified')}
                         </p>
                       ) : profile?.phone_verification_code && (
                         <div className="mt-2 space-y-2">
                           <div className="flex gap-2">
                             <Input
-                              placeholder="Indtast 6-cifret kode"
+                              placeholder={t('profile.enter_code')}
                               value={verificationCode}
                               onChange={(e) => setVerificationCode(e.target.value)}
                               className="flex-1"
                             />
                             <Button onClick={verifyPhone} size="sm" className="h-9 px-4">
-                              Bekræft
+                              {t('profile.confirm')}
                             </Button>
                           </div>
                           <p className="text-sm text-muted-foreground">
-                            Indtast koden: {profile.phone_verification_code}
+                            {t('profile.enter_code_hint', { code: profile.phone_verification_code })}
                           </p>
                         </div>
                       )}
                     </div>
 
                     <div>
-                      <Label htmlFor="company">Virksomhed (valgfrit)</Label>
+                      <Label htmlFor="company">{t('profile.company_optional')}</Label>
                       <Input
                         id="company"
                         value={profile?.company || ""}
@@ -939,7 +939,7 @@ const Profile = () => {
                           setProfile(prev => prev ? { ...prev, location: addressData.location } : null);
                           if (profile) updateProfile({ location: addressData.location });
                         }}
-                        placeholder="Søg efter adresse..."
+                        placeholder={t('profile.search_address')}
                       />
                     </div>
 
@@ -951,7 +951,7 @@ const Profile = () => {
                         value={profile?.hourly_rate || ""}
                         onChange={(e) => setProfile(prev => prev ? { ...prev, hourly_rate: parseFloat(e.target.value) || 0 } : null)}
                         onBlur={() => profile && updateProfile({ hourly_rate: profile.hourly_rate })}
-                        placeholder="kr/time"
+                        placeholder={t('profile.hourly_rate_placeholder')}
                       />
                     </div>
                   </div>
@@ -965,7 +965,7 @@ const Profile = () => {
                 </CardHeader>
                 <CardContent>
                   <Textarea
-                    placeholder="Skriv lidt om dig selv, din erfaring og hvad du tilbyder..."
+                    placeholder={t('profile.bio_placeholder')}
                     value={profile?.bio || ""}
                     onChange={(e) => setProfile(prev => prev ? { ...prev, bio: e.target.value } : null)}
                     onBlur={() => profile && updateProfile({ bio: profile.bio })}
@@ -981,7 +981,7 @@ const Profile = () => {
                     <div className="flex items-center justify-between">
                       <CardTitle className="flex items-center gap-2">
                         <DollarSign className="h-5 w-5 text-green-600" />
-                        Platform Gebyrer
+                        {t('profile.platform_fees')}
                       </CardTitle>
                       <ClientFees 
                         currentFeeRate={profile?.platform_fee_rate || 0.15}
@@ -992,11 +992,11 @@ const Profile = () => {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="text-sm text-muted-foreground">
-                      <p>Dit nuværende platform gebyr er {((profile?.platform_fee_rate || 0.15) * 100).toFixed(0)}%.</p>
-                      <p>Dette gebyr trækkes automatisk når du frigiver penge fra escrow til freelancers.</p>
+                      <p>{t('profile.current_fee', { rate: ((profile?.platform_fee_rate || 0.15) * 100).toFixed(0) })}</p>
+                      <p>{t('profile.fee_description')}</p>
                       {profile?.reduced_fee_until && new Date(profile.reduced_fee_until) > new Date() && (
                         <p className="text-green-600 font-medium mt-2">
-                          🎉 Du har særlig rabat til {new Date(profile.reduced_fee_until).toLocaleDateString('da-DK')}!
+                          {t('profile.special_discount', { date: new Date(profile.reduced_fee_until).toLocaleDateString('da-DK') })}
                         </p>
                       )}
                     </div>
@@ -1011,7 +1011,7 @@ const Profile = () => {
                     <div className="flex items-center justify-between">
                       <CardTitle className="flex items-center gap-2">
                         <Droplets className="h-5 w-5 text-amber-500" />
-                        Honningdråber
+                        {t('profile.honey_drops')}
                       </CardTitle>
                       <HoneyDropsBalance 
                         drops={profile?.total_earnings || 0} 
@@ -1021,8 +1021,8 @@ const Profile = () => {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="text-sm text-muted-foreground">
-                      <p>Honningdråber bruges til at byde på opgaver. Du skal bruge 3 dråber for hvert bud.</p>
-                      <p>Får du ikke opgaven, får du automatisk dine dråber tilbage.</p>
+                      <p>{t('profile.drops_description')}</p>
+                      <p>{t('profile.drops_refund')}</p>
                     </div>
                     <HoneyDropsPurchase 
                       currentDrops={profile?.total_earnings || 0}
@@ -1040,7 +1040,7 @@ const Profile = () => {
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <div className="text-sm text-muted-foreground mb-2">
-                      {(profile?.skills || []).length}/25 kompetencer
+                      {t('profile.skills_count', { current: (profile?.skills || []).length })}
                     </div>
                     
                     <Popover open={skillsOpen} onOpenChange={setSkillsOpen}>
@@ -1052,28 +1052,28 @@ const Profile = () => {
                           className="w-full justify-between"
                           disabled={(profile?.skills || []).length >= 25}
                         >
-                          {skillSearch || "her kan du indtaste dine skills"}
+                          {skillSearch || t('profile.skills_placeholder')}
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-full p-0" align="start">
                         <Command>
                           <CommandInput 
-                            placeholder="Søg efter kompetencer..." 
+                            placeholder={t('profile.search_skills')} 
                             value={skillSearch}
                             onValueChange={setSkillSearch}
                           />
                           <CommandList>
                             <CommandEmpty>
                               <div className="p-2">
-                                <p className="text-sm text-muted-foreground mb-2">Ingen forslag fundet.</p>
+                                <p className="text-sm text-muted-foreground mb-2">{t('profile.no_suggestions')}</p>
                                 {skillSearch.trim() && (
                                    <Button 
                                      size="sm" 
                                      onClick={() => addSkill(skillSearch)}
                                      className="w-full h-8"
                                    >
-                                    Tilføj "{skillSearch}"
+                                    {t('profile.add_skill', { skill: skillSearch })}
                                   </Button>
                                 )}
                               </div>
@@ -1140,15 +1140,15 @@ const Profile = () => {
               {/* Software Skills */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Software Kompetencer</CardTitle>
+                  <CardTitle>{t('profile.software_skills')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <div className="text-sm text-muted-foreground mb-2">
-                      {(profile?.software_skills || []).length}/30 softwareprogrammer
+                      {t('profile.software_count', { current: (profile?.software_skills || []).length })}
                       {(profile?.software_skills || []).length < 3 && (
                         <span className="text-destructive ml-2">
-                          (Minimum 3 påkrævet)
+                          {t('profile.software_minimum')}
                         </span>
                       )}
                     </div>
@@ -1162,28 +1162,28 @@ const Profile = () => {
                           className="w-full justify-between"
                           disabled={(profile?.software_skills || []).length >= 30}
                         >
-                          {softwareSearch || "Tilføj software kompetencer"}
+                          {softwareSearch || t('profile.add_software')}
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-full p-0" align="start">
                         <Command>
                           <CommandInput 
-                            placeholder="Søg efter software..." 
+                            placeholder={t('profile.search_software')} 
                             value={softwareSearch}
                             onValueChange={setSoftwareSearch}
                           />
                           <CommandList>
                             <CommandEmpty>
                               <div className="p-2">
-                                <p className="text-sm text-muted-foreground mb-2">Ingen forslag fundet.</p>
+                                <p className="text-sm text-muted-foreground mb-2">{t('profile.no_suggestions')}</p>
                                 {softwareSearch.trim() && (
                                    <Button 
                                      size="sm" 
                                      onClick={() => addSoftware(softwareSearch)}
                                      className="w-full h-8"
                                    >
-                                    Tilføj "{softwareSearch}"
+                                    {t('profile.add_software_custom', { software: softwareSearch })}
                                   </Button>
                                 )}
                               </div>
@@ -1262,7 +1262,7 @@ const Profile = () => {
                     {t('profile.projects')}
                     <Button onClick={() => setShowAddProject(true)} size="sm" className="h-9 px-4">
                       <Plus className="h-4 w-4 mr-2" />
-                      Tilføj Projekt
+                      {t('profile.add_project')}
                     </Button>
                   </CardTitle>
                 </CardHeader>
@@ -1271,11 +1271,11 @@ const Profile = () => {
                     <Card className="p-4">
                       <div className="space-y-4">
                         <h3 className="text-lg font-medium">
-                          {editingProject ? 'Rediger projekt' : 'Tilføj nyt projekt'}
+                          {editingProject ? t('profile.edit_project') : t('profile.add_new_project')}
                         </h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div>
-                            <Label htmlFor="project_title">Projekt Titel</Label>
+                            <Label htmlFor="project_title">{t('profile.project_title')}</Label>
                             <Input
                               id="project_title"
                               value={editingProject ? editingProject.title : (newProject.title || "")}
@@ -1289,7 +1289,7 @@ const Profile = () => {
                             />
                           </div>
                           <div>
-                            <Label htmlFor="client_name">Klient</Label>
+                            <Label htmlFor="client_name">{t('profile.client')}</Label>
                             <Input
                               id="client_name"
                               value={editingProject ? (editingProject.client_name || "") : (newProject.client_name || "")}
@@ -1305,7 +1305,7 @@ const Profile = () => {
                         </div>
 
                         <div>
-                          <Label htmlFor="project_description">Beskrivelse</Label>
+                          <Label htmlFor="project_description">{t('profile.description')}</Label>
                           <Textarea
                             id="project_description"
                             value={editingProject ? (editingProject.description || "") : (newProject.description || "")}
@@ -1321,7 +1321,7 @@ const Profile = () => {
                          
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div>
-                            <Label htmlFor="start_date">Start Dato</Label>
+                            <Label htmlFor="start_date">{t('profile.start_date')}</Label>
                             <Input
                               id="start_date"
                               type="date"
@@ -1336,7 +1336,7 @@ const Profile = () => {
                             />
                           </div>
                           <div>
-                            <Label htmlFor="end_date">Slut Dato</Label>
+                            <Label htmlFor="end_date">{t('profile.end_date')}</Label>
                             <Input
                               id="end_date"
                               type="date"
@@ -1374,14 +1374,14 @@ const Profile = () => {
                                 }}
                               />
                               <Label htmlFor="still_working_here" className="text-sm">
-                                Arbejder her stadig
+                                {t('profile.still_working')}
                               </Label>
                             </div>
                           </div>
                         </div>
 
                         <div>
-                          <Label htmlFor="project_url">Projekt URL</Label>
+                          <Label htmlFor="project_url">{t('profile.project_url')}</Label>
                           <Input
                             id="project_url"
                             type="url"
@@ -1397,7 +1397,7 @@ const Profile = () => {
                         </div>
 
                         <div>
-                          <Label htmlFor="project_image">Projekt Billede</Label>
+                          <Label htmlFor="project_image">{t('profile.project_image')}</Label>
                           <div className="space-y-2">
                             <Input
                               id="project_image"
@@ -1407,13 +1407,13 @@ const Profile = () => {
                               disabled={uploadingImage}
                             />
                             {uploadingImage && (
-                              <p className="text-sm text-muted-foreground">Uploader billede...</p>
+                              <p className="text-sm text-muted-foreground">{t('profile.uploading_image')}</p>
                             )}
                             {((editingProject && editingProject.image_url) || (!editingProject && newProject.image_url)) && (
                               <div className="relative">
                                 <img 
                                   src={editingProject ? (editingProject.image_url || "") : (newProject.image_url || "")} 
-                                  alt="Projekt preview" 
+                                  alt={t('profile.project_preview')} 
                                   className="w-full h-32 object-cover rounded-md border"
                                 />
                                 <Button
@@ -1443,7 +1443,7 @@ const Profile = () => {
                             className="h-9 px-4"
                           >
                             <Save className="h-4 w-4 mr-2" />
-                            {editingProject ? 'Opdater Projekt' : 'Gem Projekt'}
+                            {editingProject ? t('profile.update_project') : t('profile.save_project')}
                           </Button>
                           <Button 
                             variant="outline" 
@@ -1453,7 +1453,7 @@ const Profile = () => {
                             }} 
                             className="h-9 px-4"
                           >
-                            Annuller
+                            {t('profile.cancel')}
                           </Button>
                         </div>
                       </div>
@@ -1471,13 +1471,13 @@ const Profile = () => {
                               className="w-full h-48 object-cover rounded-t-lg hover:opacity-80 transition-opacity"
                             />
                             <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity bg-black/20 rounded-t-lg">
-                              <span className="text-white text-sm font-medium">Klik for at forstørre</span>
+                              <span className="text-white text-sm font-medium">{t('profile.click_enlarge')}</span>
                             </div>
                           </div>
                         )}
                         {!project.image_url && (
                           <div className="w-full h-48 bg-muted rounded-t-lg flex items-center justify-center">
-                            <span className="text-muted-foreground">Ingen billede</span>
+                            <span className="text-muted-foreground">{t('profile.no_image')}</span>
                           </div>
                         )}
                         <CardHeader>
@@ -1503,13 +1503,13 @@ const Profile = () => {
                             </div>
                           </CardTitle>
                           {project.client_name && (
-                            <p className="text-sm text-muted-foreground">Klient: {project.client_name}</p>
+                            <p className="text-sm text-muted-foreground">{t('profile.client_label', { name: project.client_name })}</p>
                           )}
                           {(project.start_date || project.end_date || project.still_working_here) && (
                             <p className="text-sm text-muted-foreground">
                               {project.start_date && new Date(project.start_date).toLocaleDateString('da-DK')}
                               {project.start_date && (project.end_date || project.still_working_here) && ' - '}
-                              {project.still_working_here ? 'Nuværende' : (project.end_date && new Date(project.end_date).toLocaleDateString('da-DK'))}
+                              {project.still_working_here ? t('profile.current') : (project.end_date && new Date(project.end_date).toLocaleDateString('da-DK'))}
                             </p>
                           )}
                         </CardHeader>
@@ -1524,7 +1524,7 @@ const Profile = () => {
                               rel="noopener noreferrer"
                               className="text-sm text-primary hover:underline"
                             >
-                              Se projekt →
+                              {t('profile.view_project')}
                             </a>
                           )}
                         </CardContent>
@@ -1534,7 +1534,7 @@ const Profile = () => {
 
                   {projects.length === 0 && !showAddProject && (
                     <div className="text-center py-8 text-muted-foreground">
-                      <p>Ingen projekter endnu. Tilføj dit første projekt!</p>
+                      <p>{t('profile.no_projects')}</p>
                     </div>
                   )}
                 </CardContent>
@@ -1546,7 +1546,7 @@ const Profile = () => {
                 {/* Payment Overview */}
                 <Card>
                   <CardHeader>
-                    <CardTitle>Min Økonomi</CardTitle>
+                    <CardTitle>{t('profile.my_economy')}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <PaymentOverview />
@@ -1556,7 +1556,7 @@ const Profile = () => {
                 {/* Completed Jobs */}
                 <Card>
                   <CardHeader>
-                    <CardTitle>Færdige Opgaver</CardTitle>
+                    <CardTitle>{t('profile.completed_jobs')}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     {jobHistory.length > 0 ? (
@@ -1592,19 +1592,19 @@ const Profile = () => {
                         </div>
                         {jobHistory.length > 10 && (
                           <div className="mt-4 text-center">
-                            <Button 
-                              variant="outline" 
-                              onClick={() => setShowJobHistoryModal(true)}
-                              className="h-9 px-4"
-                            >
-                              Se alle opgaver ({jobHistory.length})
-                            </Button>
+                              <Button 
+                                variant="outline" 
+                                onClick={() => setShowJobHistoryModal(true)}
+                                className="h-9 px-4"
+                              >
+                                {t('profile.view_all_jobs', { count: jobHistory.length })}
+                              </Button>
                           </div>
                         )}
                       </>
                     ) : (
                       <div className="text-center py-8 text-muted-foreground">
-                        <p>Ingen færdige opgaver endnu.</p>
+                        <p>{t('profile.no_completed_jobs')}</p>
                       </div>
                     )}
                   </CardContent>
@@ -1622,7 +1622,7 @@ const Profile = () => {
       <Dialog open={showJobHistoryModal} onOpenChange={setShowJobHistoryModal}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
           <div className="flex justify-between items-center p-6 pb-4">
-            <h2 className="text-xl font-semibold">Alle opgaver</h2>
+            <h2 className="text-xl font-semibold">{t('profile.all_jobs')}</h2>
             <Button
               variant="ghost"
               size="sm"
@@ -1639,7 +1639,7 @@ const Profile = () => {
                     <div>
                       <h4 className="font-medium text-lg">{job.title}</h4>
                       <p className="text-sm text-muted-foreground">
-                        Færdiggjort: {job.completed_at && new Date(job.completed_at).toLocaleDateString('da-DK')}
+                        {t('profile.completed_at', { date: job.completed_at && new Date(job.completed_at).toLocaleDateString('da-DK') })}
                       </p>
                     </div>
                     {job.final_amount && (
@@ -1683,7 +1683,7 @@ const Profile = () => {
             {selectedImage && (
               <img
                 src={selectedImage}
-                alt="Forstørret projektbillede"
+                alt={t('profile.enlarged_project_image')}
                 className="w-full h-auto max-h-[80vh] object-contain"
               />
             )}
@@ -1696,27 +1696,27 @@ const Profile = () => {
         <DialogContent className="max-w-md">
           <div className="space-y-4">
             <div>
-              <h2 className="text-lg font-semibold">Anmod om rolleændring</h2>
+              <h2 className="text-lg font-semibold">{t('profile.request_role_change')}</h2>
               <p className="text-sm text-muted-foreground">
-                Din nuværende rolle: <strong>{profile?.role || 'freelancer'}</strong>
+                {t('profile.current_role', { role: profile?.role || 'freelancer' })}
               </p>
             </div>
             
             <div>
-              <Label htmlFor="requested_role">Ønsket rolle</Label>
+              <Label htmlFor="requested_role">{t('profile.desired_role')}</Label>
               <Select value={requestedRole} onValueChange={setRequestedRole}>
                 <SelectTrigger className="w-full mt-1">
-                  <SelectValue placeholder="Vælg rolle" />
+                  <SelectValue placeholder={t('profile.select_role')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="freelancer">Freelancer</SelectItem>
-                  <SelectItem value="client">Klient</SelectItem>
+                  <SelectItem value="freelancer">{t('profile.freelancer')}</SelectItem>
+                  <SelectItem value="client">{t('profile.client')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <p className="text-xs text-muted-foreground">
-              Din anmodning vil blive sendt til administratorerne til godkendelse.
+              {t('profile.role_request_note')}
             </p>
 
             <div className="flex gap-2 justify-end">
@@ -1727,13 +1727,13 @@ const Profile = () => {
                   setRequestedRole("");
                 }}
               >
-                Annuller
+                {t('profile.cancel')}
               </Button>
               <Button 
                 onClick={requestRoleChange}
                 disabled={!requestedRole || saving}
               >
-                {saving ? "Sender..." : "Send anmodning"}
+                {saving ? t('profile.sending') : t('profile.send_request')}
               </Button>
             </div>
           </div>
@@ -1744,7 +1744,7 @@ const Profile = () => {
       <Dialog open={showPublicView} onOpenChange={setShowPublicView}>
         <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
           <div className="flex justify-between items-center pb-4 border-b">
-            <h2 className="text-xl font-semibold">Sådan ser andre din profil</h2>
+            <h2 className="text-xl font-semibold">{t('profile.view_as_others_title')}</h2>
             <Button
               variant="ghost"
               size="sm"

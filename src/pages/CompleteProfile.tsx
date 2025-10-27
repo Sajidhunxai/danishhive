@@ -424,7 +424,7 @@ const CompleteProfile = () => {
               }`}>
                 {currentStep > 1 ? <CheckCircle className="h-4 w-4" /> : '1'}
               </div>
-              <span className="text-sm font-medium">Kontaktinfo</span>
+              <span className="text-sm font-medium">{t('section.contactInfo')}</span>
             </div>
             
             <div className={`w-8 h-0.5 ${currentStep >= 2 ? 'bg-primary' : 'bg-muted-foreground'}`} />
@@ -435,7 +435,7 @@ const CompleteProfile = () => {
               }`}>
                 2
               </div>
-              <span className="text-sm font-medium">Betalingsinfo</span>
+              <span className="text-sm font-medium">{t('section.paymentInfo')}</span>
             </div>
           </div>
         )}
@@ -446,7 +446,7 @@ const CompleteProfile = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <User className="h-5 w-5" />
-                Kontakt Information
+                {t('contact.information')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -521,7 +521,7 @@ const CompleteProfile = () => {
                       updateProfileData('city', address.city);
                       updateProfileData('postal_code', address.postal_code);
                     }}
-                    placeholder="Søg din adresse..."
+                    placeholder={t('address.search')}
                   />
                 </div>
 
@@ -534,7 +534,7 @@ const CompleteProfile = () => {
 
                 {profileData.postal_code && (
                   <div>
-                    <Label>Postnummer</Label>
+                    <Label>{t('contact.postcode')}</Label>
                     <Input value={profileData.postal_code} readOnly className="bg-gray-50" />
                   </div>
                 )}

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from "@/contexts/LanguageContext";
 import { 
   Shield, 
   Download, 
@@ -46,7 +47,7 @@ export const GDPRCompliance = () => {
   });
   const [exporting, setExporting] = useState(false);
   const [deleting, setDeleting] = useState(false);
-
+  const { t } = useLanguage();
   useEffect(() => {
     // Load saved consent preferences from localStorage
     const savedConsents = localStorage.getItem('gdpr-consents');
@@ -139,7 +140,7 @@ export const GDPRCompliance = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5" />
-            Dine GDPR Rettigheder
+            {t("gdpr.rightsTitle")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -147,29 +148,29 @@ export const GDPRCompliance = () => {
             <div className="flex items-center gap-3 p-3 border rounded-lg">
               <CheckCircle className="h-5 w-5 text-green-500" />
               <div>
-                <p className="font-medium">Ret til indsigt</p>
-                <p className="text-sm text-muted-foreground">Se hvilke data vi har om dig</p>
+                <p className="font-medium">{t("gdpr.accessRight")}</p>
+                <p className="text-sm text-muted-foreground">{t("gdpr.accessDesc")}</p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3 border rounded-lg">
               <CheckCircle className="h-5 w-5 text-green-500" />
               <div>
-                <p className="font-medium">Ret til dataportabilitet</p>
-                <p className="text-sm text-muted-foreground">Download dine data</p>
+                <p className="font-medium">{t("gdpr.portabilityRight")}</p>
+                <p className="text-sm text-muted-foreground">{t("gdpr.portabilityDesc")}</p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3 border rounded-lg">
               <CheckCircle className="h-5 w-5 text-green-500" />
               <div>
-                <p className="font-medium">Ret til sletning</p>
-                <p className="text-sm text-muted-foreground">Slet din konto permanent</p>
+                <p className="font-medium">{t("gdpr.deletionRight")}</p>
+                <p className="text-sm text-muted-foreground">{t("gdpr.deletionDesc")}</p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3 border rounded-lg">
               <CheckCircle className="h-5 w-5 text-green-500" />
               <div>
-                <p className="font-medium">Ret til berigtigelse</p>
-                <p className="text-sm text-muted-foreground">Ret fejl i dine data</p>
+                <p className="font-medium">{t("gdpr.rectificationRight")}</p>
+                <p className="text-sm text-muted-foreground">{t("gdpr.rectificationDesc")}</p>
               </div>
             </div>
           </div>
@@ -181,23 +182,23 @@ export const GDPRCompliance = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Cookie className="h-5 w-5" />
-            Cookie Præferencer
+            {t("gdpr.cookiePreferences")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 border rounded-lg">
               <div>
-                <p className="font-medium">Nødvendige cookies</p>
-                <p className="text-sm text-muted-foreground">Påkrævet for grundlæggende funktionalitet</p>
+                <p className="font-medium">{t("gdpr.necessaryCookies")}</p>
+                <p className="text-sm text-muted-foreground">{t("gdpr.necessaryCookiesDesc")}</p>
               </div>
-              <Badge variant="secondary">Påkrævet</Badge>
+              <Badge variant="secondary">{t("gdpr.required")}</Badge>
             </div>
             
             <div className="flex items-center justify-between p-3 border rounded-lg">
               <div>
-                <p className="font-medium">Analyse cookies</p>
-                <p className="text-sm text-muted-foreground">Hjælper os forbedre tjenesten</p>
+                <p className="font-medium">{t("gdpr.analyticsCookies")}</p>
+                <p className="text-sm text-muted-foreground">{t("gdpr.analyticsCookiesDesc")}</p>
               </div>
               <Button
                 variant={consents.analytics ? "default" : "outline"}
@@ -210,8 +211,8 @@ export const GDPRCompliance = () => {
 
             <div className="flex items-center justify-between p-3 border rounded-lg">
               <div>
-                <p className="font-medium">Marketing cookies</p>
-                <p className="text-sm text-muted-foreground">Personaliserede annoncer og indhold</p>
+                <p className="font-medium">{t("gdpr.marketingCookies")}</p>
+                <p className="text-sm text-muted-foreground">{t("gdpr.marketingCookiesDesc")}</p>
               </div>
               <Button
                 variant={consents.marketing ? "default" : "outline"}
@@ -224,8 +225,8 @@ export const GDPRCompliance = () => {
 
             <div className="flex items-center justify-between p-3 border rounded-lg">
               <div>
-                <p className="font-medium">Præference cookies</p>
-                <p className="text-sm text-muted-foreground">Husker dine indstillinger</p>
+                <p className="font-medium">{t("gdpr.preferenceCookies")}</p>
+                <p className="text-sm text-muted-foreground">{t("gdpr.preferenceCookiesDesc")}</p>
               </div>
               <Button
                 variant={consents.preferences ? "default" : "outline"}
@@ -244,7 +245,7 @@ export const GDPRCompliance = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
-            Data Management
+            {t("gdpr.dataManagement")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -258,8 +259,8 @@ export const GDPRCompliance = () => {
             >
               <Download className="h-5 w-5" />
               <div className="text-left">
-                <p className="font-medium">Eksporter Mine Data</p>
-                <p className="text-sm text-muted-foreground">Download alle dine data som JSON</p>
+                <p className="font-medium">{t("gdpr.exportData")}</p>
+                <p className="text-sm text-muted-foreground">{t("gdpr.exportDataDesc")}</p>
               </div>
             </Button>
 
@@ -272,8 +273,8 @@ export const GDPRCompliance = () => {
                 >
                   <Trash2 className="h-5 w-5" />
                   <div className="text-left">
-                    <p className="font-medium">Slet Min Konto</p>
-                    <p className="text-sm opacity-90">Permanent sletning af alle data</p>
+                    <p className="font-medium">{t("gdpr.deleteAccount")}</p>
+                    <p className="text-sm opacity-90">{t("gdpr.deleteAccountDesc")}</p>
                   </div>
                 </Button>
               </AlertDialogTrigger>
@@ -281,23 +282,23 @@ export const GDPRCompliance = () => {
                 <AlertDialogHeader>
                   <AlertDialogTitle className="flex items-center gap-2">
                     <AlertTriangle className="h-5 w-5 text-destructive" />
-                    Slet Konto Permanent
+                    {t("gdpr.confirmDeleteAccount")}
                   </AlertDialogTitle>
                   <AlertDialogDescription>
-                    <strong>Denne handling kan ikke fortrydes.</strong>
+                    <strong>{t("gdpr.irreversibleAction")}</strong>
                     <br /><br />
-                    Følgende data vil blive slettet permanent:
+                    {t("gdpr.deleteWillRemove")}
                     <ul className="list-disc list-inside mt-2 space-y-1">
-                      <li>Din profil og kontaktoplysninger</li>
-                      <li>Alle beskeder og kommunikation</li>
-                      <li>Jobansøgninger og kontrakter</li>
-                      <li>Indtægtshistorik og betalingsdata</li>
-                      <li>Uploadede filer og billeder</li>
+                      <li>{t("gdpr.deleteProfile")}</li>
+                      <li>{t("gdpr.deleteMessages")}</li>
+                      <li>{t("gdpr.deleteJobs")}</li>
+                      <li>{t("gdpr.deleteEarnings")}</li>
+                      <li>{t("gdpr.deleteFiles")}</li>
                     </ul>
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Annuller</AlertDialogCancel>
+                  <AlertDialogCancel>{t("gdpr.cancel")}</AlertDialogCancel>
                   <AlertDialogAction 
                     onClick={deleteAccount}
                     disabled={deleting}
@@ -317,7 +318,7 @@ export const GDPRCompliance = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
-            Juridiske Dokumenter
+            {t("gdpr.legalDocuments")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -327,7 +328,7 @@ export const GDPRCompliance = () => {
             onClick={() => window.open('/privacy-policy', '_blank')}
           >
             <Eye className="h-4 w-4 mr-2" />
-            Privatlivspolitik
+            {t("gdpr.privacyPolicy")}
           </Button>
           <Button 
             variant="ghost" 
@@ -335,7 +336,7 @@ export const GDPRCompliance = () => {
             onClick={() => window.open('/terms-of-service', '_blank')}
           >
             <FileText className="h-4 w-4 mr-2" />
-            Servicevilkår
+            {t("gdpr.termsOfService")}
           </Button>
           <Button 
             variant="ghost" 
@@ -343,7 +344,7 @@ export const GDPRCompliance = () => {
             onClick={() => window.open('/cookie-policy', '_blank')}
           >
             <Cookie className="h-4 w-4 mr-2" />
-            Cookie Politik
+            {t("gdpr.cookiePolicy")}
           </Button>
         </CardContent>
       </Card>

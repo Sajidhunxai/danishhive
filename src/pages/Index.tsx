@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/contexts/LanguageContext";
 import JobsSection from "@/components/JobsSection";
 import FreelancerSearch from "@/components/FreelancerSearch";
 import { AdminPanel } from "@/components/AdminPanel";
@@ -10,6 +11,7 @@ import { api } from "@/services/api";
 
 const Index = () => {
   const { user, userRole, loading, signOut } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const hasCheckedRef = useRef(false);
 useEffect(() => {
@@ -110,7 +112,7 @@ useEffect(() => {
           <div className="flex min-h-[60vh] items-center justify-center">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-              <p className="mt-4 text-muted-foreground animate-pulse">Indlæser...</p>
+              <p className="mt-4 text-muted-foreground animate-pulse">{t('index.loading')}</p>
             </div>
           </div>
         </main>
@@ -126,12 +128,12 @@ useEffect(() => {
         {/* Welcome Section */}
         <div className="text-center py-12">
           <h2 className="mb-4 text-4xl font-bold text-header-dark">
-            Velkommen til Danish Hive
+            {t('index.welcome')}
           </h2>
           <p className="text-xl text-muted-foreground mb-4">
-            Danmarks førende platform for freelancere og virksomheder
+            {t('index.subtitle')}
           </p>
-          <p className="text-lg text-muted-foreground">Logget ind som: {user.email}</p>
+          <p className="text-lg text-muted-foreground">{t('index.logged_in_as')}: {user.email}</p>
         </div>
 
         {/* Role Navigation Buttons - Only show for admin users */}
@@ -141,19 +143,19 @@ useEffect(() => {
               onClick={() => navigate("/client")}
               className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3"
             >
-              🏢 Gå til Klient Dashboard
+              🏢 {t('index.go_to_client')}
             </Button>
             <Button 
               onClick={() => navigate("/")}
               className="bg-green-600 hover:bg-green-700 text-white px-6 py-3"
             >
-              💼 Gå til Freelancer Side
+              💼 {t('index.go_to_freelancer')}
             </Button>
             <Button 
               onClick={() => navigate("/admin")}
               className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3"
             >
-              ⚙️ Gå til Admin Panel
+              ⚙️ {t('index.go_to_admin')}
             </Button>
           </div>
         )}

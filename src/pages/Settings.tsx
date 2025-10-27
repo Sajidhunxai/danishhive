@@ -15,7 +15,7 @@ import { ContractSystem } from "@/components/ContractSystem";
 import { BackButton } from "@/components/ui/back-button";
 import BankAutocomplete from "@/components/BankAutocomplete";
 import { GDPRCompliance } from "@/components/GDPRCompliance";
-
+import { useLanguage } from "@/contexts/LanguageContext";
 interface Profile {
   id: string;
   user_id: string;
@@ -54,7 +54,7 @@ const Settings = () => {
   const [accountNumber, setAccountNumber] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<"danish_bank" | "iban" | "paypal">("danish_bank");
   const [paypalEmail, setPaypalEmail] = useState("");
-
+  const { t } = useLanguage();
   useEffect(() => {
     if (user) {
       fetchProfile();
@@ -302,7 +302,7 @@ const Settings = () => {
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Indlæser indstillinger...</p>
+          <p className="mt-4 text-muted-foreground">{t("settings.loadingSettings")}</p>
         </div>
       </div>
     );
@@ -316,7 +316,7 @@ const Settings = () => {
             <div className="w-px h-8 bg-border"></div>
             <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
               <SettingsIcon className="h-8 w-8" />
-              Indstillinger
+              {t("nav.settings")}
             </h1>
           </div>
           <div className="flex gap-2">
@@ -327,13 +327,13 @@ const Settings = () => {
                 className="flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
               >
                 <Save className="h-4 w-4" />
-                {saving ? "Gemmer..." : "Gem Ændringer"}
+                {saving ? t("completeProfile.saving") : "Gem Ændringer"}
               </Button>
             )}
             <ThemeToggle />
             <BackButton />
             <Button onClick={signOut} variant="destructive" size="sm">
-              Log Ud
+            {t("nav.logout")}
             </Button>
           </div>
         </div>
@@ -349,7 +349,7 @@ const Settings = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Lock className="h-5 w-5" />
-              Kontosikkerhed
+              {t("profile.account_security")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -357,11 +357,11 @@ const Settings = () => {
             <div className="space-y-4">
               <h3 className="text-lg font-medium flex items-center gap-2">
                 <Mail className="h-4 w-4" />
-                Email Adresse
+                {t("settings.emailAddress")}
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
                 <div className="sm:col-span-2">
-                  <Label htmlFor="new_email">Ny Email</Label>
+                  <Label htmlFor="new_email">{t("settings.newEmail")}</Label>
                   <Input
                     id="new_email"
                     type="email"
@@ -371,11 +371,11 @@ const Settings = () => {
                   />
                 </div>
                 <Button onClick={updateEmail} disabled={saving}>
-                  Opdater Email
+                {t("settings.updateEmail")}
                 </Button>
               </div>
               <p className="text-sm text-muted-foreground">
-                Du vil modtage en bekræftelses email på den nye adresse.
+              {t("settings.emailConfirmNotice")}
               </p>
             </div>
 
@@ -383,10 +383,10 @@ const Settings = () => {
 
             {/* Password Update */}
             <div className="space-y-4">
-              <h3 className="text-lg font-medium">Ændre Adgangskode</h3>
+              <h3 className="text-lg font-medium">{t("settings.changePassword")}</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="new_password">Ny Adgangskode</Label>
+                  <Label htmlFor="new_password">{t("settings.newPassword")}</Label>
                   <Input
                     id="new_password"
                     type="password"
@@ -395,7 +395,7 @@ const Settings = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="confirm_password">Bekræft Adgangskode</Label>
+                  <Label htmlFor="confirm_password">{t("settings.confirmPassword")}</Label>
                   <Input
                     id="confirm_password"
                     type="password"
@@ -408,7 +408,7 @@ const Settings = () => {
                 onClick={updatePassword} 
                 disabled={saving || !newPassword || !confirmPassword}
               >
-                Opdater Adgangskode
+                {t("settings.updatePassword")}
               </Button>
             </div>
           </CardContent>
@@ -420,12 +420,12 @@ const Settings = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MapPin className="h-5 w-5" />
-                Adresse Oplysninger
+                {t("settings.addressInfo")}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="address">Adresse</Label>
+              <Label htmlFor="address">{t("address.label")}</Label>
               <Input
                 id="address"
                 value={profile?.address || ""}
@@ -436,7 +436,7 @@ const Settings = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="postal_code">Postnummer</Label>
+                <Label htmlFor="postal_code">{t("contact.postcode")}</Label>
                 <Input
                   id="postal_code"
                   value={profile?.postal_code || ""}
@@ -464,7 +464,7 @@ const Settings = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CreditCard className="h-5 w-5" />
-                Bankoplysninger
+                {t("settings.bankInfo")}
               </CardTitle>
             </CardHeader>
           <CardContent>
@@ -512,33 +512,33 @@ const Settings = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Shield className="h-5 w-5" />
-                MitID Verificering
+                {t("settings.mitidVerification")}
               </CardTitle>
             </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <p className="font-medium">Verificering Status</p>
+                <p className="font-medium">{t("settings.verificationStatus")}</p>
                 <div className="flex items-center gap-2">
                   {profile?.mitid_verified ? (
                     <>
                       <CheckCircle className="h-4 w-4 text-green-600" />
                       <Badge variant="default" className="bg-green-100 text-green-800">
-                        Verificeret
+                      {t("profile.verified")}
                       </Badge>
                     </>
                   ) : (
                     <>
                       <AlertCircle className="h-4 w-4 text-orange-600" />
                       <Badge variant="secondary" className="bg-orange-100 text-orange-800">
-                        Ikke Verificeret
+                      {t("settings.notVerified")}
                       </Badge>
                     </>
                   )}
                 </div>
                 {profile?.mitid_verified && profile?.mitid_verification_date && (
                   <p className="text-sm text-muted-foreground">
-                    Verificeret den {new Date(profile.mitid_verification_date).toLocaleDateString('da-DK')}
+                    {t("settings.verifiedOn")} {new Date(profile.mitid_verification_date).toLocaleDateString('da-DK')}
                   </p>
                 )}
               </div>
@@ -549,23 +549,23 @@ const Settings = () => {
                   disabled={saving}
                   className="bg-primary text-primary-foreground hover:bg-primary/90"
                 >
-                  Start MitID Verificering
+                  {t("settings.startMitidVerification")}
                 </Button>
               )}
             </div>
 
             <div className="bg-muted/50 p-4 rounded-lg">
               <p className="text-sm text-muted-foreground">
-                <strong>Note:</strong> Dette er en demo implementering. I en rigtig app ville du integrere med 
+                <strong>{t("settings.note")}:</strong> {t("settings.demoImplementation")}
                 <a 
                   href="https://www.mitid.dk/da/udvikler/" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="text-primary hover:underline ml-1"
                 >
-                  MitID Developer API
+                  {t("settings.mitidDeveloperAPI")}
                 </a> 
-                {" "}for ægte verificering.
+                {" "}{t("settings.forRealVerification")}
               </p>
             </div>
           </CardContent>

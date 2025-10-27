@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { BackButton } from "@/components/ui/back-button";
 import { AdminPanel } from "@/components/AdminPanel";
@@ -29,6 +30,7 @@ import {
 
 const AdminDashboard = () => {
   const { user, signOut } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
 
@@ -43,12 +45,12 @@ const AdminDashboard = () => {
         {/* Welcome Section */}
         <div className="text-center py-8">
           <h2 className="mb-4 text-4xl font-bold text-header-dark">
-            Admin Dashboard
+            {t('admin.dashboard')}
           </h2>
           <p className="text-xl text-muted-foreground mb-4">
-            Administrer brugere, opgaver og systemindstillinger
+            {t('admin.subtitle')}
           </p>
-          <p className="text-lg text-muted-foreground">Logget ind som admin: {user.email}</p>
+          <p className="text-lg text-muted-foreground">{t('admin.logged_in_as')}: {user.email}</p>
         </div>
 
         {/* Admin Functions Tabs */}
@@ -56,35 +58,35 @@ const AdminDashboard = () => {
           <TabsList className="grid w-full grid-cols-8 mb-8">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <Shield className="h-4 w-4" />
-              Oversigt
+              {t('admin.overview')}
             </TabsTrigger>
             <TabsTrigger value="revenue" className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4" />
-              Omsætning
+              {t('admin.revenue')}
             </TabsTrigger>
             <TabsTrigger value="users" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
-              Brugere
+              {t('admin.users')}
             </TabsTrigger>
             <TabsTrigger value="payroll" className="flex items-center gap-2">
               <CreditCard className="h-4 w-4" />
-              Løn & Betaling
+              {t('admin.payroll')}
             </TabsTrigger>
             <TabsTrigger value="coupons" className="flex items-center gap-2">
               <Ticket className="h-4 w-4" />
-              Kuponer
+              {t('admin.coupons')}
             </TabsTrigger>
             <TabsTrigger value="images" className="flex items-center gap-2">
               <Image className="h-4 w-4" />
-              Billeder
+              {t('admin.images')}
             </TabsTrigger>
             <TabsTrigger value="reports" className="flex items-center gap-2">
               <AlertTriangle className="h-4 w-4" />
-              Rapporter
+              {t('admin.reports')}
             </TabsTrigger>
             <TabsTrigger value="translations" className="flex items-center gap-2">
               <Languages className="h-4 w-4" />
-              Oversættelser
+              {t('admin.translations')}
             </TabsTrigger>
           </TabsList>
 
@@ -93,7 +95,7 @@ const AdminDashboard = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Shield className="h-5 w-5" />
-                  System Administration
+                  {t('admin.system_administration')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -107,7 +109,7 @@ const AdminDashboard = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <TrendingUp className="h-5 w-5" />
-                  Omsætning & Økonomi
+                  {t('admin.revenue_economy')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -132,7 +134,7 @@ const AdminDashboard = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5" />
-                  Brugeradministration
+                  {t('admin.user_management')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -147,7 +149,7 @@ const AdminDashboard = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <CreditCard className="h-5 w-5" />
-                    Freelancer Lønadministration
+                    {t('admin.freelancer_payroll')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -162,7 +164,7 @@ const AdminDashboard = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <CreditCard className="h-5 w-5" />
-                    Medlemskabsbetalinger
+                    {t('admin.membership_payments')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -177,7 +179,7 @@ const AdminDashboard = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Ticket className="h-5 w-5" />
-                  Kuponkode Administration
+                  {t('admin.coupon_management')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -191,7 +193,7 @@ const AdminDashboard = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Image className="h-5 w-5" />
-                  Billedgodkendelse
+                  {t('admin.image_approval')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -205,7 +207,7 @@ const AdminDashboard = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <AlertTriangle className="h-5 w-5" />
-                  Rapportadministration
+                  {t('admin.report_management')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -219,7 +221,7 @@ const AdminDashboard = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Languages className="h-5 w-5" />
-                  Oversættelsesadministration
+                  {t('admin.translation_management')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
