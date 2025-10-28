@@ -2,8 +2,9 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BackButton } from '@/components/ui/back-button';
 import { FileText, Scale, Shield, AlertTriangle } from 'lucide-react';
-
+import { useLanguage } from "@/contexts/LanguageContext";
 const TermsOfService = () => {
+  const { t } = useLanguage();
   return (
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-4xl mx-auto space-y-6">
@@ -183,7 +184,7 @@ const TermsOfService = () => {
             <div>
               <h3 className="text-xl font-semibold mb-3">Kontaktoplysninger</h3>
               <div className="bg-muted p-4 rounded-lg">
-                <p><strong>Danish Hive ApS</strong></p>
+                <p><strong>{t("privacy.company")}</strong></p>
                 <p>CVR: [CVR-nummer]</p>
                 <p>Email: support@danishhive.dk</p>
                 <p>Telefon: +45 XX XX XX XX</p>

@@ -7,7 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Download, Droplets, Calendar, Receipt, Eye } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-
+import { useLanguage } from "@/contexts/LanguageContext";
 interface HoneyDropPurchase {
   id: string;
   created_at: string;
@@ -26,7 +26,7 @@ export const HoneyDropsPurchaseHistory: React.FC = () => {
   const [purchases, setPurchases] = useState<HoneyDropPurchase[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPurchase, setSelectedPurchase] = useState<HoneyDropPurchase | null>(null);
-
+  const { t } = useLanguage();
   useEffect(() => {
     if (user) {
       fetchPurchaseHistory();
@@ -152,7 +152,7 @@ Tak for dit køb!
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Droplets className="h-5 w-5 text-amber-500" />
-            Købshistorik - Honningdråber
+            {t("orders.purchaseHistoryHoneyDrops")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -168,7 +168,7 @@ Tak for dit køb!
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Droplets className="h-5 w-5 text-amber-500" />
-            Købshistorik - Honningdråber
+            {t("orders.purchaseHistoryHoneyDrops")}
           </CardTitle>
           {purchases.length > 0 && (
             <Button
@@ -187,8 +187,8 @@ Tak for dit køb!
         {purchases.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <Droplets className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Ingen køb endnu</p>
-            <p className="text-sm">Dine honningdråbekøb vil vises her</p>
+            <p>{t("honey.noPurchases")}</p>
+            <p className="text-sm">{t("honey.noPurchasesDesc")}</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -206,7 +206,7 @@ Tak for dit køb!
                         <Droplets className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                       </div>
                       <div>
-                        <div className="font-medium">{purchase.honey_drops} Honningdråber</div>
+                        <div className="font-medium">{purchase.honey_drops} {t("honey.honeyDrops")}</div>
                         <div className="text-sm text-muted-foreground flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
                           {new Date(purchase.created_at).toLocaleDateString('da-DK', {
@@ -229,17 +229,17 @@ Tak for dit køb!
 
                   <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground">
                     <div>
-                      <span className="font-medium">Subtotal:</span> {formatPrice(subtotal)} kr
+                      <span className="font-medium">{t("honey.subtotal")}</span> {formatPrice(subtotal)} kr
                     </div>
                     <div>
-                      <span className="font-medium">Moms (25%):</span> {formatPrice(vat)} kr
+                      <span className="font-medium">{t("honey.vat25")}</span> {formatPrice(vat)} kr
                     </div>
                     <div>
-                      <span className="font-medium">Pris pr. dråbe:</span> 2,50 kr (inkl. moms)
+                      <span className="font-medium">{t("honey.pricePerDrop")}</span> {t("honey.pricePerDropWithVAT")}
                     </div>
                     <div>
                       <Badge variant="outline" className="w-fit">
-                        {purchase.status === 'completed' ? 'Betalt' : purchase.status}
+                        {purchase.status === 'completed' ? t("honey.paid") : purchase.status}
                       </Badge>
                     </div>
                   </div>
@@ -253,12 +253,12 @@ Tak for dit køb!
                           onClick={() => setSelectedPurchase(purchase)}
                         >
                           <Eye className="h-4 w-4 mr-2" />
-                          Se kvittering
+                          {t("honey.viewReceipt")}
                         </Button>
                       </DialogTrigger>
                       <DialogContent className="max-w-md">
                         <DialogHeader>
-                          <DialogTitle>Kvittering</DialogTitle>
+                          <DialogTitle>{t("honey.receipt")}</DialogTitle>
                         </DialogHeader>
                         <div className="space-y-4">
                           <pre className="text-xs bg-muted p-4 rounded-lg overflow-auto whitespace-pre-wrap">
@@ -274,7 +274,7 @@ Tak for dit køb!
                       onClick={() => downloadReceipt(purchase)}
                     >
                       <Download className="h-4 w-4 mr-2" />
-                      Download
+                      {t("honey.download")}
                     </Button>
                   </div>
                 </div>

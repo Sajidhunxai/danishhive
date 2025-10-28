@@ -2,8 +2,10 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BackButton } from '@/components/ui/back-button';
 import { Shield, Mail, Phone, MapPin, Calendar } from 'lucide-react';
-
+import { useNavigate } from 'react-router-dom';
+import { useLanguage } from "@/contexts/LanguageContext";
 const PrivacyPolicy = () => {
+  const { t } = useLanguage();
   return (
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-4xl mx-auto space-y-6">
@@ -11,171 +13,168 @@ const PrivacyPolicy = () => {
           <BackButton />
           <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
             <Shield className="h-8 w-8" />
-            Privatlivspolitik
+            {t("privacy.title")}
           </h1>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Generelle oplysninger</CardTitle>
+            <CardTitle>{t("privacy.generalInfo")}</CardTitle>
           </CardHeader>
           <CardContent className="prose dark:prose-invert max-w-none space-y-6">
             <div>
-              <p><strong>Sidst opdateret:</strong> {new Date().toLocaleDateString('da-DK')}</p>
+              <p><strong>{t("privacy.LastUpdated")}:</strong> {new Date().toLocaleDateString('da-DK')}</p>
               <p>
-                Denne privatlivspolitik beskriver, hvordan Danish Hive ("vi", "os", "vores") 
-                indsamler, bruger og beskytter dine personlige oplysninger, når du bruger vores platform.
+              {t("privacy.intro")}
               </p>
             </div>
 
             <div>
               <h3 className="text-xl font-semibold mb-3 flex items-center gap-2">
                 <MapPin className="h-5 w-5" />
-                Dataansvarlig
+                {t("privacy.controller")}
               </h3>
               <div className="bg-muted p-4 rounded-lg">
-                <p><strong>Danish Hive ApS</strong></p>
+                <p><strong>{t("privacy.company")}</strong></p>
                 <p>CVR: [CVR-nummer]</p>
-                <p>Adresse: [Adresse]</p>
-                <p>Email: privacy@danishhive.dk</p>
-                <p>Telefon: +45 XX XX XX XX</p>
+                <p>{t("address.label")}: [Adresse]</p>
+                <p>{t("common.email")}: privacy@danishhive.dk</p>
+                <p>{t("profile.phone")}: +45 XX XX XX XX</p>
               </div>
             </div>
 
             <div>
-              <h3 className="text-xl font-semibold mb-3">Hvilke oplysninger indsamler vi?</h3>
+              <h3 className="text-xl font-semibold mb-3">{t("privacy.collectTitle")}</h3>
               <div className="space-y-4">
                 <div>
-                  <h4 className="font-medium">Kontooplysninger</h4>
+                  <h4 className="font-medium">{t("privacy.collect.account")}</h4>
                   <ul className="list-disc list-inside text-muted-foreground">
-                    <li>Navn, email og telefonnummer</li>
-                    <li>Adresse og bopælsoplysninger</li>
-                    <li>Profilbillede og CV</li>
-                    <li>Færdigheder og arbejdserfaring</li>
+                    <li>{t("privacy.data.contact")}</li>
+                    <li>{t("privacy.data.address")}</li>
+                    <li>{t("privacy.data.profile")}</li>
+                    <li>{t("privacy.data.skills")}</li>
                   </ul>
                 </div>
                 <div>
-                  <h4 className="font-medium">Betalingsoplysninger</h4>
+                  <h4 className="font-medium">{t("privacy.collect.payment")}</h4>
                   <ul className="list-disc list-inside text-muted-foreground">
-                    <li>Bankkontooplysninger (IBAN/kontonummer)</li>
-                    <li>MitID verifikationsdata</li>
-                    <li>Betalingshistorik</li>
+                    <li>{t("privacy.data.bank")}</li>
+                    <li>{t("privacy.data.mitid")}</li>
+                    <li>{t("privacy.data.paymentHistory")}</li>
                   </ul>
                 </div>
                 <div>
-                  <h4 className="font-medium">Platformsaktivitet</h4>
+                  <h4 className="font-medium">{t("privacy.collect.activity")}</h4>
                   <ul className="list-disc list-inside text-muted-foreground">
-                    <li>Jobopslag og ansøgninger</li>
-                    <li>Beskeder og kommunikation</li>
-                    <li>Kontrakter og aftaler</li>
-                    <li>Søge- og browseraktivitet</li>
+                    <li>{t("privacy.data.jobs")}</li>
+                    <li>{t("privacy.data.messages")}</li>
+                    <li>{t("privacy.data.contracts")}</li>
+                    <li>{t("privacy.data.activity")}</li>
                   </ul>
                 </div>
               </div>
             </div>
 
             <div>
-              <h3 className="text-xl font-semibold mb-3">Hvorfor bruger vi dine oplysninger?</h3>
+              <h3 className="text-xl font-semibold mb-3">{t("privacy.usageTitle")}</h3>
               <div className="space-y-3">
                 <div className="border-l-4 border-primary pl-4">
-                  <h4 className="font-medium">Kontraktopfyldelse</h4>
+                  <h4 className="font-medium">{t("privacy.usage.contract")}</h4>
                   <p className="text-muted-foreground">
-                    For at kunne levere vores tjenester, facilitere jobmatch og håndtere betalinger.
+                  {t("privacy.usage.contractDesc")}
                   </p>
                 </div>
                 <div className="border-l-4 border-blue-500 pl-4">
-                  <h4 className="font-medium">Legitime interesser</h4>
+                  <h4 className="font-medium">{t("privacy.usage.legitimate")}</h4>
                   <p className="text-muted-foreground">
-                    Forbedring af platformen, forebyggelse af misbrug og kundesupport.
+                  {t("privacy.usage.legitimateDesc")}
                   </p>
                 </div>
                 <div className="border-l-4 border-green-500 pl-4">
-                  <h4 className="font-medium">Samtykke</h4>
+                  <h4 className="font-medium">{t("privacy.usage.consent")}</h4>
                   <p className="text-muted-foreground">
-                    Markedsføring, nyhedsbreve og ikke-nødvendige cookies.
+                  {t("privacy.usage.consentDesc")}
                   </p>
                 </div>
                 <div className="border-l-4 border-orange-500 pl-4">
-                  <h4 className="font-medium">Lovpligtige forpligtelser</h4>
+                  <h4 className="font-medium">{t("privacy.usage.legal")}</h4>
                   <p className="text-muted-foreground">
-                    Skattemæssige rapportering og anti-hvidvask kontrol.
+                  {t("privacy.usage.legalDesc")}
                   </p>
                 </div>
               </div>
             </div>
 
             <div>
-              <h3 className="text-xl font-semibold mb-3">Deling af oplysninger</h3>
-              <p>Vi deler kun dine oplysninger i følgende tilfælde:</p>
+              <h3 className="text-xl font-semibold mb-3">{t("privacy.shareTitle")}</h3>
+              <p>{t("privacy.shareDesc")}</p>
               <ul className="list-disc list-inside space-y-2">
-                <li>Med andre brugere som del af jobmatch-processen</li>
-                <li>Med betalingsudbydere for at håndtere transaktioner</li>
-                <li>Med myndigheder når det er lovpligtigt</li>
-                <li>Med tjenesteudbydere der hjælper med at drive platformen</li>
+                <li>{t("privacy.share.point1")}</li>
+                <li>{t("privacy.share.point2")}</li>
+                <li>{t("privacy.share.point3")}</li>
+                <li>{t("privacy.share.point4")}</li>
               </ul>
             </div>
 
             <div>
-              <h3 className="text-xl font-semibold mb-3">Dine rettigheder</h3>
+              <h3 className="text-xl font-semibold mb-3">{t("privacy.rightsTitle")}</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="p-4 border rounded-lg">
-                  <h4 className="font-medium">Ret til indsigt</h4>
-                  <p className="text-sm text-muted-foreground">Se hvilke data vi har om dig</p>
+                  <h4 className="font-medium">{t("privacy.right.access")}</h4>
+                  <p className="text-sm text-muted-foreground">{t("privacy.right.accessDesc")}</p>
                 </div>
                 <div className="p-4 border rounded-lg">
-                  <h4 className="font-medium">Ret til berigtigelse</h4>
-                  <p className="text-sm text-muted-foreground">Ret fejl i dine data</p>
+                  <h4 className="font-medium">{t("privacy.right.rectify")}</h4>
+                  <p className="text-sm text-muted-foreground">{t("privacy.right.rectifyDesc")}</p>
                 </div>
                 <div className="p-4 border rounded-lg">
-                  <h4 className="font-medium">Ret til sletning</h4>
-                  <p className="text-sm text-muted-foreground">Slet dine data</p>
+                  <h4 className="font-medium">{t("privacy.right.delete")}</h4>
+                  <p className="text-sm text-muted-foreground">{t("privacy.right.deleteDesc")}</p>
                 </div>
                 <div className="p-4 border rounded-lg">
-                  <h4 className="font-medium">Ret til dataportabilitet</h4>
-                  <p className="text-sm text-muted-foreground">Download dine data</p>
+                  <h4 className="font-medium">{t("privacy.right.portability")}</h4>
+                  <p className="text-sm text-muted-foreground">{t("privacy.right.portabilityDesc")}</p>
                 </div>
               </div>
             </div>
 
             <div>
-              <h3 className="text-xl font-semibold mb-3">Datasikkerhed</h3>
-              <p>Vi implementerer passende tekniske og organisatoriske sikkerhedsforanstaltninger:</p>
+              <h3 className="text-xl font-semibold mb-3">{t("privacy.securityTitle")}</h3>
+              <p>{t("privacy.securityDesc")}:</p>
               <ul className="list-disc list-inside space-y-1">
-                <li>End-to-end kryptering af følsomme data</li>
-                <li>Regelmæssige sikkerhedsopdateringer</li>
-                <li>Adgangskontrol og medarbejdertræning</li>
-                <li>Regelmæssige sikkerhedsaudit</li>
+                <li>{t("privacy.security.point1")}</li>
+                <li>{t("privacy.security.point2")}</li>
+                <li>{t("privacy.security.point3")}</li>
+                <li>{t("privacy.security.point4")}</li>
               </ul>
             </div>
 
             <div>
-              <h3 className="text-xl font-semibold mb-3">Opbevaring af data</h3>
-              <p>Vi opbevarer dine oplysninger kun så længe det er nødvendigt:</p>
+              <h3 className="text-xl font-semibold mb-3">{t("privacy.storageTitle")}</h3>
+              <p>{t("privacy.storageDesc")}:</p>
               <ul className="list-disc list-inside space-y-1">
-                <li>Kontooplysninger: Så længe din konto er aktiv</li>
-                <li>Betalingsdata: 5 år (bogføringsloven)</li>
-                <li>Kommunikation: 3 år efter sidste aktivitet</li>
-                <li>Cookies: Maksimalt 13 måneder</li>
+                <li>{t("privacy.storage.point1")}</li>
+                <li>{t("privacy.storage.point2")}</li>
+                <li>{t("privacy.storage.point3")}</li>
+                <li>{t("privacy.storage.point4")}</li>
               </ul>
             </div>
 
             <div>
               <h3 className="text-xl font-semibold mb-3 flex items-center gap-2">
                 <Mail className="h-5 w-5" />
-                Kontakt os
+                {t("privacy.contactTitle")}
               </h3>
               <p>
-                Hvis du har spørgsmål til denne privatlivspolitik eller vil udøve dine rettigheder, 
-                kan du kontakte os på:
+              {t("privacy.contactDesc")}
               </p>
               <div className="bg-muted p-4 rounded-lg mt-3">
-                <p><strong>Email:</strong> privacy@danishhive.dk</p>
-                <p><strong>Telefon:</strong> +45 XX XX XX XX</p>
-                <p><strong>Post:</strong> Danish Hive ApS, [Adresse]</p>
+                <p><strong>{t("common.email")}:</strong> privacy@danishhive.dk</p>
+                <p><strong>{t("profile.phone")}:</strong> +45 XX XX XX XX</p>
+                <p><strong>{t("common.post")}:</strong> {t("privacy.company")}, [Adresse]</p>
               </div>
               <p className="mt-3 text-sm text-muted-foreground">
-                Du har altid ret til at klage til Datatilsynet, hvis du mener, 
-                vi ikke overholder reglerne for databeskyttelse.
+              {t("privacy.complaint")}
               </p>
             </div>
           </CardContent>

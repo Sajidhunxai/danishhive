@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, MapPin, Clock, Building, Users, Search, CheckCircle, User } from "lucide-react";
 import { CompleteJobDialog } from "@/components/CompleteJobDialog";
-
+import { useLanguage } from "@/contexts/LanguageContext";
 interface Job {
   id: string;
   client_id: string;
@@ -44,6 +44,7 @@ const JobsSection = () => {
   const [loading, setLoading] = useState(true);
   const [showAddJob, setShowAddJob] = useState(false);
   const [saving, setSaving] = useState(false);
+  const { t } = useLanguage();
   const [userRole, setUserRole] = useState<string | null>(null);
   const [completeJobDialog, setCompleteJobDialog] = useState<{ isOpen: boolean; job: Job | null }>({
     isOpen: false,
@@ -233,13 +234,13 @@ const JobsSection = () => {
         <div className="flex items-center gap-2">
           <Building className="h-6 w-6" />
           <h2 className="text-2xl font-bold text-foreground">
-            {userRole === 'client' ? 'Mine Opgaver' : 'Tilgængelige Opgaver'}
+          {userRole === 'client' ? t("jobs.myTasks") : t("jobs.availableTasks")}
           </h2>
         </div>
         {userRole === 'client' && (
           <Button onClick={() => setShowAddJob(true)} className="bg-primary text-primary-foreground">
             <Plus className="h-4 w-4 mr-2" />
-            Opret Opgave
+            {t("jobs.createTask")}
           </Button>
         )}
       </div>
@@ -249,7 +250,7 @@ const JobsSection = () => {
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           type="text"
-          placeholder="Søg i opgaver..."
+          placeholder={t("jobs.searchPlaceholder")}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pl-10"
@@ -259,68 +260,68 @@ const JobsSection = () => {
       {showAddJob && userRole === 'client' && (
         <Card className="border-2 border-primary/20">
           <CardHeader>
-            <CardTitle>Ny Opgave</CardTitle>
+            <CardTitle>{t("jobs.newTask")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="job_title">Titel</Label>
+                <Label htmlFor="job_title">{t("jobs.title")}</Label>
                 <Input
                   id="job_title"
                   value={newJob.title}
                   onChange={(e) => setNewJob(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="Beskrivende titel for opgaven"
+                  placeholder={t("jobs.titlePlaceholder")}
                 />
               </div>
               <div>
-                <Label htmlFor="project_type">Opgave Type</Label>
+                <Label htmlFor="project_type">{t("jobs.type")}</Label>
                 <select
                   id="project_type"
                   value={newJob.project_type}
                   onChange={(e) => setNewJob(prev => ({ ...prev, project_type: e.target.value }))}
                   className="w-full px-3 py-2 border border-input bg-background rounded-md"
                 >
-                  <option value="one-time">Engangsprojekt</option>
-                  <option value="ongoing">Løbende samarbejde</option>
-                  <option value="hourly">Timebaseret</option>
+                  <option value="one-time">{t("jobs.type.oneTime")}</option>
+                  <option value="ongoing">{t("jobs.type.ongoing")}</option>
+                  <option value="hourly">{t("jobs.type.hourly")}</option>
                 </select>
               </div>
             </div>
 
             <div>
-              <Label htmlFor="job_description">Beskrivelse</Label>
+              <Label htmlFor="job_description">{t("jobs.description")}</Label>
               <Textarea
                 id="job_description"
                 value={newJob.description}
                 onChange={(e) => setNewJob(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Detaljeret beskrivelse af opgaven..."
+                placeholder={t("jobs.descriptionPlaceholder")}
                 className="min-h-[100px]"
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <Label htmlFor="budget_min">Min Budget (DKK)</Label>
+                    <Label htmlFor="budget_min">{t("jobs.minBudget")}</Label>
                 <Input
                   id="budget_min"
                   type="number"
                   value={newJob.budget_min}
                   onChange={(e) => setNewJob(prev => ({ ...prev, budget_min: e.target.value }))}
-                  placeholder="0"
+                  placeholder={t("jobs.minBudgetPlaceholder")}
                 />
               </div>
               <div>
-                <Label htmlFor="budget_max">Max Budget (DKK)</Label>
+                <Label htmlFor="budget_max">{t("jobs.maxBudget")}</Label>
                 <Input
                   id="budget_max"
                   type="number"
                   value={newJob.budget_max}
                   onChange={(e) => setNewJob(prev => ({ ...prev, budget_max: e.target.value }))}
-                  placeholder="0"
+                  placeholder={t("jobs.maxBudgetPlaceholder")}
                 />
               </div>
               <div>
-                <Label htmlFor="deadline">Deadline</Label>
+                <Label htmlFor="deadline">{t("jobs.deadline")}</Label>
                 <Input
                   id="deadline"
                   type="date"
@@ -332,12 +333,12 @@ const JobsSection = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="location">Lokation</Label>
+                <Label htmlFor="location">{t("jobs.location")}</Label>
                 <Input
                   id="location"
                   value={newJob.location}
                   onChange={(e) => setNewJob(prev => ({ ...prev, location: e.target.value }))}
-                  placeholder="By eller region"
+                  placeholder={t("jobs.locationPlaceholder")}
                 />
               </div>
               <div className="flex items-center space-x-2 pt-6">
@@ -348,19 +349,19 @@ const JobsSection = () => {
                   onChange={(e) => setNewJob(prev => ({ ...prev, is_remote: e.target.checked }))}
                   className="rounded"
                 />
-                <Label htmlFor="is_remote">Remote arbejde muligt</Label>
+                <Label htmlFor="is_remote">{t("jobs.remoteOption")}</Label>
               </div>
             </div>
 
             <div>
-              <Label>Krævede Kompetencer</Label>
+              <Label>{t("jobs.skillsRequired")}</Label>
               <div className="space-y-2">
                 <div className="flex gap-2">
                   <Input
                     value={newSkill}
                     onChange={(e) => setNewSkill(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && addSkill()}
-                    placeholder="Tilføj kompetence..."
+                    placeholder={t("jobs.addSkillPlaceholder")}
                   />
                   <Button onClick={addSkill} type="button" variant="outline">
                     <Plus className="h-4 w-4" />
@@ -379,10 +380,10 @@ const JobsSection = () => {
 
             <div className="flex gap-2">
               <Button onClick={addJob} disabled={saving}>
-                {saving ? "Opretter..." : "Opret Opgave"}
+                {saving ? t("jobs.creating") : t("jobs.createTask")}
               </Button>
               <Button onClick={() => setShowAddJob(false)} variant="outline">
-                Annuller
+                {t("jobs.cancel")}
               </Button>
             </div>
           </CardContent>
@@ -395,14 +396,14 @@ const JobsSection = () => {
             {searchQuery ? (
               <>
                 <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Ingen opgaver fundet for "{searchQuery}".</p>
-                <p className="text-sm text-muted-foreground">Prøv at søge med andre nøgleord.</p>
+                          <p className="text-muted-foreground">{t("jobs.noJobsFound", { query: searchQuery })}</p>
+                <p className="text-sm text-muted-foreground">{t("jobs.tryAnother")}</p>
               </>
             ) : (
               <>
                 <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Ingen opgaver tilgængelige endnu.</p>
-                <p className="text-sm text-muted-foreground">Vær den første til at oprette en opgave!</p>
+                <p className="text-muted-foreground">{t("jobs.noJobsAvailable")}</p>
+                <p className="text-sm text-muted-foreground">{t("jobs.firstToCreate")}</p>
               </>
             )}
           </div>
@@ -414,7 +415,7 @@ const JobsSection = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Badge variant="outline">{job.project_type}</Badge>
-                    {job.is_remote && <Badge variant="secondary">Remote</Badge>}
+                    {job.is_remote && <Badge variant="secondary">{t("jobs.remote")}</Badge>}
                   </div>
                   
                   {/* Client Info */}
@@ -424,7 +425,7 @@ const JobsSection = () => {
                         {job.client_profile[0].avatar_url ? (
                           <img 
                             src={job.client_profile[0].avatar_url} 
-                            alt="Klient logo" 
+                            alt={t("jobs.clientLogo")} 
                             className="w-full h-full rounded-full object-cover"
                           />
                         ) : (
@@ -432,7 +433,7 @@ const JobsSection = () => {
                         )}
                       </div>
                       <span className="font-medium">
-                        {job.client_profile[0].company || job.client_profile[0].full_name || 'Anonym klient'}
+                        {job.client_profile[0].company || job.client_profile[0].full_name || t("jobs.anonymousClient")}
                       </span>
                     </div>
                   )}
@@ -456,7 +457,7 @@ const JobsSection = () => {
                   {job.deadline && (
                     <div className="flex items-center gap-2 text-sm">
                       <Clock className="h-4 w-4" />
-                      <span>Deadline: {formatDate(job.deadline)}</span>
+                      <span>{t("jobs.deadlineLabel", { date: formatDate(job.deadline) })}</span>
                     </div>
                   )}
                 </div>
@@ -470,7 +471,7 @@ const JobsSection = () => {
                     ))}
                     {job.skills_required.length > 3 && (
                       <Badge variant="outline" className="text-xs">
-                        +{job.skills_required.length - 3} mere
+                        +{job.skills_required.length - 3} {t("jobs.moreSkills")}
                       </Badge>
                     )}
                   </div>
@@ -483,7 +484,7 @@ const JobsSection = () => {
                       size="sm"
                       onClick={() => navigate(`/job/${job.id}`)}
                     >
-                      Vis Detaljer
+                      {t("jobs.viewDetails")}
                     </Button>
                     {job.status === 'open' && (
                       <Button 
@@ -493,7 +494,7 @@ const JobsSection = () => {
                         className="flex items-center gap-1"
                       >
                         <CheckCircle className="h-3 w-3" />
-                        Fuldført
+                          {t("jobs.completed")}
                       </Button>
                     )}
                   </div>

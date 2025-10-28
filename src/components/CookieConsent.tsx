@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-
+import { useLanguage } from "@/contexts/LanguageContext";
 interface CookieConsent {
   necessary: boolean;
   analytics: boolean;
@@ -28,7 +28,7 @@ export const CookieConsent = () => {
     marketing: false,
     preferences: false
   });
-
+  const { t } = useLanguage();
   useEffect(() => {
     // Check if user has already made a choice
     const savedConsents = localStorage.getItem('gdpr-consents');
@@ -105,30 +105,29 @@ export const CookieConsent = () => {
             <div className="flex items-start gap-4">
               <Cookie className="h-6 w-6 text-primary mt-1 flex-shrink-0" />
               <div className="flex-1">
-                <h3 className="font-semibold text-lg mb-2">Vi bruger cookies</h3>
+                <h3 className="font-semibold text-lg mb-2">{t("cookies.title")}</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Vi bruger cookies til at forbedre din oplevelse på Danish Hive. Nogle cookies er nødvendige for 
-                  at platformen fungerer, mens andre hjælper os med at forstå, hvordan du bruger vores tjeneste.
+                {t("cookies.description")}
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <Button onClick={acceptAll} className="bg-primary text-primary-foreground">
-                    Accepter alle
+                  {t("cookies.acceptAll")}
                   </Button>
                   <Button onClick={acceptNecessary} variant="outline">
-                    Kun nødvendige
+                  {t("cookies.acceptNecessary")}
                   </Button>
                   <Dialog open={showPreferences} onOpenChange={setShowPreferences}>
                     <DialogTrigger asChild>
                       <Button variant="ghost" className="flex items-center gap-2">
                         <Settings className="h-4 w-4" />
-                        Tilpas præferencer
+                        {t("cookies.customize")}
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-2xl">
                       <DialogHeader>
-                        <DialogTitle>Cookie Præferencer</DialogTitle>
+                        <DialogTitle>{t("cookies.preferencesTitle")}</DialogTitle>
                         <DialogDescription>
-                          Vælg hvilke typer cookies du tillader. Du kan altid ændre dine præferencer senere.
+                          {t("cookies.preferencesDesc")}
                         </DialogDescription>
                       </DialogHeader>
                       <div className="space-y-6 py-4">
@@ -136,32 +135,30 @@ export const CookieConsent = () => {
                         <div className="flex items-center justify-between p-4 border rounded-lg">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
-                              <h4 className="font-medium">Nødvendige cookies</h4>
-                              <Badge variant="secondary">Påkrævet</Badge>
+                              <h4 className="font-medium">{t("cookies.necessaryTitle")}</h4>
+                              <Badge variant="secondary">{t("gdpr.required")}</Badge>
                             </div>
                             <p className="text-sm text-muted-foreground">
-                              Disse cookies er nødvendige for at Danish Hive kan fungere korrekt. 
-                              De kan ikke deaktiveres.
+                              {t("cookies.necessaryDesc")}
                             </p>
                             <p className="text-xs text-muted-foreground mt-1">
-                              Inkluderer: Session cookies, sikkerhed, formdata
+                              {t("cookies.necessaryIncludes")}
                             </p>
                           </div>
                           <div className="ml-4">
-                            <Badge variant="default">Altid aktiv</Badge>
+                            <Badge variant="default">{t("cookies.alwaysActive")}</Badge>
                           </div>
                         </div>
 
                         {/* Analytics Cookies */}
                         <div className="flex items-center justify-between p-4 border rounded-lg">
                           <div className="flex-1">
-                            <h4 className="font-medium mb-2">Analyse cookies</h4>
+                            <h4 className="font-medium mb-2">{t("cookies.analyticsTitle")}</h4>
                             <p className="text-sm text-muted-foreground">
-                              Hjælper os med at forstå, hvordan besøgende interagerer med hjemmesiden 
-                              ved at indsamle og rapportere information anonymt.
+                              {t("cookies.analyticsDesc")}
                             </p>
                             <p className="text-xs text-muted-foreground mt-1">
-                              Inkluderer: Google Analytics, brugsstatistikker
+                              {t("cookies.analyticsIncludes")}
                             </p>
                           </div>
                           <div className="ml-4">
@@ -170,7 +167,7 @@ export const CookieConsent = () => {
                               size="sm"
                               onClick={() => updateConsent('analytics', !consents.analytics)}
                             >
-                              {consents.analytics ? 'Aktiveret' : 'Deaktiveret'}
+                              {consents.analytics ? t("cookies.enabled") : t("cookies.disabled")}
                             </Button>
                           </div>
                         </div>
@@ -178,13 +175,12 @@ export const CookieConsent = () => {
                         {/* Marketing Cookies */}
                         <div className="flex items-center justify-between p-4 border rounded-lg">
                           <div className="flex-1">
-                            <h4 className="font-medium mb-2">Marketing cookies</h4>
+                            <h4 className="font-medium mb-2">{t("gdpr.marketingCookies")}</h4>
                             <p className="text-sm text-muted-foreground">
-                              Bruges til at vise relevante annoncer og spore effektiviteten af 
-                              vores marketingkampagner.
+                              {t("cookies.marketingDesc")}
                             </p>
                             <p className="text-xs text-muted-foreground mt-1">
-                              Inkluderer: Facebook Pixel, Google Ads, retargeting
+                              {t("cookies.marketingIncludes")}
                             </p>
                           </div>
                           <div className="ml-4">
@@ -193,7 +189,7 @@ export const CookieConsent = () => {
                               size="sm"
                               onClick={() => updateConsent('marketing', !consents.marketing)}
                             >
-                              {consents.marketing ? 'Aktiveret' : 'Deaktiveret'}
+                              {consents.marketing ? t("cookies.enabled") : t("cookies.disabled")}
                             </Button>
                           </div>
                         </div>
@@ -201,13 +197,12 @@ export const CookieConsent = () => {
                         {/* Preference Cookies */}
                         <div className="flex items-center justify-between p-4 border rounded-lg">
                           <div className="flex-1">
-                            <h4 className="font-medium mb-2">Præference cookies</h4>
+                            <h4 className="font-medium mb-2">{t("cookies.preferenceTitle")}</h4>
                             <p className="text-sm text-muted-foreground">
-                              Gør det muligt for hjemmesiden at huske oplysninger, der ændrer 
-                              måden, siden fungerer eller ser ud på.
+                              {t("cookies.preferenceDesc")}
                             </p>
                             <p className="text-xs text-muted-foreground mt-1">
-                              Inkluderer: Sprogindstillinger, tema, layout præferencer
+                              {t("cookies.preferenceIncludes")}
                             </p>
                           </div>
                           <div className="ml-4">
@@ -216,17 +211,17 @@ export const CookieConsent = () => {
                               size="sm"
                               onClick={() => updateConsent('preferences', !consents.preferences)}
                             >
-                              {consents.preferences ? 'Aktiveret' : 'Deaktiveret'}
+                              {consents.preferences ? t("cookies.enabled") : t("cookies.disabled")}
                             </Button>
                           </div>
                         </div>
                       </div>
                       <div className="flex gap-3 pt-4">
                         <Button onClick={savePreferences} className="flex-1">
-                          Gem præferencer
+                          {t("cookies.savePreferences")}
                         </Button>
                         <Button onClick={acceptAll} variant="outline" className="flex-1">
-                          Accepter alle
+                          {t("cookies.acceptAll")}
                         </Button>
                       </div>
                     </DialogContent>

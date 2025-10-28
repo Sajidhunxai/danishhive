@@ -1289,7 +1289,7 @@ const Profile = () => {
                             />
                           </div>
                           <div>
-                            <Label htmlFor="client_name">{t('profile.client')}</Label>
+                            <Label htmlFor="client_name">{t('profile.client_label')} {t('common.name')}</Label>
                             <Input
                               id="client_name"
                               value={editingProject ? (editingProject.client_name || "") : (newProject.client_name || "")}

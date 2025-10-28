@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
+import { useLanguage } from "@/contexts/LanguageContext";
 // Danish bank registration numbers mapping
 const DANISH_BANKS: Record<string, string> = {
   "0092": "Arbejdernes Landsbank",
@@ -74,7 +74,7 @@ const BankAutocomplete: React.FC<BankAutocompleteProps> = ({
       }
     }
   }, [registrationNumber, bankName, onBankNameChange]);
-
+  const { t } = useLanguage();
   const handleRegistrationNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, "").slice(0, 4); // Only numbers, max 4 digits
     onRegistrationNumberChange(value);
@@ -93,15 +93,15 @@ const BankAutocomplete: React.FC<BankAutocompleteProps> = ({
   return (
     <div className="space-y-4">
       <div>
-        <Label htmlFor="payment_method">Betalingsmetode</Label>
+        <Label htmlFor="payment_method">{t("payment.method")}</Label>
         <Select value={paymentMethod} onValueChange={onPaymentMethodChange}>
           <SelectTrigger>
-            <SelectValue placeholder="Vælg betalingsmetode" />
+            <SelectValue placeholder={t("payment.selectMethod")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="danish_bank">Dansk bank overførsel</SelectItem>
-            <SelectItem value="iban">IBAN</SelectItem>
-            <SelectItem value="paypal">PayPal</SelectItem>
+            <SelectItem value="danish_bank">{t("payment.danishBank")}</SelectItem>
+            <SelectItem value="iban">{t("payment.iban")}</SelectItem>
+            <SelectItem value="paypal">{t("payment.paypal")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -109,53 +109,53 @@ const BankAutocomplete: React.FC<BankAutocompleteProps> = ({
       {paymentMethod === "danish_bank" && (
         <>
           <div>
-            <Label htmlFor="account_holder_name">Kontoindehaver</Label>
+            <Label htmlFor="account_holder_name">{t("payment.accountHolder")}</Label>
             <Input
               id="account_holder_name"
               value={accountHolderName}
               onChange={(e) => onAccountHolderNameChange(e.target.value)}
-              placeholder="Fulde navn på kontoen"
+              placeholder={t("payment.accountHolderPlaceholder")}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="registration_number">Registreringsnummer (4 cifre)</Label>
+              <Label htmlFor="registration_number">{t("payment.registrationNumber")}</Label>
               <Input
                 id="registration_number"
                 value={registrationNumber}
                 onChange={handleRegistrationNumberChange}
-                placeholder="0000"
+                placeholder={t("payment.registrationNumber")}
                 maxLength={4}
                 className={registrationNumber.length !== 4 && registrationNumber.length > 0 ? "border-destructive" : ""}
               />
               {registrationNumber.length > 0 && registrationNumber.length !== 4 && (
-                <p className="text-sm text-destructive mt-1">Registreringsnummer skal være præcis 4 cifre</p>
+                <p className="text-sm text-destructive mt-1">{t("payment.registrationNumberError")}</p>
               )}
             </div>
             <div>
-              <Label htmlFor="account_number">Kontonummer (6-10 cifre)</Label>
+              <Label htmlFor="account_number">{t("payment.accountNumber")}</Label>
               <Input
                 id="account_number"
                 value={accountNumber}
                 onChange={handleAccountNumberChange}
-                placeholder="123456789"
+                placeholder={t("payment.accountNumber")}
                 maxLength={10}
                 className={accountNumber.length > 0 && (accountNumber.length < 6 || accountNumber.length > 10) ? "border-destructive" : ""}
               />
               {accountNumber.length > 0 && (accountNumber.length < 6 || accountNumber.length > 10) && (
-                <p className="text-sm text-destructive mt-1">Kontonummer skal være mellem 6 og 10 cifre</p>
+                    <p className="text-sm text-destructive mt-1">{t("payment.accountNumberError")}</p>
               )}
             </div>
           </div>
 
           <div>
-            <Label htmlFor="bank_name">Bank Navn</Label>
+            <Label htmlFor="bank_name">{t("payment.bankName")}</Label>
             <Input
               id="bank_name"
               value={bankName}
               onChange={(e) => onBankNameChange(e.target.value)}
-              placeholder="Navn på din bank"
+              placeholder={t("payment.bankNamePlaceholder")}
               readOnly={DANISH_BANKS[registrationNumber] ? true : false}
               className={DANISH_BANKS[registrationNumber] ? "bg-muted" : ""}
             />
@@ -166,31 +166,31 @@ const BankAutocomplete: React.FC<BankAutocompleteProps> = ({
       {paymentMethod === "iban" && (
         <>
           <div>
-            <Label htmlFor="account_holder_name">Kontoindehaver</Label>
+            <Label htmlFor="account_holder_name">{t("payment.accountHolder")}</Label>
             <Input
               id="account_holder_name"
               value={accountHolderName}
               onChange={(e) => onAccountHolderNameChange(e.target.value)}
-              placeholder="Fulde navn på kontoen"
+              placeholder={t("payment.accountHolderPlaceholder")}
             />
           </div>
           <div>
-            <Label htmlFor="iban">IBAN</Label>
+            <Label htmlFor="iban">{t("payment.iban")}</Label>
             <Input
               id="iban"
               value={iban}
               onChange={handleIbanChange}
-              placeholder="DK1234567890123456"
+              placeholder={t("payment.ibanPlaceholder")}
               maxLength={34}
             />
           </div>
           <div>
-            <Label htmlFor="bank_name">Bank Navn</Label>
+            <Label htmlFor="bank_name">{t("payment.bankName")}</Label>
             <Input
               id="bank_name"
               value={bankName}
               onChange={(e) => onBankNameChange(e.target.value)}
-              placeholder="Navn på din bank"
+              placeholder={t("payment.bankNamePlaceholder")}
             />
           </div>
         </>
@@ -198,13 +198,13 @@ const BankAutocomplete: React.FC<BankAutocompleteProps> = ({
 
       {paymentMethod === "paypal" && (
         <div>
-          <Label htmlFor="paypal_email">PayPal Email</Label>
+          <Label htmlFor="paypal_email">{t("payment.paypalEmail")}</Label>
           <Input
             id="paypal_email"
             type="email"
             value={paypalEmail}
             onChange={(e) => onPaypalEmailChange(e.target.value)}
-            placeholder="din-paypal@email.dk"
+            placeholder={t("payment.paypalPlaceholder")}
           />
         </div>
       )}
