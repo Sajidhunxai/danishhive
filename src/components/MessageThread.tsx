@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -56,31 +56,21 @@ export const MessageThread: React.FC<MessageThreadProps> = ({ conversation }) =>
 
   const fetchMessages = async () => {
     try {
-      const { data, error } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('conversation_id', conversation.id)
-        .order('created_at', { ascending: true });
-
-      if (error) throw error;
-
-      // Get sender profiles for each message
-      const messagesWithProfiles = await Promise.all(
-        (data || []).map(async (message) => {
-          const { data: senderProfile } = await supabase
-            .from('profiles')
-            .select('full_name, avatar_url')
-            .eq('user_id', message.sender_id)
-            .single();
-
-          return {
-            ...message,
-            sender_profile: senderProfile
-          };
-        })
-      );
-
-      setMessages(messagesWithProfiles);
+      // Conversation ID is already provided from ConversationsList (backend uses conv-<sorted>
+      const otherUserId = conversation.client_id === user?.id ? conversation.freelancer_id : conversation.client_id;
+      const result = await api.messages.getConversationWithUser(otherUserId);
+      const msgs = (result?.messages || []).map((m: any) => ({
+        id: m.id,
+        conversation_id: conversation.id,
+        sender_id: m.sender.id,
+        content: m.content,
+        created_at: m.createdAt,
+        updated_at: m.createdAt,
+        sender_profile: m.sender?.profile
+          ? { full_name: m.sender.profile.fullName, avatar_url: m.sender.profile.avatarUrl }
+          : undefined,
+      })) as Message[];
+      setMessages(msgs);
     } catch (error: any) {
       console.error('Error fetching messages:', error);
       toast({
@@ -98,58 +88,31 @@ export const MessageThread: React.FC<MessageThreadProps> = ({ conversation }) =>
 
     setSending(true);
     try {
-      // Insert the message
-      const { data: messageData, error: messageError } = await supabase
-        .from('messages')
-        .insert({
-          conversation_id: conversation.id,
-          sender_id: user.id,
-          content: newMessage.trim()
-        })
-        .select('*')
-        .single();
-
-      if (messageError) throw messageError;
-
-      // Get sender profile for the new message
-      const { data: senderProfile } = await supabase
-        .from('profiles')
-        .select('full_name, avatar_url')
-        .eq('user_id', user.id)
-        .single();
-
-      const messageWithProfile = {
-        ...messageData,
-        sender_profile: senderProfile
-      };
-
-      // Add message to local state
-      setMessages(prev => [...prev, messageWithProfile]);
-      setNewMessage('');
-
-      // Send email notification to the other user
       const recipientId = conversation.client_id === user.id 
         ? conversation.freelancer_id 
         : conversation.client_id;
-      
-      const senderName = conversation.client_id === user.id
-        ? conversation.client_profile?.full_name || 'En klient'
-        : conversation.freelancer_profile?.full_name || 'En freelancer';
 
-      try {
-        await supabase.functions.invoke('send-message-notification', {
-          body: {
-            recipientId,
-            senderName,
-            messageContent: newMessage.trim(),
-            conversationId: conversation.id
-          }
-        });
-      } catch (emailError) {
-        console.error('Error sending email notification:', emailError);
-        // Don't show error to user as the message was sent successfully
-      }
+      const sent = await api.messages.sendMessage({
+        receiverId: recipientId,
+        content: newMessage.trim(),
+        conversationId: conversation.id,
+      });
 
+      const m = (sent?.message || sent) as any;
+      const appended: Message = {
+        id: m.id,
+        conversation_id: conversation.id,
+        sender_id: user.id,
+        content: m.content,
+        created_at: m.createdAt,
+        updated_at: m.createdAt,
+        sender_profile: m.sender?.profile
+          ? { full_name: m.sender.profile.fullName, avatar_url: m.sender.profile.avatarUrl }
+          : undefined,
+      };
+
+      setMessages(prev => [...prev, appended]);
+      setNewMessage('');
       scrollToBottom();
     } catch (error: any) {
       console.error('Error sending message:', error);
@@ -171,31 +134,13 @@ export const MessageThread: React.FC<MessageThreadProps> = ({ conversation }) =>
     scrollToBottom();
   }, [messages]);
 
-  // Set up real-time subscription for new messages
+  // Simple polling for updates
   useEffect(() => {
-    const channel = supabase
-      .channel(`messages-${conversation.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `conversation_id=eq.${conversation.id}`
-        },
-        (payload) => {
-          // Only add if it's not from the current user (to avoid duplication)
-          if (payload.new.sender_id !== user?.id) {
-            fetchMessages(); // Refetch to get sender profile data
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [conversation.id, user?.id]);
+    const id = setInterval(() => {
+      fetchMessages();
+    }, 8000);
+    return () => clearInterval(id);
+  }, [conversation.id]);
 
   const getOtherUser = () => {
     if (conversation.client_id === user?.id) {

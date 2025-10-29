@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/services/api';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -50,51 +50,52 @@ export const ConversationsList: React.FC<ConversationsListProps> = ({
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
-        .from('conversations')
-        .select('*')
-        .or(`client_id.eq.${user.id},freelancer_id.eq.${user.id}`)
-        .order('last_message_at', { ascending: false, nullsFirst: false });
-
-      if (error) throw error;
-
-      // Get latest message and profiles for each conversation
-      const conversationsWithMessages = await Promise.all(
-        (data || []).map(async (conversation) => {
-          // Get latest message
-          const { data: messageData } = await supabase
-            .from('messages')
-            .select('content, sender_id, created_at')
-            .eq('conversation_id', conversation.id)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .single();
-
-          // Get client profile
-          const { data: clientProfile } = await supabase
-            .from('profiles')
-            .select('full_name, avatar_url')
-            .eq('user_id', conversation.client_id)
-            .single();
-
-          // Get freelancer profile
-          const { data: freelancerProfile } = await supabase
-            .from('profiles')
-            .select('full_name, avatar_url')
-            .eq('user_id', conversation.freelancer_id)
-            .single();
-
-          return {
-            ...conversation,
-            latest_message: messageData,
-            client_profile: clientProfile,
-            freelancer_profile: freelancerProfile
+      const result: { conversations?: unknown[] } = await api.messages.getConversations();
+      // Backend shape: { conversations: [{ conversationId, lastMessage, unreadCount }] }
+      const mapped: Conversation[] = (result?.conversations || []).map((c: unknown) => {
+        const conv = c as {
+          conversationId: string;
+          lastMessage?: {
+            id: string;
+            content: string;
+            createdAt: string;
+            sender: { id: string; profile?: { fullName: string; avatarUrl?: string } };
+            receiver: { id: string; profile?: { fullName: string; avatarUrl?: string } };
           };
-        })
-      );
+          unreadCount?: number;
+        };
+        const last = conv.lastMessage;
+        const senderId: string | undefined = last?.sender?.id;
+        const receiverId = last?.receiver?.id;
+        const clientId = senderId === user.id ? senderId : receiverId;
+        const freelancerId = senderId === user.id ? receiverId : senderId;
+        const clientProfile = last?.sender?.id === clientId ? last?.sender?.profile : last?.receiver?.profile;
+        const freelancerProfile = last?.sender?.id === freelancerId ? last?.sender?.profile : last?.receiver?.profile;
+        return {
+          id: conv.conversationId,
+          client_id: clientId,
+          freelancer_id: freelancerId,
+          last_message_at: last?.createdAt || null,
+          created_at: last?.createdAt || new Date().toISOString(),
+          updated_at: last?.createdAt || new Date().toISOString(),
+          latest_message: last
+            ? ({
+                content: last.content as string,
+                sender_id: last.sender.id as string,
+                created_at: last.createdAt as string,
+              } as Conversation['latest_message'])
+            : undefined,
+          client_profile: clientProfile
+            ? { full_name: clientProfile.fullName, avatar_url: clientProfile.avatarUrl }
+            : undefined,
+          freelancer_profile: freelancerProfile
+            ? { full_name: freelancerProfile.fullName, avatar_url: freelancerProfile.avatarUrl }
+            : undefined,
+        } as Conversation;
+      });
 
-      setConversations(conversationsWithMessages);
-    } catch (error: any) {
+      setConversations(mapped);
+    } catch (error: unknown) {
       console.error('Error fetching conversations:', error);
       toast({
         title: "Fejl",
@@ -110,40 +111,12 @@ export const ConversationsList: React.FC<ConversationsListProps> = ({
     fetchConversations();
   }, [user]);
 
-  // Set up real-time subscription for new messages
+  // Real-time updates via polling (simple fallback)
   useEffect(() => {
-    if (!user) return;
-
-    const channel = supabase
-      .channel('conversations-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'conversations',
-          filter: `or(client_id.eq.${user.id},freelancer_id.eq.${user.id})`
-        },
-        () => {
-          fetchConversations();
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages'
-        },
-        () => {
-          fetchConversations();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    const id = setInterval(() => {
+      if (user) fetchConversations();
+    }, 10000);
+    return () => clearInterval(id);
   }, [user]);
 
   const getOtherUser = (conversation: Conversation) => {
