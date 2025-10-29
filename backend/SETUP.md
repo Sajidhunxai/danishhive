@@ -18,7 +18,7 @@ Update the following variables:
 DATABASE_URL="mysql://username:password@localhost:3306/talentforge"
 JWT_SECRET="your-super-secret-jwt-key-change-in-production"
 JWT_REFRESH_SECRET="your-refresh-token-secret-change-in-production"
-PORT=5001
+PORT=5000
 FRONTEND_URL="http://localhost:5173"
 ```
 
@@ -39,7 +39,7 @@ npm run prisma:seed
 npm run dev
 ```
 
-The API will be available at `http://localhost:5001`
+The API will be available at `http://localhost:5000`
 
 ## Available Scripts
 
@@ -157,7 +157,7 @@ npm run prisma:migrate
 
 ## Common Issues
 
-### Port 5001 Already in Use
+### Port 5000 Already in Use
 Change the PORT in `.env`:
 ```env
 PORT=5002

@@ -393,7 +393,7 @@ export const uploadImage = async (req: AuthRequest, res: Response) => {
     await fs.writeFile(imagePath, imageBuffer);
     
     // Create full URL for frontend access
-    const baseUrl = process.env.BACKEND_URL || 'http://localhost:5001';
+    const baseUrl = process.env.BACKEND_URL || 'http://localhost:5000';
     const imageUrl = `${baseUrl}/uploads/profiles/${imageName}`;
     
     // Update profile with new avatar URL

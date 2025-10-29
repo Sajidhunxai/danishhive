@@ -27,7 +27,7 @@ import verificationRoutes from './routes/verification.routes';
 dotenv.config();
 
 const app: Application = express();
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 5000;
 
 // Security middleware - configure helmet to allow images from cross-origin
 app.use(helmet({
