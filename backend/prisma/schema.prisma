@@ -261,6 +261,31 @@ model PhoneVerification {
   @@map("phone_verifications")
 }
 
+// Referrals
+model Referral {
+  id               String   @id @default(uuid())
+  referrerId       String
+  referredEmail    String
+  status           String   @default("pending")
+  referredEarnings Int      @default(0)
+  bonusPaid        Boolean  @default(false)
+  bonusPaidAt      DateTime?
+  createdAt        DateTime @default(now())
+
+  @@unique([referrerId, referredEmail])
+  @@map("referrals")
+}
+
+model ReferralBonus {
+  id         String   @id @default(uuid())
+  referrerId String
+  amount     Int
+  status     String   @default("pending") // pending | completed | cancelled
+  createdAt  DateTime @default(now())
+
+  @@map("referral_bonuses")
+}
+
 // Email Change Requests
 model EmailChangeRequest {
   id                String    @id @default(uuid())
