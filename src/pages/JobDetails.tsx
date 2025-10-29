@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,11 +6,12 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { BackButton } from "@/components/ui/back-button";
 import { useFreelancerVerification } from '@/components/FreelancerVerificationGuard';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { getJobById, getJobApplications } from '@/api/jobs';
+
 import { 
   ArrowLeft, 
   MapPin, 
@@ -75,86 +76,100 @@ const JobDetails = () => {
   const [applications, setApplications] = useState<JobApplication[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (id) {
-      fetchJob();
-    }
-  }, [id]);
-
-  const fetchJob = async () => {
-    if (!id) return;
-
+  const fetchApplications = useCallback(async (jobId: string) => {
     try {
-      const { data: jobData, error: jobError } = await supabase
-        .from('jobs')
-        .select('*')
-        .eq('id', id)
-        .maybeSingle();
-
-      if (jobError) throw jobError;
-
-      if (jobData) {
-        setJob(jobData);
-        
-        // Fetch client profile
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('full_name, avatar_url, location, city')
-          .eq('user_id', jobData.client_id)
-          .maybeSingle();
-
-        if (profileError) {
-          console.error('Error fetching client profile:', profileError);
-        } else {
-          setClientProfile(profileData);
-        }
-
-        // Fetch client spending estimate
-        const { data: earningsData, error: earningsError } = await supabase
-          .from('earnings')
-          .select('amount')
-          .eq('user_id', jobData.client_id);
-
-        if (!earningsError && earningsData) {
-          const totalSpending = earningsData.reduce((sum, earning) => sum + Number(earning.amount), 0);
-          setClientSpending(totalSpending);
-        }
-
-        // Calculate client rating based on completed jobs
-        const { data: completedJobs, error: jobsError } = await supabase
-          .from('jobs')
-          .select('final_amount')
-          .eq('client_id', jobData.client_id)
-          .eq('status', 'completed')
-          .not('final_amount', 'is', null);
-
-        if (!jobsError && completedJobs && completedJobs.length > 0) {
-          // Simple rating calculation: 5 stars for clients with 3+ completed jobs, 4.8 for 2, 4.5 for 1
-          const completedCount = completedJobs.length;
-          let rating = 4.2;
-          if (completedCount >= 3) rating = 4.8;
-          else if (completedCount >= 2) rating = 4.6;
-          else if (completedCount >= 1) rating = 4.4;
-          
-          setClientRating(rating);
-        }
-
-        // Fetch applications if user is the client
-        if (user && jobData.client_id === user.id) {
-          await fetchApplications(jobData.id);
-        }
-      }
+      const apps = await getJobApplications(jobId);
+      
+      // Map backend data to frontend format
+      const mappedApplications: JobApplication[] = (apps || []).map((app: any) => ({
+        id: app.id,
+        applicant_id: app.freelancerId,
+        cover_letter: app.coverLetter,
+        proposed_rate: app.proposedRate ? parseFloat(app.proposedRate.toString()) : null,
+        availability: app.availability || null,
+        status: app.status,
+        applied_at: app.submittedAt,
+        applicant_profile: {
+          full_name: app.freelancer?.profile?.fullName || null,
+          avatar_url: app.freelancer?.profile?.avatarUrl || null,
+          location: app.freelancer?.profile?.location || null,
+          skills: Array.isArray(app.freelancer?.profile?.skills) ? app.freelancer.profile.skills : 
+                  (typeof app.freelancer?.profile?.skills === 'string' ? JSON.parse(app.freelancer.profile.skills) : []),
+        },
+      }));
+      
+      setApplications(mappedApplications);
     } catch (error) {
-      console.error('Error fetching job:', error);
+      console.error("Error fetching applications:", error);
       toast({
-        title: 'Fejl',
-        description: 'Kunne ikke hente opgave detaljer.',
-        variant: 'destructive',
+        title: "Fejl",
+        description: "Kunne ikke hente ansøgninger.",
+        variant: "destructive",
+      });
+    }
+  }, [toast]);
+
+  const fetchJob = useCallback(async () => {
+    if (!id) return;
+  
+    try {
+      const jobData = await getJobById(id);
+      
+      // Map backend data to frontend format
+      const mappedJob: Job = {
+        id: jobData.id,
+        title: jobData.title,
+        description: jobData.description,
+        skills_required: Array.isArray(jobData.skills) ? jobData.skills : 
+                         (typeof jobData.skills === 'string' ? JSON.parse(jobData.skills) : []),
+        budget_min: jobData.budget ? parseFloat(jobData.budget.toString()) : null,
+        budget_max: jobData.budget ? parseFloat(jobData.budget.toString()) : null,
+        location: jobData.location,
+        is_remote: !jobData.location || jobData.location.toLowerCase().includes('remote'),
+        deadline: jobData.deadline,
+        status: jobData.status,
+        project_type: 'one-time', // Default value
+        created_at: jobData.createdAt,
+        client_id: jobData.clientId,
+      };
+      
+      setJob(mappedJob);
+  
+      // Extract client info
+      const client = jobData.client?.profile;
+      setClientProfile({
+        full_name: client?.fullName || null,
+        avatar_url: client?.avatarUrl || null,
+        location: client?.location || null,
+        city: client?.companyName || null,
+      });
+  
+      // Example derived data - TODO: Calculate from actual data
+      setClientSpending(0);
+      setClientRating(4.5);
+  
+      // Only fetch applications if user is the client
+      if (user && jobData.client?.id === user.id) {
+        await fetchApplications(jobData.id);
+      }
+  
+    } catch (error) {
+      console.error("Error fetching job:", error);
+      toast({
+        title: "Fejl",
+        description: "Kunne ikke hente opgave detaljer.",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, user, toast, fetchApplications]);
+
+  useEffect(() => {
+    if (id) {
+      fetchJob();
+    }
+  }, [id, fetchJob]);
 
   const formatBudget = (min: number | null, max: number | null) => {
     if (!min && !max) return 'Ikke angivet';
@@ -171,34 +186,6 @@ const JobDetails = () => {
       month: 'long',
       day: 'numeric'
     });
-  };
-
-  const fetchApplications = async (jobId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('job_applications')
-        .select(`
-          *,
-          applicant_profile:profiles!job_applications_applicant_id_fkey (
-            full_name,
-            avatar_url,
-            location,
-            skills
-          )
-        `)
-        .eq('job_id', jobId)
-        .order('applied_at', { ascending: false });
-
-      if (error) throw error;
-      setApplications(data || []);
-    } catch (error) {
-      console.error('Error fetching applications:', error);
-      toast({
-        title: 'Fejl',
-        description: 'Kunne ikke hente ansøgninger.',
-        variant: 'destructive',
-      });
-    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -313,7 +300,7 @@ const JobDetails = () => {
                   <h3 className="text-lg font-semibold mb-3">Påkrævet kompetencer</h3>
                   <div className="flex flex-wrap gap-2">
                     {job.skills_required.map((skill, index) => (
-                      <Badge key={index} variant="outline" className="text-black">
+                      <Badge key={index} variant="outline" className="text-black dark:text-white">
                         {skill}
                       </Badge>
                     ))}

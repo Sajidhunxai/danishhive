@@ -6,6 +6,7 @@ import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
+import path from 'path';
 
 // Import routes
 import authRoutes from './routes/auth.routes';
@@ -28,8 +29,12 @@ dotenv.config();
 const app: Application = express();
 const PORT = process.env.PORT || 5001;
 
-// Security middleware
-app.use(helmet());
+// Security middleware - configure helmet to allow images from cross-origin
+app.use(helmet({
+  crossOriginEmbedderPolicy: false, // Allow embedding images
+  crossOriginOpenerPolicy: false, // Allow opening images
+  crossOriginResourcePolicy: { policy: "cross-origin" }, // Allow images to be loaded from different origins
+}));
 app.use(compression());
 
 // CORS configuration - Allow multiple origins
@@ -56,6 +61,7 @@ app.use(cors({
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Content-Type', 'Content-Length', 'Cache-Control', 'ETag'],
 }));
 
 // Rate limiting
@@ -70,8 +76,8 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
-// Serve uploaded files
-app.use('/uploads', express.static('uploads'));
+// Serve uploaded files from the backend/uploads directory
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Logging
 if (process.env.NODE_ENV === 'development') {
