@@ -153,12 +153,12 @@ GET https://fmgbsampskpmcaabyznk.supabase.co/rest/v1/profiles
 
 **✅ Should see:**
 ```
-POST http://localhost:5001/api/auth/login
+POST http://localhost:5000/api/auth/login
 Status: 200 OK
 ```
 
 ### In Network Tab:
-- ✅ All requests to `localhost:5001`
+- ✅ All requests to `localhost:5000`
 - ✅ No `supabase.co` URLs
 - ✅ No CORS errors
 - ✅ No 401/403 errors
@@ -225,7 +225,7 @@ After clearing storage:
 ✅ Login works (backend API)
 ✅ Dashboard loads
 ✅ No Supabase errors in console
-✅ All auth calls to localhost:5001
+✅ All auth calls to localhost:5000
 ```
 
 Some features might still query Supabase for data, but **authentication is 100% backend!**
@@ -237,7 +237,7 @@ Some features might still query Supabase for data, but **authentication is 100% 
 1. **Try Incognito/Private window** - This guarantees no cache
 2. **Check backend is running:**
    ```bash
-   curl http://localhost:5001/health
+   curl http://localhost:5000/health
    ```
 3. **Check frontend port:**
    ```bash

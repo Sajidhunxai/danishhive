@@ -36,7 +36,7 @@ npm run prisma:seed
 npm run dev
 ```
 
-✅ Backend should now be running on http://localhost:5001
+✅ Backend should now be running on http://localhost:5000
 
 ## 2️⃣ Frontend Setup (1 minute)
 
@@ -50,7 +50,7 @@ cd ..
 npm install axios
 
 # Create .env file
-echo "VITE_API_URL=http://localhost:5001/api" > .env
+echo "VITE_API_URL=http://localhost:5000/api" > .env
 
 # Start frontend
 npm run dev
@@ -97,15 +97,15 @@ Password: password123
 
 ```bash
 # Health check
-curl http://localhost:5001/health
+curl http://localhost:5000/health
 
 # Login (get token)
-curl -X POST http://localhost:5001/api/auth/login \
+curl -X POST http://localhost:5000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"freelancer1@example.com","password":"password123"}'
 
 # Get all jobs
-curl http://localhost:5001/api/jobs
+curl http://localhost:5000/api/jobs
 ```
 
 ### View Database

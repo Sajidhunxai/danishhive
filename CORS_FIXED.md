@@ -40,7 +40,7 @@ Access-Control-Allow-Origin: http://localhost:8080
 ### Method 2: Test with Curl
 
 ```bash
-curl -X POST http://localhost:5001/api/auth/login \
+curl -X POST http://localhost:5000/api/auth/login \
   -H "Content-Type: application/json" \
   -H "Origin: http://localhost:8080" \
   -d '{"email":"test","password":"test"}' \
@@ -69,7 +69,7 @@ location.reload();
 ### 2. ✅ Verify Backend is Running
 
 ```bash
-curl http://localhost:5001/health
+curl http://localhost:5000/health
 ```
 
 **Should return:**
@@ -94,7 +94,7 @@ Use test credentials:
 | Supabase auth calls | ✅ Fixed | Updated Auth.tsx to use backend API |
 | useAuth hook | ✅ Fixed | Re-exports backend auth |
 | CORS configuration | ✅ Fixed | **Just fixed!** Allows port 8080 |
-| Backend running | ✅ Running | Port 5001 active |
+| Backend running | ✅ Running | Port 5000 active |
 | Frontend running | ✅ Running | Port 8080 active |
 
 ## ✅ Expected Behavior Now
@@ -106,13 +106,13 @@ After clearing storage and reloading:
    - Auth form appears
 
 2. **Login Works** ✅
-   - Calls `http://localhost:5001/api/auth/login`
+   - Calls `http://localhost:5000/api/auth/login`
    - No CORS errors
    - Redirects to dashboard on success
 
 3. **Network Tab Shows** ✅
    ```
-   POST http://localhost:5001/api/auth/login
+   POST http://localhost:5000/api/auth/login
    Status: 200 OK (or 401 if credentials wrong)
    Access-Control-Allow-Origin: http://localhost:8080
    ```
@@ -151,17 +151,17 @@ lsof -i :8080
 
 ```bash
 # 1. Check backend health
-curl http://localhost:5001/health
+curl http://localhost:5000/health
 
 # 2. Test CORS with wrong credentials (should return 401, not CORS error)
-curl -X POST http://localhost:5001/api/auth/login \
+curl -X POST http://localhost:5000/api/auth/login \
   -H "Content-Type: application/json" \
   -H "Origin: http://localhost:8080" \
   -d '{"email":"test@test.com","password":"wrong"}' \
   -i
 
 # 3. Test with real credentials
-curl -X POST http://localhost:5001/api/auth/login \
+curl -X POST http://localhost:5000/api/auth/login \
   -H "Content-Type: application/json" \
   -H "Origin: http://localhost:8080" \
   -d '{"email":"freelancer1@example.com","password":"password123"}' \

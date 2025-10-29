@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/services/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,28 @@ import { BackButton } from "@/components/ui/back-button";
 import BankAutocomplete from "@/components/BankAutocomplete";
 import { GDPRCompliance } from "@/components/GDPRCompliance";
 import { useLanguage } from "@/contexts/LanguageContext";
+type BackendUser = { phoneNumber?: string };
+type BackendProfile = {
+  id: string;
+  userId: string;
+  fullName?: string | null;
+  address?: string | null;
+  city?: string | null;
+  postalCode?: string | null;
+  iban?: string | null;
+  bankName?: string | null;
+  accountHolderName?: string | null;
+  mitidVerified?: boolean | null;
+  mitidVerificationDate?: string | null;
+  role?: string | null;
+  isAdmin?: boolean | null;
+  projects?: unknown[];
+  user?: BackendUser;
+  registration_number?: string | null;
+  account_number?: string | null;
+  payment_method?: "danish_bank" | "iban" | "paypal" | null;
+  paypal_email?: string | null;
+};
 interface Profile {
   id: string;
   user_id: string;
@@ -65,47 +88,57 @@ const Settings = () => {
   // Initialize registration and account numbers when profile changes
   useEffect(() => {
     if (profile) {
-      if ((profile as any).registration_number) {
-        setRegistrationNumber((profile as any).registration_number);
+      if (profile.registration_number) {
+        setRegistrationNumber(profile.registration_number);
       }
-      if ((profile as any).account_number) {
-        setAccountNumber((profile as any).account_number);
+      if (profile.account_number) {
+        setAccountNumber(profile.account_number);
       }
-      if ((profile as any).payment_method) {
-        setPaymentMethod((profile as any).payment_method);
+      if (profile.payment_method) {
+        setPaymentMethod((profile.payment_method as "danish_bank" | "iban" | "paypal") ?? 'danish_bank');
       }
-      if ((profile as any).paypal_email) {
-        setPaypalEmail((profile as any).paypal_email);
+      if (profile.paypal_email) {
+        setPaypalEmail(profile.paypal_email);
       }
     }
   }, [profile]);
 
   const fetchProfile = async () => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', user?.id)
-        .maybeSingle();
+      const response = await api.profiles.getMyProfile();
+      const data: BackendProfile | undefined = (response as { profile?: BackendProfile })?.profile || (response as BackendProfile);
+      if (!data) throw new Error('No profile');
 
-      if (error) throw error;
-      setProfile(data);
-      setOriginalProfile(data);
+      // Map backend camelCase to local snake_case shape expected in component
+      const mapped: Profile = {
+        id: data.id,
+        user_id: data.userId,
+        full_name: data.fullName ?? null,
+        phone: (data.user?.phoneNumber ?? undefined) ?? null,
+        address: data.address ?? null,
+        city: data.city ?? null,
+        postal_code: data.postalCode ?? null,
+        iban: data.iban ?? null,
+        bank_name: data.bankName ?? null,
+        account_holder_name: data.accountHolderName ?? null,
+        registration_number: data.registration_number ?? null,
+        account_number: data.account_number ?? null,
+        payment_method: data.payment_method ?? null,
+        paypal_email: data.paypal_email ?? null,
+        mitid_verified: data.mitidVerified ?? null,
+        mitid_verification_date: data.mitidVerificationDate ?? null,
+        role: data.role ?? null,
+        is_admin: data.isAdmin ?? null,
+      } as Profile;
+
+      setProfile(mapped);
+      setOriginalProfile(mapped);
       setHasChanges(false);
-      
-      // Initialize registration and account numbers from existing data
-      if ((data as any)?.registration_number) {
-        setRegistrationNumber((data as any).registration_number);
-      }
-      if ((data as any)?.account_number) {
-        setAccountNumber((data as any).account_number);
-      }
-      if ((data as any)?.payment_method) {
-        setPaymentMethod((data as any).payment_method);
-      }
-      if ((data as any)?.paypal_email) {
-        setPaypalEmail((data as any).paypal_email);
-      }
+
+      if (mapped.registration_number) setRegistrationNumber(mapped.registration_number);
+      if (mapped.account_number) setAccountNumber(mapped.account_number);
+      if (mapped.payment_method) setPaymentMethod(mapped.payment_method as "danish_bank" | "iban" | "paypal");
+      if (mapped.paypal_email) setPaypalEmail(mapped.paypal_email);
     } catch (error) {
       console.error('Error fetching profile:', error);
       toast({
@@ -123,15 +156,23 @@ const Settings = () => {
 
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .upsert({
-          user_id: user.id,
-          ...profile,
-          ...updates,
-        });
+      // Map snake_case to backend camelCase
+      const payload: Record<string, unknown> = {
+        fullName: updates.full_name ?? profile?.full_name,
+        address: updates.address ?? profile?.address,
+        city: updates.city ?? profile?.city,
+        postalCode: updates.postal_code ?? profile?.postal_code,
+        phoneNumber: updates.phone ?? profile?.phone,
+        bankName: updates.bank_name ?? profile?.bank_name,
+        accountHolderName: updates.account_holder_name ?? profile?.account_holder_name,
+        iban: updates.iban ?? profile?.iban,
+        payment_method: updates.payment_method ?? (profile)?.payment_method ?? undefined,
+        registration_number: updates.registration_number ?? (profile)?.registration_number ?? undefined,
+        account_number: updates.account_number ?? (profile)?.account_number ?? undefined,
+        paypal_email: updates.paypal_email ?? (profile)?.paypal_email ?? undefined,
+      };
 
-      if (error) throw error;
+      await api.profiles.updateMyProfile(payload);
 
       setProfile(prev => prev ? { ...prev, ...updates } : null);
       setOriginalProfile(prev => prev ? { ...prev, ...updates } : null);
@@ -157,15 +198,8 @@ const Settings = () => {
 
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .upsert({
-          user_id: user.id,
-          ...profile,
-        });
-
-      if (error) throw error;
-
+      // Reuse updateProfile mapping to send complete current profile
+      await updateProfile({ ...profile! });
       setOriginalProfile(profile);
       setHasChanges(false);
       toast({
@@ -226,11 +260,11 @@ const Settings = () => {
         title: "Succes",
         description: "Adgangskode opdateret",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating password:', error);
       toast({
         title: "Fejl",
-        description: error.message || "Kunne ikke opdatere adgangskode",
+        description: (error as { message?: string })?.message || "Kunne ikke opdatere adgangskode",
         variant: "destructive",
       });
     } finally {
@@ -260,11 +294,11 @@ const Settings = () => {
         title: "Succes",
         description: "Bekræftelses email sendt til den nye adresse",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating email:', error);
       toast({
         title: "Fejl",
-        description: error.message || "Kunne ikke opdatere email",
+        description: (error as { message?: string })?.message || "Kunne ikke opdatere email",
         variant: "destructive",
       });
     } finally {
@@ -498,8 +532,9 @@ const Settings = () => {
                 setProfile(prev => prev ? { ...prev, paypal_email: value } : null);
               }}
               onPaymentMethodChange={(value) => {
-                setPaymentMethod(value);
-                setProfile(prev => prev ? { ...prev, payment_method: value } : null);
+                const v = value as "danish_bank" | "iban" | "paypal";
+                setPaymentMethod(v);
+                setProfile(prev => prev ? { ...prev, payment_method: v } : null);
               }}
             />
           </CardContent>

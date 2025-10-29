@@ -80,7 +80,7 @@ After clearing storage, login with:
 
 ### After Clearing (✅ Good):
 - No Supabase URLs
-- All requests to `http://localhost:5001/api/...`
+- All requests to `http://localhost:5000/api/...`
 - Login succeeds
 - Redirects to dashboard
 - No console errors
@@ -95,7 +95,7 @@ After clearing storage:
 2. **Go to Network tab**
 3. **Click login**
 4. **Check Network tab:**
-   - ✅ Should see: `POST http://localhost:5001/api/auth/login` (Status: 200)
+   - ✅ Should see: `POST http://localhost:5000/api/auth/login` (Status: 200)
    - ❌ Should NOT see: Any `supabase.co` URLs
 
 ---
@@ -121,7 +121,7 @@ After clearing storage:
 
 ### 3. Check Backend is Running
 ```bash
-curl http://localhost:5001/health
+curl http://localhost:5000/health
 # Should return: {"status":"ok"}
 ```
 

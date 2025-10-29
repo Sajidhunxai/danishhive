@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { MessageCircle, User, Settings, LogOut, Home, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { api } from '@/services/api';
 
 export const TopNavigation: React.FC = () => {
   const { user, userRole, signOut } = useAuth();
@@ -111,13 +112,19 @@ export const TopNavigation: React.FC = () => {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="flex items-center gap-2">
                   <Avatar className="h-6 w-6">
-                    <AvatarImage src={user?.user_metadata?.avatar_url} />
+                    {(() => {
+                      const raw = user?.profile?.avatarUrl;
+                      const src = raw
+                        ? (raw.startsWith('http') ? raw : `${api.getBackendUrl()}${raw}`)
+                        : undefined;
+                      return <AvatarImage src={src} />;
+                    })()}
                     <AvatarFallback className="text-xs">
-                      {getInitials(user?.user_metadata?.full_name || 'User')}
+                      {getInitials((user?.profile?.fullName || user?.email || 'User').trim())}
                     </AvatarFallback>
                   </Avatar>
                   <span className="hidden sm:inline text-sm">
-                    {user?.user_metadata?.full_name || 'User'}
+                    {user?.profile?.fullName || user?.email || 'User'}
                   </span>
                   {userRole === 'admin' && (
                     <Badge variant="secondary" className="text-xs">

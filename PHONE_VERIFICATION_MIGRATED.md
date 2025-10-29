@@ -192,7 +192,7 @@ npm run dev
 
 **Check availability:**
 ```bash
-curl -X POST http://localhost:5001/api/verification/phone/check-availability \
+curl -X POST http://localhost:5000/api/verification/phone/check-availability \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{"phoneNumber":"+4512345678"}'
@@ -200,7 +200,7 @@ curl -X POST http://localhost:5001/api/verification/phone/check-availability \
 
 **Send SMS:**
 ```bash
-curl -X POST http://localhost:5001/api/verification/phone/send-sms \
+curl -X POST http://localhost:5000/api/verification/phone/send-sms \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{"phoneNumber":"12345678","countryCode":"+45"}'
@@ -208,7 +208,7 @@ curl -X POST http://localhost:5001/api/verification/phone/send-sms \
 
 **Verify code:**
 ```bash
-curl -X POST http://localhost:5001/api/verification/phone/verify-sms \
+curl -X POST http://localhost:5000/api/verification/phone/verify-sms \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{"phoneNumber":"12345678","countryCode":"+45","verificationCode":"123456"}'

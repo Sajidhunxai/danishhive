@@ -222,7 +222,7 @@ npm run dev
 ### Step 2: Frontend Setup
 ```bash
 npm install axios
-# Create .env file with VITE_API_URL=http://localhost:5001/api
+# Create .env file with VITE_API_URL=http://localhost:5000/api
 npm run dev
 ```
 
@@ -334,7 +334,7 @@ The implementation provides both Supabase and Backend API support:
 ## 📝 Notes
 
 - All passwords in seeded data: `password123`
-- Default ports: Backend (5001), Frontend (5173)
+- Default ports: Backend (5000), Frontend (5173)
 - JWT tokens expire: Access (7 days), Refresh (30 days)
 - Rate limiting: 100 requests per 15 minutes per IP
 - File upload limit: 10MB

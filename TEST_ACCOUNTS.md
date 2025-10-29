@@ -47,13 +47,13 @@ Use these accounts to test login:
 
 ### Check Backend is Running:
 ```bash
-curl http://localhost:5001/health
+curl http://localhost:5000/health
 # Should return: {"status":"ok"}
 ```
 
 ### Check Login Endpoint:
 ```bash
-curl -X POST http://localhost:5001/api/auth/login \
+curl -X POST http://localhost:5000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"freelancer1@example.com","password":"password123"}' | jq
 ```
@@ -98,7 +98,7 @@ curl -I http://localhost:8080
 
 ✅ Login page loads without Supabase errors  
 ✅ Login succeeds with test account  
-✅ Console shows: `POST http://localhost:5001/api/auth/login`  
+✅ Console shows: `POST http://localhost:5000/api/auth/login`  
 ✅ No `supabase.co` URLs in Network tab  
 ✅ Redirects to appropriate dashboard  
 

@@ -79,7 +79,7 @@ This removes old Supabase tokens that cause errors.
 # Backend (Terminal 1)
 cd backend
 npm run dev
-# Running on http://localhost:5001
+# Running on http://localhost:5000
 
 # Frontend (Terminal 2)  
 npm run dev
@@ -104,10 +104,10 @@ You can test backend endpoints directly:
 
 ```bash
 # Get all jobs
-curl http://localhost:5001/api/jobs
+curl http://localhost:5000/api/jobs
 
 # Login
-curl -X POST http://localhost:5001/api/auth/login \
+curl -X POST http://localhost:5000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"freelancer1@example.com","password":"password123"}'
 ```
@@ -326,7 +326,7 @@ All passwords: **password123**
 - **Fix:** Token expired, logout and login again
 
 ### Backend not responding
-- **Check:** Is backend running? `curl http://localhost:5001/health`
+- **Check:** Is backend running? `curl http://localhost:5000/health`
 
 ## 🎊 Conclusion
 

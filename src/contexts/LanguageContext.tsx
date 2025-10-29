@@ -256,6 +256,31 @@ const translations = {
     "jobs.anonymousClient": "Anonym klient",
     "jobs.moreSkills": "+{count} mere",
     "jobs.remote": "Remote",
+    "job.notFound.title": "Opgave ikke fundet",
+    "job.notFound.desc": "Den opgave du prøver at ansøge om eksisterer ikke.",
+    "job.notFound.back": "Tilbage til forsiden",
+
+    "job.apply.title": "Ansøg om opgave",
+    "job.apply.subtitle": "Din ansøgning",
+    "job.apply.coverLetter": "Følgebrev *",
+    "job.apply.charCount": "{count} tegn (500-3000 tegn påkrævet)",
+    "job.apply.coverLetter.placeholder":
+      "Beskriv hvorfor du er den rette til denne opgave...",
+    "job.apply.coverLetter.help":
+      "Fortæl klienten om din erfaring og hvordan du vil løse opgaven. Du kan bruge emojis og specialtegn.",
+    "job.apply.coverLetter.invalid":
+      "Følgebrevet skal indeholde mellem 500-3000 tegn",
+    "job.apply.validating": "Kontrollerer indhold...",
+    "job.apply.rate": "Foreslået pris",
+    "job.apply.delivery": "Forventet leveringstid (dage)",
+    "job.apply.cancel": "Annuller",
+    "job.apply.submit": "Send ansøgning (3 dråber)",
+    "job.apply.sending": "Sender...",
+    "job.apply.insufficientDrops": "Ikke nok honningdråber (3 kræves)",
+    "job.apply.averagePrice":
+      "💡 Gennemsnitspris for lignende opgaver: {min} - {max} kr. (baseret på {count} gennemførte opgaver)",
+    "job.apply.termsNote":
+      "Ved at sende din ansøgning accepterer du vores vilkår og betingelser",
 
     // Complete Profile page
     "completeProfile.title": "Fuldfør Din {role} Profil",
@@ -897,6 +922,31 @@ const translations = {
     "jobs.anonymousClient": "Anonymous Client",
     "jobs.moreSkills": "+{count} more",
     "jobs.remote": "Remote",
+    "job.notFound.title": "Job not found",
+    "job.notFound.desc": "The job you are trying to apply for does not exist.",
+    "job.notFound.back": "Back to homepage",
+
+    "job.apply.title": "Apply for Job",
+    "job.apply.subtitle": "Your Application",
+    "job.apply.coverLetter": "Cover Letter *",
+    "job.apply.charCount": "{count} characters (500–3000 required)",
+    "job.apply.coverLetter.placeholder":
+      "Describe why you’re the right fit for this job...",
+    "job.apply.coverLetter.help":
+      "Tell the client about your experience and how you’ll complete the job. Emojis and special characters are allowed.",
+    "job.apply.coverLetter.invalid":
+      "The cover letter must be between 500–3000 characters",
+    "job.apply.validating": "Validating content...",
+    "job.apply.rate": "Proposed Rate",
+    "job.apply.delivery": "Expected Delivery Time (days)",
+    "job.apply.cancel": "Cancel",
+    "job.apply.submit": "Submit Application (3 drops)",
+    "job.apply.sending": "Sending...",
+    "job.apply.insufficientDrops": "Not enough honey drops (3 required)",
+    "job.apply.averagePrice":
+      "💡 Average price for similar jobs: {min} - {max} DKK (based on {count} completed jobs)",
+    "job.apply.termsNote":
+      "By submitting your application, you agree to our terms and conditions",
 
     // Cookies
     "cookies.title": "We use cookies",
@@ -1564,6 +1614,28 @@ const translations = {
     "jobs.anonymousClient": "匿名客户",
     "jobs.moreSkills": "+{count} 更多",
     "jobs.remote": "远程",
+    "job.notFound.title": "未找到任务",
+    "job.notFound.desc": "您尝试申请的任务不存在。",
+    "job.notFound.back": "返回主页",
+
+    "job.apply.title": "申请任务",
+    "job.apply.subtitle": "您的申请",
+    "job.apply.coverLetter": "求职信 *",
+    "job.apply.charCount": "{count} 个字符（需要 500–3000 个）",
+    "job.apply.coverLetter.placeholder": "描述为什么您是此任务的理想人选...",
+    "job.apply.coverLetter.help":
+      "告诉客户您的经验以及您将如何完成任务。可以使用表情符号和特殊字符。",
+    "job.apply.coverLetter.invalid": "求职信必须包含 500–3000 个字符",
+    "job.apply.validating": "正在验证内容...",
+    "job.apply.rate": "建议报价",
+    "job.apply.delivery": "预计交付时间（天）",
+    "job.apply.cancel": "取消",
+    "job.apply.submit": "提交申请（3 滴蜜）",
+    "job.apply.sending": "发送中...",
+    "job.apply.insufficientDrops": "蜜滴不足（需要 3 滴）",
+    "job.apply.averagePrice":
+      "💡 类似任务的平均价格：{min} - {max} 丹麦克朗（基于 {count} 个已完成任务）",
+    "job.apply.termsNote": "提交申请即表示您同意我们的条款和条件",
 
     // cookies
     "cookies.title": "我们使用 Cookie",
@@ -2195,6 +2267,32 @@ const translations = {
     "jobs.anonymousClient": "गुमनाम ग्राहक",
     "jobs.moreSkills": "+{count} और",
     "jobs.remote": "रिमोट",
+    "job.notFound.title": "कार्य नहीं मिला",
+    "job.notFound.desc":
+      "जिस कार्य के लिए आप आवेदन करने की कोशिश कर रहे हैं वह मौजूद नहीं है।",
+    "job.notFound.back": "मुख्य पृष्ठ पर वापस जाएँ",
+
+    "job.apply.title": "कार्य के लिए आवेदन करें",
+    "job.apply.subtitle": "आपका आवेदन",
+    "job.apply.coverLetter": "कवर लेटर *",
+    "job.apply.charCount": "{count} अक्षर (500–3000 आवश्यक)",
+    "job.apply.coverLetter.placeholder":
+      "बताएँ कि आप इस कार्य के लिए सही उम्मीदवार क्यों हैं...",
+    "job.apply.coverLetter.help":
+      "ग्राहक को अपने अनुभव के बारे में बताएं और आप कार्य कैसे पूरा करेंगे। इमोजी और विशेष वर्णों का उपयोग कर सकते हैं।",
+    "job.apply.coverLetter.invalid":
+      "कवर लेटर में 500 से 3000 अक्षर होने चाहिए",
+    "job.apply.validating": "सामग्री की जाँच हो रही है...",
+    "job.apply.rate": "प्रस्तावित दर",
+    "job.apply.delivery": "अपेक्षित डिलीवरी समय (दिनों में)",
+    "job.apply.cancel": "रद्द करें",
+    "job.apply.submit": "आवेदन भेजें (3 ड्रॉप्स)",
+    "job.apply.sending": "भेजा जा रहा है...",
+    "job.apply.insufficientDrops": "पर्याप्त हनी ड्रॉप्स नहीं हैं (3 आवश्यक)",
+    "job.apply.averagePrice":
+      "💡 समान कार्यों के लिए औसत मूल्य: {min} - {max} DKK (आधारित {count} पूर्ण कार्यों पर)",
+    "job.apply.termsNote":
+      "आवेदन भेजकर, आप हमारी शर्तों और नियमों से सहमत होते हैं",
 
     // Setting
     "settings.forRealVerification": "वास्तविक सत्यापन के लिए।",

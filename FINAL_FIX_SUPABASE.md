@@ -93,7 +93,7 @@ When you try to login:
 
 **Should see:**
 ```
-✅ POST http://localhost:5001/api/auth/login
+✅ POST http://localhost:5000/api/auth/login
 ✅ Status: 200 OK (if credentials correct) or 401 (if wrong)
 ✅ No supabase.co URLs
 ```
@@ -131,15 +131,15 @@ If you still see issues after clearing storage:
 console.log(Object.keys(localStorage));
 
 # 2. Check backend is running:
-curl http://localhost:5001/health
+curl http://localhost:5000/health
 
 # 3. Test backend login directly:
-curl -X POST http://localhost:5001/api/auth/login \
+curl -X POST http://localhost:5000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"freelancer1@example.com","password":"password123"}' | jq
 
 # 4. Check CORS:
-curl -X OPTIONS http://localhost:5001/api/auth/login \
+curl -X OPTIONS http://localhost:5000/api/auth/login \
   -H "Origin: http://localhost:8080" \
   -H "Access-Control-Request-Method: POST" \
   -i
@@ -180,7 +180,7 @@ After clearing storage, you should be able to:
 - ✅ See the login page
 - ✅ Login successfully with test account
 - ✅ See no `supabase.co` URLs in Network tab
-- ✅ All auth calls go to `localhost:5001`
+- ✅ All auth calls go to `localhost:5000`
 
 ## 🚀 Final Command
 

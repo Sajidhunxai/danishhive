@@ -214,7 +214,7 @@ The backend uses MySQL with Prisma ORM:
 ## Testing the Integration
 
 ### Prerequisites
-1. Backend server running on `http://localhost:5001` (or configured `VITE_BACKEND_URL`)
+1. Backend server running on `http://localhost:5000` (or configured `VITE_BACKEND_URL`)
 2. MySQL database configured with Prisma migrations applied
 3. Valid user authentication (freelancer or admin role)
 

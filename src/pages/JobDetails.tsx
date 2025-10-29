@@ -11,7 +11,7 @@ import { BackButton } from "@/components/ui/back-button";
 import { useFreelancerVerification } from '@/components/FreelancerVerificationGuard';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { getJobById, getJobApplications } from '@/api/jobs';
-
+import { useLanguage } from "@/contexts/LanguageContext";
 import { 
   ArrowLeft, 
   MapPin, 
@@ -75,7 +75,7 @@ const JobDetails = () => {
   const [clientRating, setClientRating] = useState<number | null>(null);
   const [applications, setApplications] = useState<JobApplication[]>([]);
   const [loading, setLoading] = useState(true);
-
+  const { t } = useLanguage();
   const fetchApplications = useCallback(async (jobId: string) => {
     try {
       const apps = await getJobApplications(jobId);
@@ -211,8 +211,8 @@ const JobDetails = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-2">Opgave ikke fundet</h2>
-          <p className="text-muted-foreground mb-4">Den opgave du leder efter eksisterer ikke.</p>
+          <h2 className="text-2xl font-bold mb-2">{t("job.notFound.title")}</h2>
+          <p className="text-muted-foreground mb-4">{t("job.notFound.desc")}</p>
           <Button onClick={() => navigate('/')}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Tilbage til forsiden

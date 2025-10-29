@@ -6,7 +6,7 @@
 - ✅ All 9 controllers fully implemented
 - ✅ 50+ API endpoints working
 - ✅ Database seeded with test data
-- ✅ Backend server running on port 5001
+- ✅ Backend server running on port 5000
 - ✅ JWT authentication working
 - ✅ All business logic implemented
 
@@ -161,10 +161,10 @@ cd backend && npm run dev
 npm run dev
 
 # Test backend API directly
-curl http://localhost:5001/api/jobs
+curl http://localhost:5000/api/jobs
 
 # Check backend health
-curl http://localhost:5001/health
+curl http://localhost:5000/health
 ```
 
 ## Current Architecture
@@ -178,7 +178,7 @@ API Service (src/services/api.ts)
     ↓
 Axios HTTP Client
     ↓
-Backend API (localhost:5001)
+Backend API (localhost:5000)
     ↓
 Prisma ORM
     ↓

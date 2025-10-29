@@ -89,7 +89,7 @@ Try logging in with a test account:
 After clearing storage and reloading:
 - ✅ No Supabase URLs in network tab
 - ✅ No Supabase errors in console
-- ✅ Login works and calls `http://localhost:5001/api/auth/login`
+- ✅ Login works and calls `http://localhost:5000/api/auth/login`
 - ✅ App functions normally
 
 ## 🔍 Verify It's Working
@@ -103,7 +103,7 @@ POST https://fmgbsampskpmcaabyznk.supabase.co/auth/v1/token
 
 **After (✅ Correct):**
 ```
-POST http://localhost:5001/api/auth/login
+POST http://localhost:5000/api/auth/login
 ```
 
 ## 📊 Files Updated
@@ -133,7 +133,7 @@ No more Supabase connections for authentication! 🎉
 1. **Clear browser cache completely** (Ctrl+Shift+Delete)
 2. **Try incognito/private window** (fresh browser session)
 3. **Hard refresh** (Ctrl+Shift+R on Windows, Cmd+Shift+R on Mac)
-4. **Check** that backend is running: `curl http://localhost:5001/health`
+4. **Check** that backend is running: `curl http://localhost:5000/health`
 
 ## ✨ Next Steps
 

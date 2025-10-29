@@ -32,7 +32,7 @@ This document explains how to integrate the custom Node.js backend with the fron
    DATABASE_URL="mysql://username:password@localhost:3306/talentforge"
    JWT_SECRET="your-super-secret-jwt-key"
    JWT_REFRESH_SECRET="your-refresh-token-secret"
-   PORT=5001
+   PORT=5000
    FRONTEND_URL="http://localhost:5173"
    ```
 
@@ -56,7 +56,7 @@ This document explains how to integrate the custom Node.js backend with the fron
    npm run dev
    ```
 
-   The backend API will be available at `http://localhost:5001`
+   The backend API will be available at `http://localhost:5000`
 
 ### Frontend Setup
 
@@ -72,7 +72,7 @@ This document explains how to integrate the custom Node.js backend with the fron
 
 3. **Create/Update `.env` file in project root:**
    ```env
-   VITE_API_URL=http://localhost:5001/api
+   VITE_API_URL=http://localhost:5000/api
    ```
 
 4. **Update your main App file to use the backend auth provider:**

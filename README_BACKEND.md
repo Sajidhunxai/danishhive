@@ -76,7 +76,7 @@ npm run dev
 ### Step 3: Configure Frontend
 ```bash
 # In project root, create .env
-echo "VITE_API_URL=http://localhost:5001/api" > .env
+echo "VITE_API_URL=http://localhost:5000/api" > .env
 
 # Start frontend
 npm run dev
@@ -205,7 +205,7 @@ import { BackendAuthProvider } from '@/hooks/useBackendAuth';
 
 ### Frontend API errors
 - Check VITE_API_URL in `.env`
-- Ensure backend is running on port 5001
+- Ensure backend is running on port 5000
 - Check browser console for errors
 
 ### Authentication issues
@@ -229,7 +229,7 @@ cd backend && npm run prisma:studio
 cd backend && npx prisma migrate reset
 
 # Check API health
-curl http://localhost:5001/health
+curl http://localhost:5000/health
 ```
 
 ---
