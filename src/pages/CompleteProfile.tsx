@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -112,27 +111,39 @@ const CompleteProfile = () => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('full_name, phone, address, city, postal_code, payment_verified, phone_verified, role')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (error) throw error;
+      const response: { profile?: {
+        fullName?: string;
+        address?: string;
+        city?: string;
+        postalCode?: string;
+        paymentVerified?: boolean;
+        role?: string;
+        user?: { phoneNumber?: string; phoneVerified?: boolean };
+      } } = await api.profiles.getMyProfile();
+      const data = response.profile || (response as unknown as {
+        fullName?: string;
+        address?: string;
+        city?: string;
+        postalCode?: string;
+        paymentVerified?: boolean;
+        role?: string;
+        user?: { phoneNumber?: string; phoneVerified?: boolean };
+      });
+      if (!data) return;
 
       // Check completeness based on role
-      if (data.role === 'client') {
+      if ((data.role || userRole) === 'client') {
         // Client needs payment verification
         // For clients: require all fields including payment verification
         // For freelancers/admins: only require basic profile fields and phone verification
         const isProfileComplete = userRole === 'client' 
-          ? (data.full_name && data.phone && data.address && data.city && data.postal_code && data.payment_verified && data.phone_verified)
-          : (data.full_name && data.phone && data.phone_verified);
+          ? (data.fullName && data.user?.phoneNumber && data.address && data.city && data.postalCode && data.paymentVerified && data.user?.phoneVerified)
+          : (data.fullName && data.user?.phoneNumber && data.user?.phoneVerified);
         
         if (isProfileComplete) {
           navigate('/client');
         }
-      } else if (data.role === 'freelancer') {
+      } else if ((data.role || userRole) === 'freelancer') {
         // Freelancer: do not auto-redirect away from this page to avoid loops
         // Let the user complete missing fields here
         console.log('Freelancer profile incomplete - stay on Complete Profile');
@@ -307,7 +318,7 @@ const CompleteProfile = () => {
       }
 
       // Prepare update data with strict validation
-      const updateData: any = {
+      const updateData: Record<string, unknown> = {
         fullName: profileData.full_name.trim(),
         companyName: (userRole === 'client' || (userRole === 'freelancer' && profileData.has_cvr)) ? (profileData.company?.trim() || null) : null,
         cvrNumber: profileData.has_cvr ? (profileData.cvr_number?.trim() || null) : null,
@@ -322,7 +333,7 @@ const CompleteProfile = () => {
 
       // Call backend API to update profile
       console.log('Sending profile data to backend:', updateData);
-      const result = await api.profiles.updateMyProfile(updateData);
+      const result: unknown = await api.profiles.updateMyProfile(updateData);
       console.log('Backend response:', result);
 
       toast({
@@ -336,16 +347,17 @@ const CompleteProfile = () => {
       } else {
         navigate('/');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error completing profile:', error);
       
       let errorMessage = "Kunne ikke gemme profil. Prøv igen.";
       
       // Handle API errors
-      if (error.response?.data?.error) {
-        errorMessage = error.response.data.error;
-      } else if (error.message) {
-        errorMessage = error.message;
+      const err = error as { response?: { data?: { error?: string } }, message?: string };
+      if (err.response?.data?.error) {
+        errorMessage = err.response.data.error;
+      } else if (err.message) {
+        errorMessage = err.message;
       }
       
       // Check for specific error types

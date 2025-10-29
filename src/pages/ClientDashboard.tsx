@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/services/api";
 import FreelancerSearch from "@/components/FreelancerSearch";
 import { BackButton } from "@/components/ui/back-button";
 import { ProfileCompletionGuard } from "@/components/ProfileCompletionGuard";
@@ -41,6 +41,35 @@ interface Job {
   deadline: string | null;
 }
 
+type BackendJob = {
+  id: string;
+  title: string;
+  description: string;
+  status: string;
+  budgetMin?: number | null;
+  budgetMax?: number | null;
+  createdAt: string;
+  deadline?: string | null;
+  budget_min?: number | null;
+  budget_max?: number | null;
+  created_at?: string;
+  freelancerId?: string | null;
+  freelancer_id?: string | null;
+  finalAmount?: number | null;
+  final_amount?: number | null;
+};
+
+type BackendApplication = {
+  id: string;
+  status: string;
+  appliedAt?: string;
+  applied_at?: string;
+  jobId?: string;
+  job_id?: string;
+  applicant?: { fullName?: string | null };
+  applicant_full_name?: string | null;
+};
+
 interface JobApplication {
   id: string;
   status: string;
@@ -65,8 +94,8 @@ const ClientDashboard = () => {
     totalSpent: 0,
     totalPayments: 0
   });
-  const [workedWithFreelancers, setWorkedWithFreelancers] = useState<any[]>([]);
-  const [recentPayments, setRecentPayments] = useState<any[]>([]);
+  const [workedWithFreelancers, setWorkedWithFreelancers] = useState<Array<{ user_id: string; full_name?: string; hourly_rate?: number; skills?: string[] }>>([]);
+  const [recentPayments, setRecentPayments] = useState<Array<{ id: string; description?: string; status?: string; created_at: string; amount: number; currency: string }>>([]);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [selectedJobForInvite, setSelectedJobForInvite] = useState<string | null>(null);
 
@@ -85,92 +114,89 @@ const ClientDashboard = () => {
 
   const fetchClientData = async () => {
     try {
-      // Fetch user's jobs
-      const { data: jobsData, error: jobsError } = await supabase
-        .from('jobs')
-        .select('*')
-        .eq('client_id', user?.id)
-        .order('created_at', { ascending: false });
-
-      if (jobsError) throw jobsError;
-      setMyJobs(jobsData || []);
+      // Fetch user's jobs from backend
+      const jobs: BackendJob[] = await api.jobs.getMyJobs();
+      // Map backend camelCase to local snake_case used by UI
+      const mappedJobs: Job[] = (jobs || []).map((j: BackendJob) => ({
+        id: j.id,
+        title: j.title,
+        description: j.description,
+        status: j.status,
+        budget_min: j.budgetMin ?? null,
+        budget_max: j.budgetMax ?? null,
+        created_at: j.createdAt,
+        deadline: j.deadline ?? null,
+        // preserve original fields if present
+        ...(j.budget_min !== undefined && { budget_min: j.budget_min }),
+        ...(j.budget_max !== undefined && { budget_max: j.budget_max }),
+        ...(j.created_at !== undefined && { created_at: j.created_at }),
+      }));
+      setMyJobs(mappedJobs);
 
       // Fetch recent applications for user's jobs
-      if (jobsData && jobsData.length > 0) {
-        const jobIds = jobsData.map(job => job.id);
-        
-        const { data: applicationsData, error: applicationsError } = await supabase
-          .from('job_applications')
-          .select(`
-            id,
-            status,
-            applied_at,
-            job_id,
-            profiles!job_applications_applicant_id_fkey (
-              full_name
-            )
-          `)
-          .in('job_id', jobIds)
-          .order('applied_at', { ascending: false })
-          .limit(5);
-
-        if (!applicationsError && applicationsData) {
-          const transformedApplications = applicationsData.map(app => ({
-            id: app.id,
-            status: app.status,
-            applied_at: app.applied_at,
-            job_id: app.job_id,
-            applicant: {
-              full_name: (app as any).profiles?.full_name || null
+      if (mappedJobs && mappedJobs.length > 0) {
+        const jobIds = mappedJobs.map(job => job.id);
+        // Fetch applications per job and aggregate (limit to first few to reduce calls)
+        const firstFew = jobIds.slice(0, 5);
+        const lists: BackendApplication[][] = await Promise.all(
+          firstFew.map(async (jid) => {
+            try {
+              const apps: BackendApplication[] = await api.applications.getJobApplications(jid);
+              return apps || [] as BackendApplication[];
+            } catch {
+              return [] as BackendApplication[];
             }
-          }));
-          setRecentApplications(transformedApplications);
-        }
+          })
+        );
+        const flattened = lists.flat().sort((a, b) => new Date(b.appliedAt || b.applied_at || '').getTime() - new Date(a.appliedAt || a.applied_at || '').getTime());
+        const transformedApplications: JobApplication[] = flattened.slice(0, 5).map((app: BackendApplication) => ({
+          id: app.id,
+          status: app.status,
+          applied_at: app.appliedAt || app.applied_at || new Date().toISOString(),
+          job_id: app.jobId || app.job_id || '',
+          applicant: {
+            full_name: app.applicant?.fullName || app.applicant_full_name || null,
+          },
+        }));
+        setRecentApplications(transformedApplications);
 
         // Calculate stats
-        const totalJobs = jobsData.length;
-        const openJobs = jobsData.filter(job => job.status === 'open').length;
+        const totalJobs = mappedJobs.length;
+        const openJobs = mappedJobs.filter(job => job.status === 'open').length;
         
         // Count total applications across all jobs
-        const { count: totalApplicationsCount } = await supabase
-          .from('job_applications')
-          .select('*', { count: 'exact', head: true })
-          .in('job_id', jobIds);
-
-        const { count: pendingApplicationsCount } = await supabase
-          .from('job_applications')
-          .select('*', { count: 'exact', head: true })
-          .in('job_id', jobIds)
-          .eq('status', 'pending');
+        // Backend doesn't provide a direct count endpoint; derive from aggregated lists
+        const allLists: BackendApplication[][] = await Promise.all(
+          jobIds.map(async (jid) => {
+            try {
+              const apps: BackendApplication[] = await api.applications.getJobApplications(jid);
+              return apps || [] as BackendApplication[];
+            } catch {
+              return [] as BackendApplication[];
+            }
+          })
+        );
+        const allApps: BackendApplication[] = allLists.flat();
+        const totalApplicationsCount = allApps.length;
+        const pendingApplicationsCount = allApps.filter((a) => a.status === 'pending').length;
 
         // Calculate total spent (sum of final_amount from completed jobs)
-        const completedJobs = jobsData.filter(job => job.status === 'completed' && job.final_amount);
-        const totalSpent = completedJobs.reduce((sum, job) => sum + (job.final_amount || 0), 0);
+        const completedJobs = (jobs || []).filter((job: BackendJob) => job.status === 'completed' && (job.finalAmount || job.final_amount));
+        const totalSpent = completedJobs.reduce((sum: number, job: BackendJob) => sum + (job.finalAmount || job.final_amount || 0), 0);
 
-        // Fetch earnings/payments data
-        const { data: earningsData } = await supabase
-          .from('earnings')
-          .select('*')
-          .in('job_id', jobIds)
-          .eq('status', 'completed');
-
-        const totalPayments = earningsData?.length || 0;
+        // Fetch earnings/payments data (not available on backend; set to empty for now)
+        const earningsData: Array<{ id: string; description?: string; status?: string; created_at: string; amount: number; currency: string }> = [];
+        const totalPayments = 0;
 
         // Get freelancers worked with (unique freelancers from completed jobs)
-        const completedJobsWithFreelancers = jobsData.filter(job => 
-          job.status === 'completed' && job.freelancer_id
+        const completedJobsWithFreelancers = (jobs || []).filter((job: BackendJob) => 
+          job.status === 'completed' && (job.freelancerId || job.freelancer_id)
         );
         
         if (completedJobsWithFreelancers.length > 0) {
-          const freelancerIds = [...new Set(completedJobsWithFreelancers.map(job => job.freelancer_id))];
-          const { data: freelancersData } = await supabase
-            .from('profiles')
-            .select('user_id, full_name, avatar_url, skills, hourly_rate')
-            .in('user_id', freelancerIds);
-          
-          if (freelancersData) {
-            setWorkedWithFreelancers(freelancersData);
-          }
+          const freelancerIds = [...new Set(completedJobsWithFreelancers.map((job: BackendJob) => job.freelancerId || job.freelancer_id))];
+          // Backend doesn't provide batch profile fetch by userIds; skip for now
+          setWorkedWithFreelancers([]);
         }
 
         // Get recent payments/earnings
@@ -188,7 +214,7 @@ const ClientDashboard = () => {
         });
       }
 
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error fetching client data:', error);
       toast({
         title: 'Fejl',
@@ -204,13 +230,7 @@ const ClientDashboard = () => {
     }
 
     try {
-      const { error } = await supabase
-        .from('jobs')
-        .delete()
-        .eq('id', jobId)
-        .eq('client_id', user?.id); // Extra security check
-
-      if (error) throw error;
+      await api.jobs.deleteJob(jobId);
 
       toast({
         title: 'Opgave slettet',

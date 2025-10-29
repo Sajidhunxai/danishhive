@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -31,35 +31,29 @@ export const ProfileCompletionGuard: React.FC<ProfileCompletionGuardProps> = ({
       // Only check for clients if completion is required
       if (requireComplete && userRole === 'client') {
         try {
-          const { data, error } = await supabase
-            .from('profiles')
-            .select(`
-              full_name,
-              phone,
-              address,
-              city,
-              postal_code,
-              phone_verified,
-              role
-            `)
-            .eq('user_id', user.id)
-            .single();
+          const response: { profile?: {
+            fullName?: string;
+            address?: string;
+            city?: string;
+            postalCode?: string;
+            role?: string;
+            user?: { phoneNumber?: string; phoneVerified?: boolean };
+          } } = await api.profiles.getMyProfile();
+          const data = response.profile || (response as unknown as any);
 
-          if (error) throw error;
-
-          const isComplete = data &&
-            data.full_name && 
-            data.full_name.trim() !== '' &&
-            data.full_name !== 'Incomplete Profile' &&
-            data.phone && 
-            data.phone.trim() !== '' &&
+          const isComplete = !!(data &&
+            data.fullName && 
+            data.fullName.trim() !== '' &&
+            data.fullName !== 'Incomplete Profile' &&
+            data.user?.phoneNumber && 
+            data.user.phoneNumber.trim() !== '' &&
             data.address && 
             data.address.trim() !== '' &&
             data.city && 
             data.city.trim() !== '' &&
-            data.postal_code && 
-            data.postal_code.trim() !== '' &&
-            data.phone_verified === true;
+            data.postalCode && 
+            data.postalCode.trim() !== '' &&
+            data.user?.phoneVerified === true);
 
           setProfileComplete(isComplete);
 
