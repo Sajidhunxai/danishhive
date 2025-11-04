@@ -247,11 +247,11 @@ const Settings = () => {
 
     setSaving(true);
     try {
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword
-      });
+      const response = await api.auth.changePassword(currentPassword, newPassword);
 
-      if (error) throw error;
+      if (response.error) {
+        throw new Error(response.error);
+      }
 
       setCurrentPassword("");
       setNewPassword("");
@@ -284,11 +284,11 @@ const Settings = () => {
 
     setSaving(true);
     try {
-      const { error } = await supabase.auth.updateUser({
-        email: newEmail
-      });
+      const response = await api.auth.updateEmail(newEmail);
 
-      if (error) throw error;
+      if (response.error) {
+        throw new Error(response.error);
+      }
 
       toast({
         title: "Succes",
@@ -420,6 +420,15 @@ const Settings = () => {
               <h3 className="text-lg font-medium">{t("settings.changePassword")}</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
+                  <Label htmlFor="current_password">{t("settings.currentPassword")}</Label>
+                  <Input
+                    id="current_password"
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                  />
+                </div>
+                <div>
                   <Label htmlFor="new_password">{t("settings.newPassword")}</Label>
                   <Input
                     id="new_password"
@@ -440,7 +449,7 @@ const Settings = () => {
               </div>
               <Button 
                 onClick={updatePassword} 
-                disabled={saving || !newPassword || !confirmPassword}
+                disabled={saving || !newPassword || !confirmPassword || !currentPassword}
               >
                 {t("settings.updatePassword")}
               </Button>

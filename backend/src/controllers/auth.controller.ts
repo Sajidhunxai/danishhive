@@ -244,6 +244,85 @@ export const resetPassword = async (req: Request, res: Response) => {
   }
 };
 
+export const changePassword = async (req: AuthRequest, res: Response) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user!.id;
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+    if (!isValidPassword) {
+      return res.status(401).json({ error: 'Invalid current password' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword },
+    });
+
+    res.json({ message: 'Password updated successfully' });
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.status(500).json({ error: 'Failed to change password' });
+  }
+};
+
+export const updateEmail = async (req: AuthRequest, res: Response) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { newEmail } = req.body;
+    const userId = req.user!.id;
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check if new email is already registered
+    const existingUserWithEmail = await prisma.user.findUnique({
+      where: { email: newEmail },
+    });
+
+    if (existingUserWithEmail && existingUserWithEmail.id !== userId) {
+      return res.status(400).json({ error: 'Email already in use' });
+    }
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { email: newEmail, emailVerified: false }, // Mark as unverified until confirmed
+    });
+
+    // TODO: Send a verification email to the new address
+    // This will require generating a new token and a verification link
+
+    res.json({ message: 'Email update initiated. Please verify your new email address.' });
+  } catch (error) {
+    console.error('Update email error:', error);
+    res.status(500).json({ error: 'Failed to update email' });
+  }
+};
+
 export const getCurrentUser = async (req: AuthRequest, res: Response) => {
   try {
     const user = await prisma.user.findUnique({

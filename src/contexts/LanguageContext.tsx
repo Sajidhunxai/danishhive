@@ -124,6 +124,7 @@ const translations = {
     "settings.updatePassword": "Opdater Adgangskode",
     "settings.confirmPassword": "Bekræft Adgangskode",
     "settings.newPassword": "Ny Adgangskode",
+    "settings.currentPassword": "Nuværende Adgangskode",
     "settings.changePassword": "Ændre Adgangskode",
     "settings.emailConfirmNotice":
       "Du vil modtage en bekræftelses email på den nye adresse.",
@@ -881,6 +882,7 @@ const translations = {
     "settings.updatePassword": "Update Password",
     "settings.confirmPassword": "Confirm Password",
     "settings.newPassword": "New Password",
+    "settings.currentPassword": "Current Password",
     "settings.changePassword": "Change Password",
     "settings.emailConfirmNotice":
       "You will receive a confirmation email at the new address.",
@@ -1506,6 +1508,7 @@ const translations = {
     "settings.updatePassword": "更新密码",
     "settings.confirmPassword": "确认密码",
     "settings.newPassword": "新密码",
+    "settings.currentPassword": "当前密码",
     "settings.changePassword": "更改密码",
     "settings.emailConfirmNotice": "您将在新地址收到确认电子邮件。",
     "settings.updateEmail": "更新电子邮件",
@@ -2310,6 +2313,7 @@ const translations = {
     "settings.updatePassword": "पासवर्ड अपडेट करें",
     "settings.confirmPassword": "पासवर्ड की पुष्टि करें",
     "settings.newPassword": "नया पासवर्ड",
+    "settings.currentPassword": "वर्तमान पासवर्ड",
     "settings.changePassword": "पासवर्ड बदलें",
     "settings.emailConfirmNotice":
       "आपको नए पते पर एक पुष्टि ईमेल प्राप्त होगा।",

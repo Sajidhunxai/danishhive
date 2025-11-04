@@ -126,6 +126,16 @@ class ApiService {
       const response = await this.api.post('/auth/reset-password', { token, newPassword });
       return response.data;
     },
+    
+    changePassword: async (currentPassword: string, newPassword: string) => {
+      const response = await this.api.post('/auth/change-password', { currentPassword, newPassword });
+      return response.data;
+    },
+
+    updateEmail: async (newEmail: string) => {
+      const response = await this.api.post('/auth/update-email', { newEmail });
+      return response.data;
+    },
   };
 
   // Profile endpoints

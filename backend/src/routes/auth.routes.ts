@@ -56,5 +56,26 @@ router.post(
 // Get current user
 router.get('/me', authenticate, authController.getCurrentUser);
 
+// Change password
+router.post(
+  '/change-password',
+  authenticate,
+  [
+    body('currentPassword').notEmpty(),
+    body('newPassword').isLength({ min: 8 }),
+  ],
+  authController.changePassword
+);
+
+// Update email
+router.post(
+  '/update-email',
+  authenticate,
+  [
+    body('newEmail').isEmail().normalizeEmail(),
+  ],
+  authController.updateEmail
+);
+
 export default router;
 
