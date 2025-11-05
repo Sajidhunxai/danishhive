@@ -381,7 +381,40 @@ class ApiService {
     },
   };
 
- 
+  // Referral endpoints
+  referrals = {
+    getSummary: async () => {
+      const response = await this.api.get('/referrals/summary');
+      return response.data as { referralLimit: number; referralsUsed: number };
+    },
+    getMyReferrals: async () => {
+      const response = await this.api.get('/referrals');
+      return response.data.referrals as Array<{
+        id: string;
+        referrerId: string;
+        referredEmail: string;
+        status: string;
+        referredEarnings: number;
+        bonusPaid: boolean;
+        bonusPaidAt: string | null;
+        createdAt: string;
+      }>;
+    },
+    getMyBonuses: async () => {
+      const response = await this.api.get('/referrals/bonuses');
+      return response.data.bonuses as Array<{
+        id: string;
+        referrerId: string;
+        amount: number;
+        status: string;
+        createdAt: string;
+      }>;
+    },
+    createReferral: async (referredEmail: string) => {
+      const response = await this.api.post('/referrals', { referredEmail });
+      return response.data.referral;
+    },
+  };
 
   // Admin endpoints
   admin = {
