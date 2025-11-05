@@ -27,6 +27,11 @@ interface ReferralBonus {
   created_at: string;
 }
 
+interface UserProfile {
+  referral_limit: number;
+  referrals_used: number;
+}
+
 const ReferralSystem = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -35,7 +40,7 @@ const ReferralSystem = () => {
   const [loading, setLoading] = useState(true);
   const [referring, setReferring] = useState(false);
   const [referralEmail, setReferralEmail] = useState("");
-  const [userProfile, setUserProfile] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const { t } = useLanguage();
   useEffect(() => {
     if (user) {

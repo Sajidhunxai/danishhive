@@ -85,6 +85,47 @@ interface Project {
   still_working_here: boolean;
 }
 
+// Backend API response type (camelCase)
+interface BackendProject {
+  id: string;
+  title: string;
+  description: string | null;
+  clientName: string | null;
+  projectUrl: string | null;
+  imageUrl: string | null;
+  projectType: string;
+  startDate: string | null;
+  endDate: string | null;
+  technologies: string | string[] | null;
+  stillWorkingHere?: boolean;
+}
+
+// Job History interface
+interface JobHistory {
+  id: string;
+  title: string;
+  description: string;
+  completed_at: string | null;
+  final_amount: number | null;
+  skills_required: string[] | null;
+  location: string | null;
+}
+
+// Profile Update Data interface
+interface ProfileUpdateData {
+  fullName?: string;
+  bio?: string;
+  location?: string;
+  hourlyRate?: number;
+  skills?: string[];
+  phoneNumber?: string;
+  phoneVerified?: boolean;
+  companyName?: string;
+  address?: string;
+  city?: string;
+  postalCode?: string;
+}
+
 // Common skills for autocomplete
 const COMMON_SKILLS = [
   "React", "JavaScript", "TypeScript", "Node.js", "Python", "Java", "C#", "PHP", "HTML", "CSS",
@@ -135,7 +176,7 @@ const Profile = () => {
   const [verificationCode, setVerificationCode] = useState("");
   const [sendingVerification, setSendingVerification] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [jobHistory, setJobHistory] = useState<any[]>([]);
+  const [jobHistory, setJobHistory] = useState<JobHistory[]>([]);
   const [showJobHistoryModal, setShowJobHistoryModal] = useState(false);
   const [skillsOpen, setSkillsOpen] = useState(false);
   const [skillSearch, setSkillSearch] = useState("");
@@ -320,8 +361,41 @@ const Profile = () => {
   const fetchProjects = async () => {
     try {
       const response = await api.profiles.getMyProfile();
-      const projects = response.profile?.projects || [];
-      setProjects(projects);
+      const backendProjects = response.profile?.projects || [];
+      
+      // Map backend camelCase fields to frontend snake_case Project interface
+      const mappedProjects: Project[] = backendProjects.map((project: BackendProject) => {
+        // Parse technologies if it's a JSON string
+        let technologies = null;
+        if (project.technologies) {
+          if (typeof project.technologies === 'string') {
+            try {
+              technologies = JSON.parse(project.technologies);
+            } catch (e) {
+              console.error('Error parsing technologies:', e);
+              technologies = [];
+            }
+          } else if (Array.isArray(project.technologies)) {
+            technologies = project.technologies;
+          }
+        }
+        
+        return {
+          id: project.id,
+          title: project.title,
+          description: project.description || null,
+          client_name: project.clientName || null,
+          project_url: project.projectUrl || null,
+          image_url: project.imageUrl || null,
+          project_type: project.projectType || 'portfolio',
+          start_date: project.startDate || null,
+          end_date: project.endDate || null,
+          technologies: technologies,
+          still_working_here: project.stillWorkingHere || (project.endDate === null && project.startDate !== null),
+        };
+      });
+      
+      setProjects(mappedProjects);
     } catch (error) {
       console.error('Error fetching projects:', error);
     }
@@ -421,7 +495,7 @@ const Profile = () => {
     setSaving(true);
     try {
       // Map frontend profile fields to backend API fields
-      const updateData: any = {};
+      const updateData: ProfileUpdateData = {};
       
       if (updates.full_name !== undefined) updateData.fullName = updates.full_name;
       if (updates.bio !== undefined) updateData.bio = updates.bio;
