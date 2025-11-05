@@ -119,11 +119,12 @@ app.use((req, res) => {
 });
 
 // Error handler
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error(err.stack);
-  res.status(err.status || 500).json({
-    error: err.message || 'Internal server error',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+app.use((err: unknown, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  const error = err as Error & { status?: number; stack?: string };
+  console.error(error.stack);
+  res.status(error.status || 500).json({
+    error: error.message || 'Internal server error',
+    ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
   });
 });
 

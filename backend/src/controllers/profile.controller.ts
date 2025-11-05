@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth.middleware';
 import prisma from '../config/database';
+import { Prisma } from '@prisma/client';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -70,9 +71,9 @@ export const updateMyProfile = async (req: AuthRequest, res: Response) => {
           },
         });
         console.log('User updated successfully');
-      } catch (userError: any) {
+      } catch (userError: unknown) {
         console.error('User update error:', userError);
-        if (userError.code === 'P2002') {
+        if (userError && typeof userError === 'object' && 'code' in userError && userError.code === 'P2002') {
           return res.status(400).json({ error: 'Dette telefonnummer er allerede registreret' });
         }
         throw userError;
@@ -134,16 +135,18 @@ export const updateMyProfile = async (req: AuthRequest, res: Response) => {
     
     console.log('Profile updated successfully');
     res.json({ profile, message: 'Profile updated successfully' });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Update profile error:', error);
-    console.error('Error details:', {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorDetails = error && typeof error === 'object' && 'code' in error ? {
       code: error.code,
-      meta: error.meta,
-      message: error.message,
-    });
+      meta: 'meta' in error ? error.meta : undefined,
+      message: errorMessage,
+    } : { message: errorMessage };
+    console.error('Error details:', errorDetails);
     res.status(500).json({ 
       error: 'Failed to update profile',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
     });
   }
 };
@@ -185,7 +188,7 @@ export const getAllFreelancers = async (req: AuthRequest, res: Response) => {
   try {
     const { skills, location, minRate, maxRate, search } = req.query;
     
-    const where: any = {
+    const where: Prisma.ProfileWhereInput = {
       user: {
         userType: 'FREELANCER',
       },
@@ -414,7 +417,7 @@ export const uploadImage = async (req: AuthRequest, res: Response) => {
     }
 
     // Extract base64 data
-    const matches = image.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+    const matches = image.match(/^data:([A-Za-z-+/]+);base64,(.+)$/);
     if (!matches || matches.length !== 3) {
       return res.status(400).json({ error: 'Invalid image format' });
     }
@@ -436,11 +439,13 @@ export const uploadImage = async (req: AuthRequest, res: Response) => {
     const baseUrl = process.env.BACKEND_URL || 'http://localhost:5000';
     const imageUrl = `${baseUrl}/uploads/profiles/${imageName}`;
     
-    // Update profile with new avatar URL
-    await prisma.profile.update({
-      where: { userId: req.user!.id },
-      data: { avatarUrl: imageUrl },
-    });
+    // Only update profile avatarUrl for portrait or logo images, not for project images
+    if (imageType === 'portrait' || imageType === 'logo') {
+      await prisma.profile.update({
+        where: { userId: req.user!.id },
+        data: { avatarUrl: imageUrl },
+      });
+    }
 
     res.json({
       success: true,
@@ -448,7 +453,7 @@ export const uploadImage = async (req: AuthRequest, res: Response) => {
       imageUrl: imageUrl,
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Upload image error:', error);
     res.status(500).json({ error: 'Failed to upload image' });
   }
