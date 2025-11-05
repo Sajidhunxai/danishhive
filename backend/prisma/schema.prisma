@@ -35,6 +35,8 @@ model User {
   forumPosts        ForumPost[]
   forumReplies      ForumReply[]
   honeyTransactions HoneyTransaction[]
+  languageSkills    LanguageSkill[]
+  earnings          Earning[]
   
   @@map("users")
 }
@@ -116,6 +118,7 @@ model Job {
   
   applications    JobApplication[]
   contracts       Contract[]
+  earnings        Earning[]
   
   @@map("jobs")
 }
@@ -311,5 +314,43 @@ model Coupon {
   createdAt   DateTime  @default(now())
   
   @@map("coupons")
+}
+
+// Language Skills
+model LanguageSkill {
+  id               String    @id @default(uuid())
+  userId           String
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  languageCode     String
+  languageName     String
+  proficiencyLevel String    @default("beginner")
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  
+  @@map("language_skills")
+  @@index([userId])
+}
+
+// Earnings
+model Earning {
+  id                String    @id @default(uuid())
+  userId            String
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobId             String?
+  job               Job?      @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  amount            Decimal   @db.Decimal(10, 2)
+  currency          String    @default("DKK")
+  paymentPeriodStart DateTime
+  paymentPeriodEnd   DateTime
+  payoutDate        DateTime?
+  status            String    @default("pending") // pending | processing | paid | cancelled
+  molliePaymentId   String?
+  description       String?   @db.Text
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  @@map("earnings")
+  @@index([userId])
+  @@index([jobId])
 }
 

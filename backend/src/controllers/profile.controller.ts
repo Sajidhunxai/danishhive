@@ -236,6 +236,46 @@ export const getAllFreelancers = async (req: AuthRequest, res: Response) => {
   }
 };
 
+export const getMyProfileVerification = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user?.id) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const userId = req.user.id;
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { phoneVerified: true }
+    });
+
+    const profile = await prisma.profile.findUnique({
+      where: { userId },
+      select: {
+        fullName: true,
+        avatarUrl: true,
+        bio: true,
+        location: true,
+        hourlyRate: true,
+      }
+    });
+
+    const complete = Boolean(
+      user &&
+      profile &&
+      profile.fullName &&
+      profile.bio &&
+      profile.location &&
+      profile.hourlyRate &&
+      user.phoneVerified
+    );
+
+    res.json({ complete });
+  } catch (error) {
+    console.error('Profile verification check error:', error);
+    res.status(500).json({ error: 'Failed to check profile verification' });
+  }
+};
+
 export const createProject = async (req: AuthRequest, res: Response) => {
   try {
     const {

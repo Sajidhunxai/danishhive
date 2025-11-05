@@ -8,6 +8,7 @@ router.get('/me', authenticate, profileController.getMyProfile);
 router.put('/me', authenticate, profileController.updateMyProfile);
 router.get('/freelancers', profileController.getAllFreelancers);
 router.get('/:id', profileController.getProfileById);
+router.get('/me/verification', authenticate, profileController.getMyProfileVerification);
 
 // Image upload
 router.post('/upload-image', authenticate, profileController.uploadImage);
