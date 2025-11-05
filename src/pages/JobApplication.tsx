@@ -7,7 +7,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { BackButton } from "@/components/ui/back-button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
@@ -15,6 +14,8 @@ import { ArrowLeft, Send, AlertTriangle } from "lucide-react";
 import { useFreelancerVerification } from "@/components/FreelancerVerificationGuard";
 import { HoneyDropsBalance } from "@/components/HoneyDropsBalance";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { api } from "@/services/api";
+import { getJobById } from "@/api/jobs";
 interface Job {
   id: string;
   title: string;
@@ -74,20 +75,36 @@ const JobApplication = () => {
     if (!id) return;
 
     try {
-      const { data: jobData, error } = await supabase
-        .from("jobs")
-        .select(
-          "id, title, description, client_id, payment_type, budget_min, budget_max, skills_required, project_type"
-        )
-        .eq("id", id)
-        .eq("status", "open")
-        .maybeSingle();
-
-      if (error) throw error;
+      const jobData = await getJobById(id);
 
       if (jobData) {
-        setJob(jobData);
-        fetchAveragePrice(jobData);
+        // Map backend data to frontend format
+        const mappedJob: Job = {
+          id: jobData.id,
+          title: jobData.title,
+          description: jobData.description,
+          client_id: jobData.clientId,
+          payment_type: jobData.paymentType || 'fixed',
+          budget_min: jobData.budget ? parseFloat(jobData.budget.toString()) : null,
+          budget_max: jobData.budget ? parseFloat(jobData.budget.toString()) : null,
+          skills_required: Array.isArray(jobData.skills) ? jobData.skills : 
+                          (typeof jobData.skills === 'string' ? JSON.parse(jobData.skills) : []),
+          project_type: jobData.projectType || 'one-time',
+        };
+
+        // Only set job if status is open
+        if (jobData.status === 'open') {
+          setJob(mappedJob);
+          // fetchAveragePrice(mappedJob); // TODO: Implement average price calculation via backend
+        } else {
+          toast({
+            title: "Fejl",
+            description:
+              "Opgaven blev ikke fundet eller er ikke længere tilgængelig.",
+            variant: "destructive",
+          });
+          navigate("/");
+        }
       } else {
         toast({
           title: "Fejl",
@@ -97,11 +114,11 @@ const JobApplication = () => {
         });
         navigate("/");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching job:", error);
       toast({
         title: "Fejl",
-        description: "Kunne ikke hente opgave detaljer.",
+        description: error.response?.data?.error || "Kunne ikke hente opgave detaljer.",
         variant: "destructive",
       });
       navigate("/");
@@ -112,43 +129,10 @@ const JobApplication = () => {
 
   const fetchAveragePrice = async (currentJob: Job) => {
     try {
-      // Build query for similar jobs based on skills or project type
-      let query = supabase
-        .from("jobs")
-        .select("budget_min, budget_max")
-        .eq("status", "completed")
-        .eq("project_type", currentJob.project_type)
-        .neq("id", currentJob.id);
-
-      // If we have skills, filter by similar skills
-      if (currentJob.skills_required && currentJob.skills_required.length > 0) {
-        query = query.overlaps("skills_required", currentJob.skills_required);
-      }
-
-      const { data: similarJobs, error } = await query.limit(20);
-
-      if (error) throw error;
-
-      if (similarJobs && similarJobs.length > 0) {
-        const validJobs = similarJobs.filter(
-          (job) => job.budget_min !== null && job.budget_max !== null
-        );
-
-        if (validJobs.length > 0) {
-          const avgMin =
-            validJobs.reduce((sum, job) => sum + (job.budget_min || 0), 0) /
-            validJobs.length;
-          const avgMax =
-            validJobs.reduce((sum, job) => sum + (job.budget_max || 0), 0) /
-            validJobs.length;
-
-          setAveragePrice({
-            min: Math.round(avgMin),
-            max: Math.round(avgMax),
-            count: validJobs.length,
-          });
-        }
-      }
+      // TODO: Implement average price calculation via backend API
+      // For now, we'll skip this feature as it requires backend support
+      // The backend would need an endpoint like GET /jobs/average-price?projectType=...&skills=...
+      console.log("Average price calculation not yet implemented via backend");
     } catch (error) {
       console.error("Error fetching average price:", error);
     }
@@ -158,17 +142,11 @@ const JobApplication = () => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("total_earnings")
-        .eq("user_id", user.id)
-        .single();
-
-      if (error) throw error;
-      // Using total_earnings temporarily to store honey drops until we add the proper column
-      setHoneyDrops(data?.total_earnings || 0);
+      const balance = await api.honey.getBalance();
+      setHoneyDrops(balance || 0);
     } catch (error) {
       console.error("Error fetching honey drops:", error);
+      setHoneyDrops(0);
     }
   };
 
@@ -179,27 +157,20 @@ const JobApplication = () => {
     setContactInfoWarning("");
 
     try {
-      const { data, error } = await supabase.functions.invoke(
-        "filter-contact-info",
-        {
-          body: { text },
-        }
-      );
+      // TODO: Implement contact info validation via backend API
+      // For now, we'll do basic client-side validation
+      const emailPattern = /[\w\.-]+@[\w\.-]+\.\w+/g;
+      const phonePattern = /(\+?\d{1,3}[-.\s]?)?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}/g;
+      const urlPattern = /(https?:\/\/[^\s]+|www\.[^\s]+)/gi;
+      
+      const hasEmail = emailPattern.test(text);
+      const hasPhone = phonePattern.test(text);
+      const hasUrl = urlPattern.test(text);
 
-      if (error) {
-        console.error("Error validating content:", error);
-        return;
-      }
-
-      if (data?.hasContactInfo) {
+      if (hasEmail || hasPhone || hasUrl) {
         setContactInfoWarning(
           "Din besked indeholder kontaktoplysninger, som ikke er tilladt. Brug kun Danish Hive til kommunikation."
         );
-        // Update the cover letter with filtered text
-        setApplicationData((prev) => ({
-          ...prev,
-          coverLetter: data.filteredText,
-        }));
       }
     } catch (error) {
       console.error("Error validating contact info:", error);
@@ -257,15 +228,16 @@ const JobApplication = () => {
     setSubmitting(true);
 
     try {
-      // Final validation of content before submission
-      const { data: validationData } = await supabase.functions.invoke(
-        "filter-contact-info",
-        {
-          body: { text: applicationData.coverLetter },
-        }
-      );
+      // Final validation of content before submission (client-side check)
+      const emailPattern = /[\w\.-]+@[\w\.-]+\.\w+/g;
+      const phonePattern = /(\+?\d{1,3}[-.\s]?)?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}/g;
+      const urlPattern = /(https?:\/\/[^\s]+|www\.[^\s]+)/gi;
+      
+      const hasEmail = emailPattern.test(applicationData.coverLetter);
+      const hasPhone = phonePattern.test(applicationData.coverLetter);
+      const hasUrl = urlPattern.test(applicationData.coverLetter);
 
-      if (validationData?.hasContactInfo) {
+      if (hasEmail || hasPhone || hasUrl) {
         toast({
           title: "Kontaktoplysninger detekteret",
           description:
@@ -275,41 +247,27 @@ const JobApplication = () => {
         setContactInfoWarning(
           "Din besked indeholder kontaktoplysninger, som ikke er tilladt. Brug kun Danish Hive til kommunikation."
         );
+        setSubmitting(false);
         return;
       }
 
-      // Submit the application
-      const { data: newApplication, error } = await supabase
-        .from("job_applications")
-        .insert({
-          job_id: job.id,
-          applicant_id: user.id,
-          cover_letter: applicationData.coverLetter,
-          proposed_rate: applicationData.proposedRate
-            ? parseFloat(applicationData.proposedRate)
-            : null,
-          availability: applicationData.expectedDelivery
-            ? `${applicationData.expectedDelivery} dage`
-            : null,
-          status: "pending",
-        })
-        .select()
-        .single();
+      // Submit the application via backend API
+      await api.applications.createApplication({
+        jobId: job.id,
+        coverLetter: applicationData.coverLetter,
+        proposedRate: applicationData.proposedRate
+          ? parseFloat(applicationData.proposedRate)
+          : undefined,
+      });
 
-      if (error) throw error;
-
-      // Deduct honey drops (simulate with direct update for now)
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({
-          total_earnings: honeyDrops - 3, // Using total_earnings temporarily to store honey drops
-        })
-        .eq("user_id", user.id);
-
-      if (updateError) {
-        console.error("Error deducting honey drops:", updateError);
-      } else {
+      // Deduct honey drops via backend API
+      try {
+        await api.honey.spend(3, `Application fee for job: ${job.title}`);
         setHoneyDrops((prev) => Math.max(0, prev - 3));
+      } catch (honeyError) {
+        console.error("Error deducting honey drops:", honeyError);
+        // Application was created, but honey drop deduction failed
+        // This should be handled by the backend, but we log it here
       }
 
       toast({
@@ -319,11 +277,11 @@ const JobApplication = () => {
       });
 
       navigate(`/job/${id}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error submitting application:", error);
       toast({
         title: "Fejl",
-        description: "Der opstod en fejl ved afsendelse af din ansøgning.",
+        description: error.response?.data?.error || "Der opstod en fejl ved afsendelse af din ansøgning.",
         variant: "destructive",
       });
     } finally {
