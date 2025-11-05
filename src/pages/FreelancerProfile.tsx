@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/services/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -118,13 +118,22 @@ const FreelancerProfile = () => {
       setProjects(projectsData || []);
 
       // Fetch language skills
-      const { data: languageData, error: languageError } = await supabase
-        .from('language_skills')
-        .select('*')
-        .eq('user_id', userId);
-
-      if (languageError) throw languageError;
-      setLanguageSkills(languageData || []);
+      try {
+        const languageData = await api.languageSkills.getUserLanguageSkills(userId);
+        // Transform to match expected format
+        const transformed = languageData.map(skill => ({
+          id: skill.id,
+          language_code: skill.languageCode,
+          language_name: skill.languageName,
+          proficiency_level: skill.proficiencyLevel,
+          created_at: skill.createdAt,
+          user_id: skill.userId,
+        }));
+        setLanguageSkills(transformed);
+      } catch (error) {
+        console.error('Error fetching language skills:', error);
+        setLanguageSkills([]);
+      }
 
       // Fetch completed job history
       const { data: jobData, error: jobError } = await supabase

@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/services/api';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -24,9 +24,16 @@ import { Languages, Plus, Trash2, ChevronDown } from 'lucide-react';
 
 interface LanguageSkill {
   id: string;
-  language_code: string;
-  language_name: string;
-  proficiency_level: string;
+  languageCode: string;
+  languageName: string;
+  proficiencyLevel: string;
+  createdAt?: string;
+  updatedAt?: string;
+  userId?: string;
+  // Legacy field names for compatibility
+  language_code?: string;
+  language_name?: string;
+  proficiency_level?: string;
   created_at?: string;
   updated_at?: string;
   user_id?: string;
@@ -63,17 +70,7 @@ export const LanguageSkills = () => {
   const fetchLanguageSkills = async () => {
     console.log('LanguageSkills: Fetching language skills for user:', user?.id);
     try {
-      const { data, error } = await supabase
-        .from('language_skills')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: true });
-
-      if (error) {
-        console.error('LanguageSkills: Supabase error fetching language skills:', error);
-        throw error;
-      }
-      
+      const data = await api.languageSkills.getMyLanguageSkills();
       console.log('LanguageSkills: Fetched language skills:', data);
       setLanguageSkills(data || []);
     } catch (error) {
@@ -92,19 +89,7 @@ export const LanguageSkills = () => {
     console.log('LanguageSkills: Adding language skill', { languageCode, languageName, userId: user.id });
 
     try {
-      const { error } = await supabase
-        .from('language_skills')
-        .insert({
-          user_id: user.id,
-          language_code: languageCode,
-          language_name: languageName,
-          proficiency_level: 'beginner'
-        });
-
-      if (error) {
-        console.error('LanguageSkills: Supabase error adding language skill:', error);
-        throw error;
-      }
+      await api.languageSkills.createLanguageSkill(languageCode, languageName, 'beginner');
 
       console.log('LanguageSkills: Successfully added language skill');
       await fetchLanguageSkills();
@@ -114,11 +99,11 @@ export const LanguageSkills = () => {
         title: "Sprog tilføjet",
         description: `${languageName} blev tilføjet til dine sprogfærdigheder`,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding language skill:', error);
       toast({
         title: "Fejl",
-        description: "Kunne ikke tilføje sprog",
+        description: error?.response?.data?.error || "Kunne ikke tilføje sprog",
         variant: "destructive",
       });
     }
@@ -126,20 +111,15 @@ export const LanguageSkills = () => {
 
   const updateProficiencyLevel = async (skillId: string, level: string) => {
     try {
-      const { error } = await supabase
-        .from('language_skills')
-        .update({ proficiency_level: level })
-        .eq('id', skillId);
+      await api.languageSkills.updateLanguageSkill(skillId, level);
 
-      if (error) throw error;
-
-        setLanguageSkills(prev => 
-          prev.map(skill => 
-            skill.id === skillId 
-              ? { ...skill, proficiency_level: level }
-              : skill
-          )
-        );
+      setLanguageSkills(prev => 
+        prev.map(skill => 
+          skill.id === skillId 
+            ? { ...skill, proficiencyLevel: level, proficiency_level: level }
+            : skill
+        )
+      );
 
       toast({
         title: "Niveau opdateret",
@@ -157,12 +137,7 @@ export const LanguageSkills = () => {
 
   const removeLanguageSkill = async (skillId: string) => {
     try {
-      const { error } = await supabase
-        .from('language_skills')
-        .delete()
-        .eq('id', skillId);
-
-      if (error) throw error;
+      await api.languageSkills.deleteLanguageSkill(skillId);
 
       setLanguageSkills(prev => prev.filter(skill => skill.id !== skillId));
       
@@ -191,7 +166,7 @@ export const LanguageSkills = () => {
   };
 
   const availableLanguages = AVAILABLE_LANGUAGES.filter(
-    lang => !languageSkills.some(skill => skill.language_code === lang.code)
+    lang => !languageSkills.some(skill => (skill.languageCode || skill.language_code) === lang.code)
   );
 
   if (loading) {
@@ -222,17 +197,20 @@ export const LanguageSkills = () => {
         {/* Language Skills List */}
         <div className="space-y-3">
           {languageSkills.map((skill) => {
-            const languageInfo = AVAILABLE_LANGUAGES.find(lang => lang.code === skill.language_code);
+            const languageCode = skill.languageCode || skill.language_code;
+            const languageName = skill.languageName || skill.language_name;
+            const proficiencyLevel = skill.proficiencyLevel || skill.proficiency_level;
+            const languageInfo = AVAILABLE_LANGUAGES.find(lang => lang.code === languageCode);
             return (
               <div key={skill.id} className="flex items-center justify-between p-3 border rounded-lg bg-background">
                 <div className="flex items-center gap-3">
                   <span className="text-xl">{languageInfo?.flag}</span>
-                  <span className="font-medium">{skill.language_name}</span>
+                  <span className="font-medium">{languageName}</span>
                 </div>
                 
                 <div className="flex items-center gap-2">
                   <Select 
-                    value={skill.proficiency_level} 
+                    value={proficiencyLevel} 
                     onValueChange={(value) => updateProficiencyLevel(skill.id, value)}
                   >
                     <SelectTrigger className="w-32">

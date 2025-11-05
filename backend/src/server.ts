@@ -18,6 +18,9 @@ import contractRoutes from './routes/contract.routes';
 import messageRoutes from './routes/message.routes';
 import forumRoutes from './routes/forum.routes';
 import paymentRoutes from './routes/payment.routes';
+import referralRoutes from './routes/referral.routes';
+import languageSkillRoutes from './routes/language-skill.routes';
+import earningRoutes from './routes/earning.routes';
 import honeyRoutes from './routes/honey.routes';
 import couponRoutes from './routes/coupon.routes';
 import adminRoutes from './routes/admin.routes';
@@ -102,6 +105,9 @@ app.use('/api/contracts', contractRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/forum', forumRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/referrals', referralRoutes);
+app.use('/api/language-skills', languageSkillRoutes);
+app.use('/api/earnings', earningRoutes);
 app.use('/api/honey', honeyRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/admin', adminRoutes);
@@ -113,11 +119,12 @@ app.use((req, res) => {
 });
 
 // Error handler
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error(err.stack);
-  res.status(err.status || 500).json({
-    error: err.message || 'Internal server error',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+app.use((err: unknown, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  const error = err as Error & { status?: number; stack?: string };
+  console.error(error.stack);
+  res.status(error.status || 500).json({
+    error: error.message || 'Internal server error',
+    ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
   });
 });
 

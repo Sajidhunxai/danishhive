@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 import { AlertTriangle, User } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -32,13 +32,7 @@ export const FreelancerVerificationGuard: React.FC<FreelancerVerificationGuardPr
       }
 
       try {
-        const { data: isComplete, error } = await supabase
-          .rpc('is_freelancer_profile_complete', { 
-            user_id_param: user.id 
-          });
-
-        if (error) throw error;
-
+        const isComplete = await api.profiles.isMyProfileComplete();
         setIsVerified(isComplete);
         onVerificationCheck?.(isComplete);
       } catch (error) {
@@ -104,12 +98,7 @@ export const useFreelancerVerification = () => {
       }
 
       try {
-        const { data: isComplete, error } = await supabase
-          .rpc('is_freelancer_profile_complete', { 
-            user_id_param: user.id 
-          });
-
-        if (error) throw error;
+        const isComplete = await api.profiles.isMyProfileComplete();
         setIsVerified(isComplete);
       } catch (error) {
         console.error('Error checking freelancer verification:', error);

@@ -16,6 +16,13 @@ import JobFileUpload from "@/components/JobFileUpload";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { ProfileCompletionGuard } from "@/components/ProfileCompletionGuard";
 
+interface UserProfile {
+  address: string | null;
+  city: string | null;
+  postal_code: string | null;
+  company: string | null;
+}
+
 const CreateJob = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -56,7 +63,7 @@ const CreateJob = () => {
     size: number;
     url: string;
   }>>([]);
-  const [userProfile, setUserProfile] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
   // Fetch user profile for company address
   useEffect(() => {
@@ -243,11 +250,12 @@ const CreateJob = () => {
       });
 
       navigate('/client');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating job:', error);
+      const errorMessage = error instanceof Error ? error.message : "Kunne ikke oprette opgaven. Prøv igen.";
       toast({
         title: "Fejl ved oprettelse",
-        description: error.message || "Kunne ikke oprette opgaven. Prøv igen.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

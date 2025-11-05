@@ -1,15 +1,16 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth.middleware';
 import prisma from '../config/database';
+import { Prisma } from '@prisma/client';
 
 export const getAllJobs = async (req: AuthRequest, res: Response) => {
   try {
     const { status, skills, location, minBudget, maxBudget, search } = req.query;
     
-    const where: any = {};
+    const where: Prisma.JobWhereInput = {};
     
     if (status) {
-      where.status = status;
+      where.status = status as string;
     }
     
     if (location) {

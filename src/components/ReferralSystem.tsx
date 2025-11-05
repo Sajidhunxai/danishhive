@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/services/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,11 @@ interface ReferralBonus {
   created_at: string;
 }
 
+interface UserProfile {
+  referral_limit: number;
+  referrals_used: number;
+}
+
 const ReferralSystem = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -35,7 +40,7 @@ const ReferralSystem = () => {
   const [loading, setLoading] = useState(true);
   const [referring, setReferring] = useState(false);
   const [referralEmail, setReferralEmail] = useState("");
-  const [userProfile, setUserProfile] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const { t } = useLanguage();
   useEffect(() => {
     if (user) {
@@ -47,29 +52,26 @@ const ReferralSystem = () => {
 
   const fetchUserProfile = async () => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('referral_limit, referrals_used')
-        .eq('user_id', user?.id)
-        .single();
-
-      if (error) throw error;
-      setUserProfile(data);
+      const summary = await api.referrals.getSummary();
+      setUserProfile({ referral_limit: summary.referralLimit, referrals_used: summary.referralsUsed });
     } catch (error) {
-      console.error('Error fetching user profile:', error);
+      console.error('Error fetching referral summary:', error);
     }
   };
 
   const fetchReferrals = async () => {
     try {
-      const { data, error } = await supabase
-        .from('referrals')
-        .select('*')
-        .eq('referrer_id', user?.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setReferrals(data || []);
+      const data = await api.referrals.getMyReferrals();
+      const normalized = data.map(r => ({
+        id: r.id,
+        referred_email: r.referredEmail,
+        status: r.status,
+        bonus_paid: r.bonusPaid || false,
+        referred_earnings: r.referredEarnings || 0,
+        created_at: r.createdAt,
+        bonus_paid_at: r.bonusPaidAt || null,
+      }));
+      setReferrals(normalized);
     } catch (error) {
       console.error('Error fetching referrals:', error);
     } finally {
@@ -79,14 +81,14 @@ const ReferralSystem = () => {
 
   const fetchBonuses = async () => {
     try {
-      const { data, error } = await supabase
-        .from('referral_bonuses')
-        .select('*')
-        .eq('referrer_id', user?.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setBonuses(data || []);
+      const data = await api.referrals.getMyBonuses();
+      const normalized = data.map(b => ({
+        id: b.id,
+        amount: b.amount,
+        status: b.status,
+        created_at: b.createdAt,
+      }));
+      setBonuses(normalized);
     } catch (error) {
       console.error('Error fetching bonuses:', error);
     }
@@ -121,25 +123,7 @@ const ReferralSystem = () => {
 
     setReferring(true);
     try {
-      const { error } = await supabase
-        .from('referrals')
-        .insert({
-          referrer_id: user.id,
-          referred_email: referralEmail.trim().toLowerCase(),
-          status: 'pending'
-        });
-
-      if (error) {
-        if (error.code === '23505') { // Unique constraint violation
-          toast({
-            title: "Email allerede henvist",
-            description: "Du har allerede henvist denne email adresse",
-            variant: "destructive",
-          });
-          return;
-        }
-        throw error;
-      }
+      await api.referrals.createReferral(referralEmail);
 
       await fetchReferrals();
       await fetchUserProfile();

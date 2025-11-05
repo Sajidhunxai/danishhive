@@ -144,6 +144,10 @@ class ApiService {
       const response = await this.api.get('/profiles/me');
       return response.data;
     },
+    isMyProfileComplete: async () => {
+      const response = await this.api.get('/profiles/me/verification');
+      return response.data.complete as boolean;
+    },
 
     updateMyProfile: async (data: any) => {
       const response = await this.api.put('/profiles/me', data);
@@ -381,7 +385,108 @@ class ApiService {
     },
   };
 
- 
+  // Referral endpoints
+  referrals = {
+    getSummary: async () => {
+      const response = await this.api.get('/referrals/summary');
+      return response.data as { referralLimit: number; referralsUsed: number };
+    },
+    getMyReferrals: async () => {
+      const response = await this.api.get('/referrals');
+      return response.data.referrals as Array<{
+        id: string;
+        referrerId: string;
+        referredEmail: string;
+        status: string;
+        referredEarnings: number;
+        bonusPaid: boolean;
+        bonusPaidAt: string | null;
+        createdAt: string;
+      }>;
+    },
+    getMyBonuses: async () => {
+      const response = await this.api.get('/referrals/bonuses');
+      return response.data.bonuses as Array<{
+        id: string;
+        referrerId: string;
+        amount: number;
+        status: string;
+        createdAt: string;
+      }>;
+    },
+    createReferral: async (referredEmail: string) => {
+      const response = await this.api.post('/referrals', { referredEmail });
+      return response.data.referral;
+    },
+  };
+
+  // Language Skills endpoints
+  languageSkills = {
+    getMyLanguageSkills: async () => {
+      const response = await this.api.get('/language-skills/me');
+      return response.data.languageSkills as Array<{
+        id: string;
+        userId: string;
+        languageCode: string;
+        languageName: string;
+        proficiencyLevel: string;
+        createdAt: string;
+        updatedAt: string;
+      }>;
+    },
+    getUserLanguageSkills: async (userId: string) => {
+      const response = await this.api.get(`/language-skills/user/${userId}`);
+      return response.data.languageSkills as Array<{
+        id: string;
+        userId: string;
+        languageCode: string;
+        languageName: string;
+        proficiencyLevel: string;
+        createdAt: string;
+        updatedAt: string;
+      }>;
+    },
+    createLanguageSkill: async (languageCode: string, languageName: string, proficiencyLevel?: string) => {
+      const response = await this.api.post('/language-skills', {
+        languageCode,
+        languageName,
+        proficiencyLevel: proficiencyLevel || 'beginner',
+      });
+      return response.data.languageSkill;
+    },
+    updateLanguageSkill: async (id: string, proficiencyLevel: string) => {
+      const response = await this.api.put(`/language-skills/${id}`, { proficiencyLevel });
+      return response.data.languageSkill;
+    },
+    deleteLanguageSkill: async (id: string) => {
+      const response = await this.api.delete(`/language-skills/${id}`);
+      return response.data;
+    },
+  };
+
+  // Earnings endpoints
+  earnings = {
+    getMyEarnings: async () => {
+      const response = await this.api.get('/earnings/me');
+      return response.data.earnings as Array<{
+        id: string;
+        job_id: string | null;
+        amount: number;
+        currency: string;
+        payment_period_start: string;
+        payment_period_end: string;
+        payout_date: string | null;
+        status: string;
+        mollie_payment_id: string | null;
+        description: string | null;
+        created_at: string;
+        jobs?: {
+          title: string;
+          client_id: string;
+        } | null;
+      }>;
+    },
+  };
 
   // Admin endpoints
   admin = {

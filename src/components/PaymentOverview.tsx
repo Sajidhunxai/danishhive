@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/services/api";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -84,25 +84,12 @@ export const PaymentOverview = () => {
     if (user) {
       fetchEarnings();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const fetchEarnings = async () => {
     try {
-      const { data, error } = await supabase
-        .from("earnings")
-        .select(
-          `
-          *,
-          jobs (
-            title,
-            client_id
-          )
-        `
-        )
-        .eq("user_id", user?.id)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
+      const data = await api.earnings.getMyEarnings();
       setEarnings(data || []);
     } catch (error) {
       console.error("Error fetching earnings:", error);
