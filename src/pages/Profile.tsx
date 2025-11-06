@@ -433,7 +433,7 @@ const Profile = () => {
           // Send to backend API for upload
           const token = localStorage.getItem('auth_token');
           const backendUrl = api.getBackendUrl();
-          const response = await fetch(`${backendUrl}/api/profiles/upload-image`, {
+          const response = await fetch(`${backendUrl}/profiles/upload-image`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
