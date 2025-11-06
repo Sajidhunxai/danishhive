@@ -97,6 +97,8 @@ const Auth = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation(); // Prevent event bubbling
+    
     setLoading(true);
 
     try {
@@ -107,13 +109,32 @@ const Auth = () => {
         description: t('nowLoggedIn'),
       });
       
+      // Only navigate on success
       navigate("/");
     } catch (error: any) {
+      console.error('Login error:', error);
+      
+      // Extract error message
+      let errorMessage = error.message || t('invalidCredentials');
+      
+      // Handle specific error cases
+      if (errorMessage.includes('Server configuration error') || errorMessage.includes('JWT')) {
+        errorMessage = 'Server configuration error. Please contact support.';
+      } else if (errorMessage.includes('Unable to connect')) {
+        errorMessage = 'Unable to connect to server. Please check your internet connection and try again.';
+      } else if (errorMessage.includes('500') || errorMessage.includes('Server error')) {
+        errorMessage = 'Server error occurred. Please try again later or contact support.';
+      }
+      
+      // Show error toast - this should NOT cause a page refresh
       toast({
         variant: "destructive",
         title: t('loginFailed'),
-        description: error.message || t('invalidCredentials'),
+        description: errorMessage,
       });
+      
+      // Explicitly prevent any navigation or refresh
+      // Don't navigate away, just show the error
     } finally {
       setLoading(false);
     }

@@ -94,7 +94,25 @@ export const BackendAuthProvider = ({ children }: AuthProviderProps) => {
       setUserRole(response.user.userType.toLowerCase());
     } catch (error: any) {
       console.error('Sign in error:', error);
-      throw new Error(error.response?.data?.error || 'Failed to sign in');
+      
+      // Extract error message from various possible locations
+      let errorMessage = 'Failed to sign in';
+      
+      if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
+        errorMessage = error.response.data.errors.map((e: any) => e.msg || e.message || e).join(', ');
+      } else if (error.message) {
+        errorMessage = error.message;
+      } else if (error.response?.status === 500) {
+        errorMessage = 'Server error. Please try again later or contact support.';
+      } else if (error.response?.status === 401) {
+        errorMessage = 'Invalid email or password. Please try again.';
+      } else if (!error.response) {
+        errorMessage = 'Unable to connect to server. Please check your internet connection.';
+      }
+      
+      throw new Error(errorMessage);
     } finally {
       setLoading(false);
     }

@@ -32,35 +32,72 @@ class ApiService {
     this.api.interceptors.response.use(
       (response) => response,
       async (error: AxiosError) => {
+        // Log error for debugging
+        console.error('API Error:', {
+          url: error.config?.url,
+          method: error.config?.method,
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          message: error.message,
+        });
+
         if (error.response?.status === 401) {
-          // Try to refresh token
-          const refreshToken = localStorage.getItem('refresh_token');
-          if (refreshToken) {
-            try {
-              const response = await axios.post(`${API_URL}/auth/refresh-token`, {
-                refreshToken,
-              });
-              const { token, refreshToken: newRefreshToken } = response.data;
-              localStorage.setItem('auth_token', token);
-              localStorage.setItem('refresh_token', newRefreshToken);
-              
-              // Retry original request
-              if (error.config) {
-                error.config.headers.Authorization = `Bearer ${token}`;
-                return axios(error.config);
+          // Don't try to refresh token for auth endpoints (login, register, etc.)
+          // These endpoints should return 401 errors normally
+          const isAuthEndpoint = error.config?.url?.includes('/auth/login') || 
+                                 error.config?.url?.includes('/auth/register') ||
+                                 error.config?.url?.includes('/auth/refresh-token') ||
+                                 error.config?.url?.includes('/auth/forgot-password') ||
+                                 error.config?.url?.includes('/auth/reset-password');
+          
+          if (isAuthEndpoint) {
+            // For auth endpoints, just pass through the error
+            // Don't try to refresh token or redirect
+          } else {
+            // For other endpoints, try to refresh token
+            const refreshToken = localStorage.getItem('refresh_token');
+            if (refreshToken) {
+              try {
+                const response = await axios.post(`${API_URL}/auth/refresh-token`, {
+                  refreshToken,
+                });
+                const { token, refreshToken: newRefreshToken } = response.data;
+                localStorage.setItem('auth_token', token);
+                localStorage.setItem('refresh_token', newRefreshToken);
+                
+                // Retry original request
+                if (error.config) {
+                  error.config.headers.Authorization = `Bearer ${token}`;
+                  return axios(error.config);
+                }
+              } catch (refreshError) {
+                // Refresh failed, clear auth and redirect
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('refresh_token');
+                window.location.href = '/auth';
               }
-            } catch (refreshError) {
-              // Refresh failed, clear auth and redirect
+            } else {
+              // No refresh token, redirect to login
               localStorage.removeItem('auth_token');
-              localStorage.removeItem('refresh_token');
               window.location.href = '/auth';
             }
-          } else {
-            // No refresh token, redirect to login
-            localStorage.removeItem('auth_token');
-            window.location.href = '/auth';
           }
         }
+        
+        // Enhance error object with better error message
+        if (error.response?.data) {
+          const errorData = error.response.data as any;
+          if (errorData.error) {
+            error.message = errorData.error;
+          } else if (errorData.errors && Array.isArray(errorData.errors)) {
+            error.message = errorData.errors.map((e: any) => e.msg || e.message || e).join(', ');
+          }
+        } else if (!error.response) {
+          // Network error or server not reachable
+          error.message = 'Unable to connect to server. Please check your internet connection.';
+        }
+        
         return Promise.reject(error);
       }
     );

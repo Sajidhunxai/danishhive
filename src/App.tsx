@@ -8,6 +8,7 @@ import { ThemeProvider } from "next-themes";
 import { BackendAuthProvider } from "@/hooks/useBackendAuth";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { TopNavigation } from "@/components/TopNavigation";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Under18Application from "./pages/Under18Application";
@@ -49,16 +50,17 @@ const App: React.FC = () => {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        <TooltipProvider>
-          <LanguageProvider>
-            <BackendAuthProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <TopNavigation />
-                <Routes>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <TooltipProvider>
+            <LanguageProvider>
+              <BackendAuthProvider>
+                <Toaster />
+                <Sonner />
+                <BrowserRouter>
+                  <TopNavigation />
+                  <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/client" element={<ClientDashboard />} />
                 <Route path="/admin" element={<AdminDashboard />} />
@@ -92,13 +94,14 @@ const App: React.FC = () => {
                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
-              <CookieConsent />
-            </BrowserRouter>
-          </BackendAuthProvider>
-        </LanguageProvider>
-      </TooltipProvider>
-    </ThemeProvider>
-    </QueryClientProvider>
+                  <CookieConsent />
+                </BrowserRouter>
+              </BackendAuthProvider>
+            </LanguageProvider>
+          </TooltipProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 };
 

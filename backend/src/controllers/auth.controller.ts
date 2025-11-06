@@ -96,6 +96,15 @@ export const login = async (req: Request, res: Response) => {
 
     const { email, password } = req.body;
 
+    // Check if JWT secrets are configured
+    if (!process.env.JWT_SECRET || !process.env.JWT_REFRESH_SECRET) {
+      console.error('JWT secrets not configured');
+      return res.status(500).json({ 
+        error: 'Server configuration error. Please contact support.',
+        details: 'JWT secrets not configured'
+      });
+    }
+
     // Find user
     const user = await prisma.user.findUnique({
       where: { email },
@@ -115,8 +124,18 @@ export const login = async (req: Request, res: Response) => {
     }
 
     // Generate tokens
-    const token = generateToken(user.id);
-    const refreshToken = generateRefreshToken(user.id);
+    let token: string;
+    let refreshToken: string;
+    try {
+      token = generateToken(user.id);
+      refreshToken = generateRefreshToken(user.id);
+    } catch (tokenError: any) {
+      console.error('Token generation error:', tokenError);
+      return res.status(500).json({ 
+        error: 'Failed to generate authentication tokens',
+        details: process.env.NODE_ENV === 'development' ? tokenError.message : undefined
+      });
+    }
 
     res.json({
       message: 'Login successful',
@@ -132,7 +151,16 @@ export const login = async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     console.error('Login error:', error);
-    res.status(500).json({ error: 'Login failed' });
+    
+    // Provide more detailed error messages in development
+    const errorMessage = process.env.NODE_ENV === 'development' 
+      ? error.message || 'Login failed'
+      : 'Login failed. Please try again or contact support if the problem persists.';
+    
+    res.status(500).json({ 
+      error: errorMessage,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 };
 
