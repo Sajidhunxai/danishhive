@@ -74,7 +74,7 @@ export const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({ onImageU
           // Send to backend API for upload and approval
           const token = localStorage.getItem('auth_token');
           const backendUrl = api.getBackendUrl();
-          const response = await fetch(`${backendUrl}/api/profiles/upload-image`, {
+          const response = await fetch(`${backendUrl}/profiles/upload-image`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

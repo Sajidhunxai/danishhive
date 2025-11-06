@@ -116,7 +116,7 @@ serve(async (req) => {
         customerId: mollieCustomerId,
         description: "Payment method verification - will be refunded",
         redirectUrl: `${req.headers.get("origin")}/complete-profile?payment_verified=success`,
-        webhookUrl: `${req.headers.get("origin")}/api/webhook/mollie-verification`,
+        webhookUrl: `${req.headers.get("origin")}/webhook/mollie-verification`,
         metadata: {
           user_id: user.id,
           verification: true,
