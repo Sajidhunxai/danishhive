@@ -229,7 +229,7 @@ const JobDetails = () => {
           {/* Header */}
           <div className="flex items-center justify-between">
             <BackButton to="/" />
-            <ThemeToggle />
+           
           </div>
 
           {/* Job Header Card */}

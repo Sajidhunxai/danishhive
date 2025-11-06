@@ -363,11 +363,9 @@ const Settings = () => {
                 {saving ? t("completeProfile.saving") : "Gem Ændringer"}
               </Button>
             )}
-            <ThemeToggle />
+           
             <BackButton />
-            <Button onClick={signOut} variant="destructive" size="sm">
-            {t("nav.logout")}
-            </Button>
+          
           </div>
         </div>
 

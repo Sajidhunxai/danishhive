@@ -11,10 +11,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Upload, Plus, Trash2, Save, User, MapPin, Phone, Building2, Shield, ShieldCheck, Star, ToggleLeft, ToggleRight, X, Check, ChevronsUpDown, Settings, Mail, Droplets, DollarSign } from "lucide-react";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { LanguageSkills } from "@/components/LanguageSkills";
 import { BackButton } from "@/components/ui/back-button";
-import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ProfileImageUpload } from "@/components/ProfileImageUpload";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
@@ -812,8 +810,7 @@ const Profile = () => {
             <h1 className="text-3xl font-bold text-foreground">{t('profile.title')}</h1>
           </div>
           <div className="flex gap-2">
-            <LanguageSwitcher />
-            <ThemeToggle />
+            
             <Button onClick={() => navigate("/settings")} variant="outline" size="sm" className="w-32">
               {t('profile.account_security')}
             </Button>

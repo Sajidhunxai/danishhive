@@ -267,8 +267,7 @@ const Auth = () => {
       <div className="w-full max-w-md">
         {/* Language Selection and Theme Toggle */}
         <div className="flex justify-center items-center gap-4 mb-6">
-          <LanguageSwitcher />
-          <ThemeToggle />
+        
         </div>
 
         {/* Logo */}

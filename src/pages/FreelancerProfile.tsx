@@ -217,8 +217,7 @@ const FreelancerProfile = () => {
             <h1 className="text-3xl font-bold text-foreground">Freelancer Profil</h1>
           </div>
           <div className="flex gap-2">
-            <LanguageSwitcher />
-            <ThemeToggle />
+          
             <BackButton />
           </div>
         </div>

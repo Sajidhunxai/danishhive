@@ -209,7 +209,6 @@ const JobApplications = () => {
               <ArrowLeft className="h-4 w-4" />
               Tilbage til opgave
             </Button>
-            <ThemeToggle />
           </div>
 
           {/* Page Title */}

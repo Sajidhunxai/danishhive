@@ -411,29 +411,7 @@ const CompleteProfile = () => {
               {/* Back button */}
               <BackButton to="/" />
 
-              {/* Logo */}
-              
-              {/* Language and logout */}
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2">
-                  <Globe className="h-4 w-4" />
-                  <Select value={language} onValueChange={(value) => setLanguage(value as 'da' | 'en' | 'zh' | 'hi')}>
-                    <SelectTrigger className="w-20 h-8 text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="z-[9999]">
-                      <SelectItem value="da">🇩🇰 DA</SelectItem>
-                      <SelectItem value="en">🇬🇧 EN</SelectItem>
-                      <SelectItem value="zh">🇨🇳 中文</SelectItem>
-                      <SelectItem value="hi">🇮🇳 हिन्दी</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button variant="outline" size="sm" onClick={signOut}>
-                  <LogOut className="h-4 w-4 mr-2" />
-                  {t('nav.logout')}
-                </Button>
-              </div>
+         
             </div>
             
             <div className="text-center space-y-3">

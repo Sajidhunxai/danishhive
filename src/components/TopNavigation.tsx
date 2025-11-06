@@ -11,14 +11,17 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
-import { MessageCircle, User, Settings, LogOut, Home, Users } from 'lucide-react';
+import { MessageCircle, User, Settings, LogOut, Home, Users, Globe } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/services/api';
 import { useMessageNotifications } from '@/hooks/useMessageNotifications';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { LanguageSwitcher } from '@/components/ui/language-switcher';
 
 export const TopNavigation: React.FC = () => {
   const { user, userRole, signOut } = useAuth();
-  const { language } = useLanguage();
+  const { language, setLanguage } = useLanguage();
   const navigate = useNavigate();
   const { unreadCount } = useMessageNotifications(true);
 
@@ -123,6 +126,13 @@ export const TopNavigation: React.FC = () => {
                 </Badge>
               )} */}
             </Button>
+
+            {/* Language and Logout */}
+            <div className="flex items-center gap-3">
+              <LanguageSwitcher />
+              <ThemeToggle />
+              
+            </div>
 
             {/* User menu */}
             <DropdownMenu>

@@ -335,7 +335,6 @@ const JobApplication = () => {
           {/* Header */}
           <div className="flex items-center justify-between">
             <BackButton to={`/job/${id}`} />
-            <ThemeToggle />
           </div>
 
           {/* Job Summary */}
