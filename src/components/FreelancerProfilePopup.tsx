@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { 
   User, 
@@ -61,40 +61,39 @@ export function FreelancerProfilePopup({ isOpen, onClose, userId }: FreelancerPr
     
     setLoading(true);
     try {
-      // Use secure function to get public profile with access logging
-      const { data: profileArray, error } = await supabase
-        .rpc('get_public_profile_by_id', { _user_id: userId });
+      // Get public profile using backend API
+      const profileData = await api.profiles.getPublicProfile(userId);
       
-      // Convert array result to single profile object
-      const data = profileArray && profileArray.length > 0 ? profileArray[0] : null;
-
-      if (error) throw error;
-      
-      // Convert secure profile data to FreelancerProfile format
-      const freelancerProfile = data ? {
-        ...data,
-        // Add missing properties with default values for security
-        phone: null,
+      // Convert backend data to FreelancerProfile format
+      const freelancerProfile: FreelancerProfile = {
+        user_id: profileData.userId || userId,
+        full_name: profileData.fullName || '',
+        username: profileData.username || null,
+        role: profileData.role || 'freelancer',
+        bio: profileData.bio || null,
+        avatar_url: profileData.avatarUrl || null,
+        location: profileData.location || null,
+        skills: profileData.skills ? (typeof profileData.skills === 'string' ? JSON.parse(profileData.skills) : profileData.skills) : null,
+        hourly_rate: profileData.hourlyRate ? Number(profileData.hourlyRate) : null,
+        availability: 'available',
+        phone: null, // Not exposed in public profile
         phone_verified: false,
         mitid_verified: false,
         is_admin: false,
         rating: 0,
         rating_count: 0,
-        software_skills: data.skills || [],
-        iban: null,
-        bank_name: null,
-        account_holder_name: null,
         total_earnings: 0,
         active_status: true,
-        updated_at: data.created_at // Use created_at as fallback for updated_at
-      } : null;
+        created_at: profileData.createdAt || new Date().toISOString(),
+        updated_at: profileData.updatedAt || profileData.createdAt || new Date().toISOString()
+      };
       
       setProfile(freelancerProfile);
     } catch (error: any) {
       console.error('Error fetching profile:', error);
       toast({
         title: "Fejl",
-        description: "Kunne ikke hente profil data",
+        description: error.message || "Kunne ikke hente profil data",
         variant: "destructive"
       });
     } finally {

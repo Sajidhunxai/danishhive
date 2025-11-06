@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { api } from "@/services/api";
 import FreelancerSearch from "@/components/FreelancerSearch";
@@ -105,7 +106,7 @@ const ClientDashboard = () => {
     }
     // Allow both clients and admin users to access this dashboard
   }, [user, loading, navigate]);
-
+  const { t } = useLanguage();
   useEffect(() => {
     if (user && (userRole === 'client' || userRole === 'admin')) {
       fetchClientData();
@@ -277,7 +278,7 @@ const ClientDashboard = () => {
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Indlæser...</p>
+          <p className="mt-4 text-muted-foreground">{t('common.loading')}</p>
         </div>
       </div>
     );

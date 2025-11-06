@@ -37,6 +37,9 @@ model User {
   honeyTransactions HoneyTransaction[]
   languageSkills    LanguageSkill[]
   earnings          Earning[]
+  reportedProfiles  ProfileReport[]      @relation("ReporterProfiles")
+  assignedTranslations AttachmentTranslation[] @relation("AssignedTranslations")
+  requestedTranslations AttachmentTranslation[] @relation("RequestedTranslations")
   
   @@map("users")
 }
@@ -65,15 +68,20 @@ model Profile {
   avatarUrl             String?
   birthday              DateTime?
   paymentVerified       Boolean   @default(false)
+  paymentVerifiedAt     DateTime?
   mollieCustomerId      String?
   stripeCustomerId      String?
   honeyDropsBalance     Int       @default(0)
   platformFeeRate       Decimal?  @db.Decimal(5, 4)
   reducedFeeUntil       DateTime?
+  mitidVerified         Boolean   @default(false)
+  mitidVerifiedAt       DateTime?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
   
   projects              Project[]
+  profileImages         ProfileImage[]
+  profileReports        ProfileReport[]      @relation("ReportedProfiles")
   
   @@map("profiles")
 }
@@ -119,6 +127,7 @@ model Job {
   applications    JobApplication[]
   contracts       Contract[]
   earnings        Earning[]
+  translations    AttachmentTranslation[]
   
   @@map("jobs")
 }
@@ -352,5 +361,111 @@ model Earning {
   @@map("earnings")
   @@index([userId])
   @@index([jobId])
+}
+
+// Profile Images for Approval
+model ProfileImage {
+  id          String    @id @default(uuid())
+  userId      String
+  profile     Profile   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fileName    String
+  fileUrl     String
+  imageType   String    // portrait, company_logo
+  status      String    @default("pending") // pending, approved, rejected
+  adminNotes  String?   @db.Text
+  approvedBy  String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  @@map("profile_images")
+  @@index([status])
+  @@index([userId])
+}
+
+// Profile Reports
+model ProfileReport {
+  id              String    @id @default(uuid())
+  reporterId      String
+  reporter        User      @relation("ReporterProfiles", fields: [reporterId], references: [id], onDelete: Cascade)
+  reportedUserId  String
+  reportedProfile Profile   @relation("ReportedProfiles", fields: [reportedUserId], references: [id], onDelete: Cascade)
+  reportCategory  String
+  reportReason    String    @db.Text
+  description     String?   @db.Text
+  conversationData Json?
+  status          String    @default("pending") // pending, reviewed, resolved, dismissed
+  adminNotes      String?   @db.Text
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@map("profile_reports")
+  @@index([status])
+  @@index([reportedUserId])
+}
+
+// Attachment Translations
+model AttachmentTranslation {
+  id              String    @id @default(uuid())
+  jobId           String
+  job             Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  attachmentId   String    // fileId from job attachments JSON
+  originalLanguage String
+  targetLanguage  String
+  notes           String?   @db.Text
+  status          String    @default("pending") // pending, assigned, in_progress, completed, cancelled
+  assignedTo      String?   // User ID of team leader/translator
+  assignedUser    User?     @relation("AssignedTranslations", fields: [assignedTo], references: [id], onDelete: SetNull)
+  requestedBy     String?   // User ID who requested the translation
+  requester       User?     @relation("RequestedTranslations", fields: [requestedBy], references: [id], onDelete: SetNull)
+  translatedFileUrl String? // URL to translated file when completed
+  completedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@map("attachment_translations")
+  @@index([status])
+  @@index([jobId])
+  @@index([assignedTo])
+  @@index([requestedBy])
+}
+
+// Under-18 Applications
+model Under18Application {
+  id                  String    @id @default(uuid())
+  email               String
+  birthday            DateTime
+  languageSkills      Json?     // Array of language skills
+  softwareSkills      Json?     // Array of software skills
+  codeLanguages       Json?     // Array of programming languages
+  educationInstitution String?
+  cvFilePath          String
+  cvFileName          String
+  status              String    @default("pending") // pending, reviewed, approved, rejected
+  adminNotes          String?   @db.Text
+  reviewedBy          String?
+  reviewedAt          DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  
+  @@map("under18_applications")
+  @@index([status])
+  @@index([email])
+}
+
+// Universities
+model University {
+  id          String    @id @default(uuid())
+  name        String
+  city        String
+  type        String    // University, Business School, etc.
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  @@map("universities")
+  @@index([city])
+  @@index([type])
 }
 

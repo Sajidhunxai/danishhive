@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { AdminReportsManagement } from "@/components/AdminReportsManagement";
 import { AdminImageApproval } from "@/components/AdminImageApproval";
@@ -55,54 +55,28 @@ export const AdminRevenueOverview: React.FC<AdminRevenueOverviewProps> = ({
   const fetchRevenueData = async () => {
     setLoading(true);
     try {
-      const startOfMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 19);
-      const endOfMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 19);
+      const month = selectedMonth.getMonth() + 1;
+      const year = selectedMonth.getFullYear();
       
-      // Fetch freelance earnings (completed)
-      const { data: freelanceEarnings, error: freelanceError } = await supabase
-        .from('earnings')
-        .select('amount')
-        .eq('status', 'completed')
-        .gte('created_at', startOfMonth.toISOString())
-        .lt('created_at', endOfMonth.toISOString());
-
-      if (freelanceError) throw freelanceError;
-
-      // Fetch pending payments
-      const { data: pendingEarnings, error: pendingError } = await supabase
-        .from('earnings')
-        .select('amount')
-        .eq('status', 'pending')
-        .gte('created_at', startOfMonth.toISOString())
-        .lt('created_at', endOfMonth.toISOString());
-
-      if (pendingError) throw pendingError;
-
-      // Calculate revenue data
-      const freelanceTotal = freelanceEarnings?.reduce((sum, earning) => sum + Number(earning.amount), 0) || 0;
-      const pendingTotal = pendingEarnings?.reduce((sum, earning) => sum + Number(earning.amount), 0) || 0;
-      const commission = freelanceTotal * 0.15; // 15% commission
-
-      // Mock membership data (replace with actual membership table when available)
-      const membershipRevenue = 0; // TODO: Implement membership revenue calculation
+      const data = await api.admin.getRevenueOverview(month, year);
 
       // Calculate next payout date (1st of next month)
       const nextPayout = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 1);
 
       setRevenueData({
-        membershipRevenue,
-        freelanceRevenue: freelanceTotal,
-        platformCommission: commission,
-        pendingPayments: pendingTotal,
+        membershipRevenue: data.membershipRevenue || 0,
+        freelanceRevenue: data.freelanceRevenue || 0,
+        platformCommission: data.platformCommission || 0,
+        pendingPayments: data.pendingPayments || 0,
         nextPayoutDate: nextPayout.toLocaleDateString('da-DK'),
-        totalTransactions: (freelanceEarnings?.length || 0) + (pendingEarnings?.length || 0)
+        totalTransactions: data.totalTransactions || 0
       });
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching revenue data:', error);
       toast({
         title: "Fejl",
-        description: "Kunne ikke hente indtægtsdata",
+        description: error.message || "Kunne ikke hente indtægtsdata",
         variant: "destructive",
       });
     } finally {

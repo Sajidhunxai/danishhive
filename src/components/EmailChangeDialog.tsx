@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/services/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -40,11 +40,7 @@ const EmailChangeDialog: React.FC<EmailChangeDialogProps> = ({ currentEmail }) =
 
     setLoading(true);
     try {
-      const { error } = await supabase.functions.invoke('send-email-verification', {
-        body: { newEmail }
-      });
-
-      if (error) throw error;
+      await api.auth.updateEmail(newEmail);
 
       toast({
         title: "Verifikations email sendt!",

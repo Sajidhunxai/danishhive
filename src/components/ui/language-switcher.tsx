@@ -10,11 +10,11 @@ import { useLanguage, Language } from '@/contexts/LanguageContext';
 import { Globe, ChevronDown } from 'lucide-react';
 
 export const LanguageSwitcher = () => {
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
 
   const languages: { code: Language; name: string; flag: string }[] = [
-    { code: 'da', name: 'Dansk', flag: '🇩🇰' },
-    { code: 'en', name: 'English', flag: '🇬🇧' },
+    { code: 'da', name: t('language.danish'), flag: '🇩🇰' },
+    { code: 'en', name: t('language.english'), flag: '🇬🇧' },
     { code: 'zh', name: '中文', flag: '🇨🇳' },
     { code: 'hi', name: 'हिन्दी', flag: '🇮🇳' },
   ];

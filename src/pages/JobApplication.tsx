@@ -290,10 +290,10 @@ const JobApplication = () => {
   };
 
   const getRateLabel = () => {
-    if (!job) return "Foreslået pris";
+    if (!job) return t("jobs.suggestedPrice");
     return job.payment_type === "hourly"
-      ? "Foreslået timepris (kr.)"
-      : "Foreslå en pris (kr.)";
+      ? t("jobs.suggestHourlyRate")
+      : t("jobs.suggestPrice");
   };
 
   const getRatePlaceholder = () => {

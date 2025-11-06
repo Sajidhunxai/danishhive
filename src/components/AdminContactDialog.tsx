@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/services/api';
 import {
   Dialog,
   DialogContent,
@@ -98,79 +98,21 @@ export const AdminContactDialog: React.FC<AdminContactDialogProps> = ({
 
     try {
       // First, find an admin user
-      const { data: adminProfile, error: adminError } = await supabase
-        .from('profiles')
-        .select('user_id')
-        .eq('is_admin', true)
-        .limit(1)
-        .single();
+      const adminData = await api.admin.getAdminUsers();
+      const adminId = adminData.admin.id;
 
-      if (adminError || !adminProfile) {
+      if (!adminId) {
         throw new Error('No admin found');
       }
 
-      // Create or find conversation with admin
-      let conversationId: string;
-      
-      // Check if conversation already exists
-      const { data: existingConversation } = await supabase
-        .from('conversations')
-        .select('id')
-        .or(`and(client_id.eq.${user.id},freelancer_id.eq.${adminProfile.user_id}),and(client_id.eq.${adminProfile.user_id},freelancer_id.eq.${user.id})`)
-        .limit(1)
-        .single();
-
-      if (existingConversation) {
-        conversationId = existingConversation.id;
-      } else {
-        // Create new conversation with admin
-        const { data: newConversation, error: conversationError } = await supabase
-          .from('conversations')
-          .insert({
-            client_id: user.id,
-            freelancer_id: adminProfile.user_id,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })
-          .select('id')
-          .single();
-
-        if (conversationError || !newConversation) {
-          throw conversationError;
-        }
-
-        conversationId = newConversation.id;
-      }
-
-      // Send the message
+      // Send the message to admin
       const messageContent = `[${t.categories[category as keyof typeof t.categories]}] ${subject}\n\n${message}`;
       
-      const { error: messageError } = await supabase
-        .from('messages')
-        .insert({
-          conversation_id: conversationId,
-          sender_id: user.id,
-          content: messageContent,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        });
-
-      if (messageError) {
-        throw messageError;
-      }
-
-      // Send notification to admin
-      try {
-        await supabase.functions.invoke('send-message-notification', {
-          body: {
-            recipientId: adminProfile.user_id,
-            senderName: user.user_metadata?.full_name || 'Unknown User',
-            messageContent: messageContent
-          }
-        });
-      } catch (notificationError) {
-        console.warn('Failed to send notification:', notificationError);
-      }
+      await api.messages.sendMessage({
+        receiverId: adminId,
+        content: messageContent,
+        conversationId: `admin-contact-${user.id}`
+      });
 
       toast({
         title: t.success,

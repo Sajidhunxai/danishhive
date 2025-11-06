@@ -9,8 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/services/api";
 import { useToast } from "@/components/ui/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { ArrowLeft, CalendarIcon, Upload, X } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -38,9 +39,21 @@ const Under18Application = () => {
   
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   // Common programming languages and software
-  const commonLanguages = ["Dansk", "Engelsk", "Tysk", "Fransk", "Spansk", "Italiensk", "Russisk", "Arabisk", "Kinesisk", "Japansk"];
+  const commonLanguages = [
+    t("language.danish"),
+    t("language.english"),
+    t("language.german"),
+    t("language.french"),
+    t("language.spanish"),
+    t("language.italian"),
+    t("language.russian"),
+    t("language.arabic"),
+    t("language.chinese"),
+    t("language.japanese")
+  ];
   const commonSoftware = ["Microsoft Office", "Adobe Creative Suite", "AutoCAD", "SolidWorks", "Figma", "Sketch", "Canva", "Google Workspace"];
   const commonCodeLanguages = ["JavaScript", "Python", "Java", "C#", "C++", "PHP", "Ruby", "Go", "Swift", "Kotlin", "HTML/CSS", "SQL", "TypeScript", "React", "Vue.js", "Angular", "Node.js"];
 
@@ -61,18 +74,13 @@ const Under18Application = () => {
 
   const fetchUniversities = async () => {
     try {
-      const { data, error } = await supabase
-        .from('danish_universities')
-        .select('*')
-        .order('name');
-      
-      if (error) throw error;
-      setUniversities(data || []);
-    } catch (error) {
+      const universitiesData = await api.universities.getUniversities();
+      setUniversities(universitiesData);
+    } catch (error: any) {
       console.error('Error fetching universities:', error);
       toast({
         title: "Fejl",
-        description: "Kunne ikke hente universiteter",
+        description: error.message || "Kunne ikke hente universiteter",
         variant: "destructive",
       });
     }
@@ -117,18 +125,20 @@ const Under18Application = () => {
 
   const uploadCV = async (file: File): Promise<string | null> => {
     try {
-      const fileExt = 'pdf';
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('job-attachments')
-        .upload(`cv-uploads/${fileName}`, file);
-
-      if (uploadError) throw uploadError;
-
-      return fileName;
+      // Convert file to base64
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const base64 = reader.result as string;
+          // Remove data:application/pdf;base64, prefix
+          const base64Data = base64.split(',')[1];
+          resolve(base64Data);
+        };
+        reader.onerror = () => reject(new Error('Failed to read file'));
+        reader.readAsDataURL(file);
+      });
     } catch (error) {
-      console.error('Error uploading CV:', error);
+      console.error('Error reading CV file:', error);
       return null;
     }
   };
@@ -157,27 +167,23 @@ const Under18Application = () => {
     setLoading(true);
 
     try {
-      // Upload CV
-      const cvPath = await uploadCV(cvFile);
-      if (!cvPath) {
-        throw new Error("Failed to upload CV");
+      // Convert CV to base64
+      const cvBase64 = await uploadCV(cvFile);
+      if (!cvBase64) {
+        throw new Error("Failed to read CV file");
       }
 
       // Submit application
-      const { error } = await supabase
-        .from('under_18_applications')
-        .insert({
-          email,
-          birthday: birthday.toISOString().split('T')[0],
-          language_skills: languageSkills,
-          software_skills: softwareSkills,
-          code_languages: codeLanguages,
-          education_institution: selectedUniversity || null,
-          cv_file_path: cvPath,
-          cv_file_name: cvFile.name,
-        });
-
-      if (error) throw error;
+      await api.under18.createApplication({
+        email,
+        birthday: birthday.toISOString().split('T')[0],
+        languageSkills,
+        softwareSkills,
+        codeLanguages,
+        educationInstitution: selectedUniversity || undefined,
+        cvFile: cvBase64,
+        cvFileName: cvFile.name,
+      });
 
       // Clear localStorage
       localStorage.removeItem('under18FormData');

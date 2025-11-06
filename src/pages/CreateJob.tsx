@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/services/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -69,23 +69,23 @@ const CreateJob = () => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('address, city, postal_code, company')
-          .eq('user_id', user.id)
-          .single();
-        
-        if (profile) {
-          setUserProfile(profile);
-          // Auto-populate company address if available
-          if (profile.address && profile.city && profile.postal_code) {
-            const fullAddress = `${profile.address}, ${profile.postal_code} ${profile.city}`;
-            setJobData(prev => ({ 
-              ...prev, 
-              company_address: fullAddress,
-              location: profile.city || prev.location
-            }));
+        try {
+          const profile = await api.profiles.getMyProfile();
+          
+          if (profile) {
+            setUserProfile(profile);
+            // Auto-populate company address if available
+            if (profile.address && profile.city && profile.postalCode) {
+              const fullAddress = `${profile.address}, ${profile.postalCode} ${profile.city}`;
+              setJobData(prev => ({ 
+                ...prev, 
+                company_address: fullAddress,
+                location: profile.city || prev.location
+              }));
+            }
           }
+        } catch (error) {
+          console.error('Error fetching profile:', error);
         }
       }
     };
@@ -179,68 +179,60 @@ const CreateJob = () => {
     setLoading(true);
     
     try {
-      const { data: createdJob, error } = await supabase.from('jobs').insert([
-        {
-          title: jobData.title,
-          description: jobData.description,
+      // Calculate budget (use average if min/max provided, or single value)
+      const budget = jobData.budget_min && jobData.budget_max 
+        ? (parseFloat(jobData.budget_min) + parseFloat(jobData.budget_max)) / 2
+        : (jobData.budget_min ? parseFloat(jobData.budget_min) : null);
+
+      // Prepare job data for backend API
+      const jobPayload = {
+        title: jobData.title,
+        description: jobData.description,
+        budget: budget,
+        hourlyRate: jobData.payment_type === "hourly_rate" && jobData.budget_min ? parseFloat(jobData.budget_min) : null,
+        location: jobData.use_company_address && userProfile ? 
+          `${userProfile.city || ''}` : 
+          (jobData.company_address || jobData.location || null),
+        skills: jobData.skills_required || [],
+        deadline: jobData.deadline || null,
+        attachments: uploadedFiles.map(file => ({
+          fileId: file.id,
+          fileName: file.name,
+          fileUrl: file.url,
+          fileSize: file.size,
+        })),
+        // Store extra metadata in attachments/metadata for future use
+        metadata: {
           budget_min: jobData.budget_min ? parseFloat(jobData.budget_min) : null,
           budget_max: jobData.budget_max ? parseFloat(jobData.budget_max) : null,
-          deadline: jobData.deadline || null,
-          location: jobData.use_company_address && userProfile ? 
-            `${userProfile.city || ''}` : 
-            (jobData.company_address || jobData.location || null),
           is_remote: jobData.is_remote,
           project_type: jobData.project_type,
-          skills_required: jobData.skills_required,
           software_required: jobData.software_required,
           positions_available: jobData.positions_available,
           requires_approval: jobData.requires_approval,
-          client_id: user.id,
-          status: 'open',
-          // New fields
           payment_type: jobData.payment_type,
           currency: jobData.currency,
           is_permanent_consultant: jobData.is_permanent_consultant,
           hours_per_week: jobData.hours_per_week ? parseInt(jobData.hours_per_week) : null,
           contract_duration_weeks: jobData.contract_duration_weeks ? parseInt(jobData.contract_duration_weeks) : null,
-          // Remote restriction fields
           remote_restriction_type: jobData.remote_restriction_type,
           allowed_continents: jobData.allowed_continents.length > 0 ? jobData.allowed_continents : null,
           allowed_countries: jobData.allowed_countries.length > 0 ? jobData.allowed_countries : null,
-        }
-      ]).select().single();
+        },
+      };
 
-      if (error) throw error;
+      // Create job using backend API
+      const createdJob = await api.jobs.createJob(jobPayload);
 
-      // Handle file uploads if any
-      if (uploadedFiles.length > 0) {
-        const jobId = createdJob.id;
-        
-        // Move files from temp to job folder and create attachment records
-        for (const file of uploadedFiles) {
-          const oldPath = `temp/${file.id}.pdf`;
-          const newPath = `${jobId}/${file.id}.pdf`;
-          
-          // Move file in storage
-          const { error: moveError } = await supabase.storage
-            .from('job-attachments')
-            .move(oldPath, newPath);
-
-          if (moveError) {
-            console.error('Error moving file:', moveError);
-            continue;
-          }
-
-          // Create attachment record
-          await supabase.from('job_attachments').insert({
-            job_id: jobId,
-            file_name: file.name,
-            file_path: newPath,
-            file_size: file.size,
-            mime_type: 'application/pdf',
-            uploaded_by: user.id,
-            is_guideline: true
-          });
+      // Handle file uploads - move temp files to job folder
+      if (uploadedFiles.length > 0 && createdJob.id) {
+        try {
+          // Move all temp files to the job folder server-side
+          const fileIds = uploadedFiles.map(file => file.id);
+          await api.upload.moveTempFilesToJob(createdJob.id, fileIds);
+        } catch (fileError) {
+          console.error('Error moving files to job folder:', fileError);
+          // Continue even if file move fails - files are still in temp folder
         }
       }
 

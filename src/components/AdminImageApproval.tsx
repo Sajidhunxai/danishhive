@@ -5,7 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { api } from '@/services/api';
 import { Image, Check, X, User, Building2 } from 'lucide-react';
 
 interface ProfileImage {
@@ -29,48 +30,34 @@ export const AdminImageApproval: React.FC = () => {
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
   const [adminNotes, setAdminNotes] = useState<{ [key: string]: string }>({});
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const fetchPendingImages = async () => {
     try {
-      const { data, error } = await supabase
-        .from('profile_images')
-        .select(`
-          id,
-          user_id,
-          file_name,
-          file_url,
-          image_type,
-          status,
-          created_at,
-          admin_notes
-        `)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false });
+      const imagesData = await api.imageApproval.getPendingImages();
 
-      if (error) throw error;
-
-      // Fetch profile data separately for each image
-      const imagesWithProfiles = await Promise.all(
-        (data || []).map(async (image: any) => {
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('full_name, company')
-            .eq('user_id', image.user_id)
-            .single();
-          
-          return {
-            ...image,
-            profiles: profileData
-          };
-        })
-      );
+      // Map backend data to expected format
+      const imagesWithProfiles = imagesData.map((image: any) => ({
+        id: image.id,
+        user_id: image.userId,
+        file_name: image.fileName,
+        file_url: image.fileUrl,
+        image_type: image.imageType,
+        status: image.status,
+        created_at: image.createdAt,
+        admin_notes: image.adminNotes,
+        profiles: image.profile ? {
+          full_name: image.profile.fullName,
+          company: image.profile.companyName
+        } : null
+      }));
 
       setImages(imagesWithProfiles);
     } catch (error: any) {
       console.error('Error fetching images:', error);
       toast({
         title: "Fejl",
-        description: "Kunne ikke hente billeder til godkendelse",
+        description: error.message || "Kunne ikke hente billeder til godkendelse",
         variant: "destructive",
       });
     } finally {
@@ -86,19 +73,13 @@ export const AdminImageApproval: React.FC = () => {
     setProcessingIds(prev => new Set(prev).add(imageId));
     
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Ikke logget ind');
+      const notes = adminNotes[imageId] || undefined;
 
-      const { error } = await supabase
-        .from('profile_images')
-        .update({
-          status: action,
-          approved_by: user.id,
-          admin_notes: adminNotes[imageId] || null
-        })
-        .eq('id', imageId);
-
-      if (error) throw error;
+      if (action === 'approved') {
+        await api.imageApproval.approveImage(imageId, notes);
+      } else {
+        await api.imageApproval.rejectImage(imageId, notes);
+      }
 
       toast({
         title: action === 'approved' ? "Billede godkendt!" : "Billede afvist!",
@@ -148,7 +129,7 @@ export const AdminImageApproval: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-center text-muted-foreground">Indlæser...</p>
+          <p className="text-center text-muted-foreground">{t('common.loading')}</p>
         </CardContent>
       </Card>
     );

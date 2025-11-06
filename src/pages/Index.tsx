@@ -6,7 +6,6 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import JobsSection from "@/components/JobsSection";
 import FreelancerSearch from "@/components/FreelancerSearch";
 import { AdminPanel } from "@/components/AdminPanel";
-import { supabase } from "@/integrations/supabase/client";
 import { api } from "@/services/api";
 
 const Index = () => {

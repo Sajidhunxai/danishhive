@@ -39,18 +39,34 @@ interface LanguageSkill {
   user_id?: string;
 }
 
-const AVAILABLE_LANGUAGES = [
-  { code: 'da', name: 'Dansk', flag: '🇩🇰' },
-  { code: 'en', name: 'English', flag: '🇬🇧' },
-  { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
-  { code: 'fr', name: 'Français', flag: '🇫🇷' },
-  { code: 'es', name: 'Español', flag: '🇪🇸' },
-  { code: 'it', name: 'Italiano', flag: '🇮🇹' },
-  { code: 'nl', name: 'Nederlands', flag: '🇳🇱' },
-  { code: 'sv', name: 'Svenska', flag: '🇸🇪' },
-  { code: 'no', name: 'Norsk', flag: '🇳🇴' },
-  { code: 'fi', name: 'Suomi', flag: '🇫🇮' },
+const AVAILABLE_LANGUAGES_CODES = [
+  { code: 'da', flag: '🇩🇰' },
+  { code: 'en', flag: '🇬🇧' },
+  { code: 'de', flag: '🇩🇪' },
+  { code: 'fr', flag: '🇫🇷' },
+  { code: 'es', flag: '🇪🇸' },
+  { code: 'it', flag: '🇮🇹' },
+  { code: 'nl', flag: '🇳🇱' },
+  { code: 'sv', flag: '🇸🇪' },
+  { code: 'no', flag: '🇳🇴' },
+  { code: 'fi', flag: '🇫🇮' },
 ];
+
+const getLanguageName = (code: string, t: (key: string) => string): string => {
+  const languageMap: Record<string, string> = {
+    'da': t('language.danish'),
+    'en': t('language.english'),
+    'de': t('language.german'),
+    'fr': t('language.french'),
+    'es': t('language.spanish'),
+    'it': t('language.italian'),
+    'nl': 'Nederlands',
+    'sv': 'Svenska',
+    'no': 'Norsk',
+    'fi': 'Suomi',
+  };
+  return languageMap[code] || code;
+};
 
 export const LanguageSkills = () => {
   const { user } = useAuth();
@@ -165,7 +181,10 @@ export const LanguageSkills = () => {
     }
   };
 
-  const availableLanguages = AVAILABLE_LANGUAGES.filter(
+  const availableLanguages = AVAILABLE_LANGUAGES_CODES.map(lang => ({
+    ...lang,
+    name: getLanguageName(lang.code, t)
+  })).filter(
     lang => !languageSkills.some(skill => (skill.languageCode || skill.language_code) === lang.code)
   );
 
@@ -179,7 +198,7 @@ export const LanguageSkills = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="animate-pulse">Indlæser sprog...</div>
+          <div className="animate-pulse">{t('loading.languages')}</div>
         </CardContent>
       </Card>
     );
@@ -198,9 +217,9 @@ export const LanguageSkills = () => {
         <div className="space-y-3">
           {languageSkills.map((skill) => {
             const languageCode = skill.languageCode || skill.language_code;
-            const languageName = skill.languageName || skill.language_name;
             const proficiencyLevel = skill.proficiencyLevel || skill.proficiency_level;
-            const languageInfo = AVAILABLE_LANGUAGES.find(lang => lang.code === languageCode);
+            const languageInfo = AVAILABLE_LANGUAGES_CODES.find(lang => lang.code === languageCode);
+            const languageName = languageInfo ? getLanguageName(languageCode, t) : (skill.languageName || skill.language_name || languageCode);
             return (
               <div key={skill.id} className="flex items-center justify-between p-3 border rounded-lg bg-background">
                 <div className="flex items-center gap-3">

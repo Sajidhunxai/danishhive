@@ -32,6 +32,7 @@ import ForumNewPost from "./pages/ForumNewPost";
 import ForumPostDetail from "./pages/ForumPostDetail";
 import { CookieConsent } from "@/components/CookieConsent";
 import { ContractSystem } from "@/components/ContractSystem";
+import { preloadSound } from "@/utils/sound";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -42,6 +43,11 @@ const queryClient = new QueryClient({
 });
 
 const App: React.FC = () => {
+  // Preload sound on app initialization
+  React.useEffect(() => {
+    preloadSound();
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/services/api";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle } from "lucide-react";
@@ -42,17 +42,12 @@ export const CompleteJobDialog = ({ job, isOpen, onClose, onComplete }: Complete
 
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('jobs')
-        .update({
-          status: 'completed',
-          freelancer_id: user.id,
-          final_amount: parseFloat(finalAmount),
-          completed_at: new Date().toISOString()
-        })
-        .eq('id', job.id);
-
-      if (error) throw error;
+      await api.jobs.updateJob(job.id, {
+        status: 'completed',
+        freelancerId: user.id,
+        finalAmount: parseFloat(finalAmount),
+        completedAt: new Date().toISOString()
+      });
 
       toast({
         title: "Succes",
@@ -61,11 +56,11 @@ export const CompleteJobDialog = ({ job, isOpen, onClose, onComplete }: Complete
 
       onComplete();
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error completing job:', error);
       toast({
         title: "Fejl",
-        description: "Kunne ikke markere opgave som fuldført",
+        description: error.message || "Kunne ikke markere opgave som fuldført",
         variant: "destructive",
       });
     } finally {

@@ -9,6 +9,7 @@ import { ArrowLeft, Pin, Lock, MessageCircle, Plus } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import { api } from '@/services/api';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ForumPost {
   id: string;
@@ -40,6 +41,7 @@ interface ForumCategory {
 const ForumCategory: React.FC = () => {
   const { categoryId } = useParams();
   const { user, userRole } = useAuth();
+  const { t } = useLanguage();
   const [category, setCategory] = useState<ForumCategory | null>(null);
   const [posts, setPosts] = useState<ForumPost[]>([]);
   const [loading, setLoading] = useState(true);
@@ -91,7 +93,7 @@ const ForumCategory: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse">Indlæser kategori...</div>
+        <div className="animate-pulse">{t('loading.category')}</div>
       </div>
     );
   }

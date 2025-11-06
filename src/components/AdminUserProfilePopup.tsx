@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/services/api";
 import { User, Mail, Phone, MapPin, Building, Calendar, Shield, CreditCard } from "lucide-react";
 
 interface UserProfile {
@@ -54,15 +54,38 @@ export const AdminUserProfilePopup: React.FC<AdminUserProfilePopupProps> = ({
 
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
+      const usersData = await api.admin.getUsersWithEmail();
+      const user = usersData.find((u: any) => u.id === userId);
 
-      if (error) throw error;
-      setProfile(data);
-    } catch (error) {
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      // Map backend data to expected format
+      const mappedProfile: UserProfile = {
+        id: user.profile?.id || '',
+        user_id: user.id,
+        full_name: user.profile?.fullName || user.fullName || '',
+        username: user.profile?.username || null,
+        role: user.userType?.toLowerCase() || '',
+        bio: user.profile?.bio || null,
+        avatar_url: user.profile?.avatarUrl || user.avatarUrl || null,
+        location: user.profile?.location || null,
+        phone: user.phoneNumber || null,
+        created_at: user.createdAt,
+        updated_at: user.updatedAt || user.createdAt,
+        is_admin: user.isAdmin || false,
+        company: user.profile?.companyName || null,
+        address: user.profile?.address || null,
+        city: user.profile?.city || null,
+        postal_code: user.profile?.postalCode || null,
+        phone_verified: user.phoneVerified || false,
+        payment_verified: user.profile?.paymentVerified || false,
+        mitid_verified: user.profile?.mitidVerified || false,
+      };
+
+      setProfile(mappedProfile);
+    } catch (error: any) {
       console.error('Error fetching user profile:', error);
     } finally {
       setLoading(false);

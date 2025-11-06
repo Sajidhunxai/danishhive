@@ -152,7 +152,7 @@ const TermsOfService = () => {
                   <li>Forsøg først direkte forhandling</li>
                   <li>Kontakt Danish Hive's support</li>
                   <li>Mediation gennem vores system</li>
-                  <li>Som sidste udvej: danske domstole (København)</li>
+                  <li>{t('legal.lastResortDanishCourts')}</li>
                 </ol>
               </div>
             </div>
@@ -194,7 +194,7 @@ const TermsOfService = () => {
 
             <div className="border-t pt-6">
               <p className="text-sm text-muted-foreground">
-                Disse vilkår er underlagt dansk ret og eventuelle tvister skal afgøres ved danske domstole.
+                {t('legal.disputesInDanishCourts')}
               </p>
             </div>
           </CardContent>

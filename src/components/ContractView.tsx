@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/services/api";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useFreelancerVerification } from '@/components/FreelancerVerificationGuard';
@@ -87,12 +87,7 @@ export const ContractView = ({
 
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from('contracts')
-        .update({ status: 'sent' })
-        .eq('id', contract.id);
-
-      if (error) throw error;
+      await api.contracts.updateContract(contract.id, { status: 'sent' });
 
       toast({
         title: "Succes",
@@ -100,11 +95,11 @@ export const ContractView = ({
       });
 
       onContractUpdated();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending contract:', error);
       toast({
         title: "Fejl",
-        description: "Kunne ikke sende kontrakt",
+        description: error.message || "Kunne ikke sende kontrakt",
         variant: "destructive",
       });
     } finally {
@@ -149,12 +144,7 @@ export const ContractView = ({
         updates.status = 'signed';
       }
 
-      const { error } = await supabase
-        .from('contracts')
-        .update(updates)
-        .eq('id', contract.id);
-
-      if (error) throw error;
+      await api.contracts.updateContract(contract.id, updates);
 
       toast({
         title: "Succes",
@@ -179,31 +169,26 @@ export const ContractView = ({
   };
 
   const handleCreateEscrow = async () => {
-    if (!canCreateEscrow) return;
+    if (!canCreateEscrow || !contract.total_amount) return;
 
     setCreatingEscrow(true);
     try {
-      const { data, error } = await supabase.functions.invoke('create-escrow-payment', {
-        body: { contract_id: contract.id }
+      const result = await api.payments.createEscrowPayment(
+        contract.id,
+        Number(contract.total_amount),
+        `Escrow payment for contract ${contract.contract_number}`
+      );
+
+      toast({
+        title: "Succes",
+        description: result.message || "Escrow betaling oprettet",
       });
-
-      if (error) throw error;
-
-      if (data.checkout_url) {
-        // Redirect to Mollie checkout
-        window.location.href = data.checkout_url;
-      } else {
-        toast({
-          title: "Succes",
-          description: data.message,
-        });
-        onContractUpdated();
-      }
-    } catch (error) {
+      onContractUpdated();
+    } catch (error: any) {
       console.error('Error creating escrow payment:', error);
       toast({
         title: "Fejl",
-        description: "Kunne ikke oprette escrow betaling",
+        description: error.message || "Kunne ikke oprette escrow betaling",
         variant: "destructive",
       });
     } finally {
@@ -212,27 +197,24 @@ export const ContractView = ({
   };
 
   const handleReleaseEscrow = async () => {
-    if (!canReleaseEscrow) return;
+    if (!canReleaseEscrow || !contract.metadata?.escrow_payment_id) return;
 
     setReleasingEscrow(true);
     try {
-      const { data, error } = await supabase.functions.invoke('release-escrow-payment', {
-        body: { contract_id: contract.id }
-      });
-
-      if (error) throw error;
+      const paymentId = contract.metadata.escrow_payment_id;
+      const result = await api.payments.releaseEscrowPayment(contract.id, paymentId);
 
       toast({
         title: "Succes",
-        description: data.message,
+        description: result.message || "Escrow betaling frigivet",
       });
 
       onContractUpdated();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error releasing escrow payment:', error);
       toast({
         title: "Fejl",
-        description: "Kunne ikke frigive escrow betaling",
+        description: error.message || "Kunne ikke frigive escrow betaling",
         variant: "destructive",
       });
     } finally {

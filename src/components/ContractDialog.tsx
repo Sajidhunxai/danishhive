@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/services/api";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { FileText, Sparkles } from "lucide-react";
@@ -106,15 +106,10 @@ export const ContractDialog = ({
 
   const fetchTemplates = async () => {
     try {
-      const { data, error } = await supabase
-        .from('contract_templates')
-        .select('*')
-        .eq('is_active', true)
-        .order('name');
-
-      if (error) throw error;
-      setTemplates(data || []);
-    } catch (error) {
+      // TODO: When backend has contract templates endpoint, use it
+      // For now, use empty array
+      setTemplates([]);
+    } catch (error: any) {
       console.error('Error fetching templates:', error);
     }
   };
@@ -168,38 +163,24 @@ export const ContractDialog = ({
 
     // Check if user profile is complete before allowing contract creation
     try {
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select(`
-          full_name,
-          phone,
-          address,
-          city,
-          postal_code,
-          phone_verified,
-          payment_verified,
-          role
-        `)
-        .eq('user_id', user.id)
-        .single();
-
-      if (profileError) throw profileError;
+      const profile = await api.profiles.getMyProfile();
+      const userData = await api.auth.getCurrentUser();
 
       const isProfileComplete = profile &&
-        profile.full_name && 
-        profile.full_name.trim() !== '' &&
-        profile.full_name !== 'Incomplete Profile' &&
-        profile.phone && 
-        profile.phone.trim() !== '' &&
+        profile.fullName && 
+        profile.fullName.trim() !== '' &&
+        profile.fullName !== 'Incomplete Profile' &&
+        profile.phoneNumber && 
+        profile.phoneNumber.trim() !== '' &&
         profile.address && 
         profile.address.trim() !== '' &&
         profile.city && 
         profile.city.trim() !== '' &&
-        profile.postal_code && 
-        profile.postal_code.trim() !== '' &&
-        profile.phone_verified === true &&
+        profile.postalCode && 
+        profile.postalCode.trim() !== '' &&
+        userData?.phoneVerified === true &&
         // Only require payment verification for clients, not freelancers
-        profile.role === 'client' ? profile.payment_verified === true : true;
+        userData?.userType === 'CLIENT' ? profile.paymentVerified === true : true;
 
       if (!isProfileComplete) {
         toast({
@@ -209,11 +190,11 @@ export const ContractDialog = ({
         });
         return;
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error checking profile completion:', error);
       toast({
         title: "Fejl",
-        description: "Kunne ikke verificere profil status. Prøv igen senere.",
+        description: error.message || "Kunne ikke verificere profil status. Prøv igen senere.",
         variant: "destructive",
       });
       return;
@@ -221,47 +202,24 @@ export const ContractDialog = ({
 
     setLoading(true);
     try {
-      // Generate contract number if creating new
-      let contractNumber = "";
-      if (!editContract) {
-        const { data: numberData, error: numberError } = await supabase
-          .rpc('generate_contract_number');
-        if (numberError) throw numberError;
-        contractNumber = numberData;
-      }
-
       const contractPayload = {
-        job_id: selectedJob,
-        client_id: user.id,
+        jobId: selectedJob,
+        freelancerId: null, // Will be set when sending contract
         title: contractData.title,
         content: contractData.content,
         terms: contractData.terms || null,
-        payment_terms: contractData.payment_terms || null,
+        paymentTerms: contractData.payment_terms || null,
         deadline: contractData.deadline || null,
-        total_amount: contractData.total_amount ? parseFloat(contractData.total_amount) : null,
-        template_id: selectedTemplate || null,
-        contract_number: contractNumber,
-        status: 'sent' // Always create contracts with 'sent' status
+        totalAmount: contractData.total_amount ? parseFloat(contractData.total_amount) : null,
       };
 
-      let error;
       if (editContract) {
-        // Update existing contract (exclude contract_number)
-        const { contract_number, ...updatePayload } = contractPayload;
-        const { error: updateError } = await supabase
-          .from('contracts')
-          .update(updatePayload)
-          .eq('id', editContract.id);
-        error = updateError;
+        // Update existing contract
+        await api.contracts.updateContract(editContract.id, contractPayload);
       } else {
-        // Create new contract (include contract_number)
-        const { error: insertError } = await supabase
-          .from('contracts')
-          .insert(contractPayload);
-        error = insertError;
+        // Create new contract
+        await api.contracts.createContract(contractPayload);
       }
-
-      if (error) throw error;
 
       toast({
         title: "Succes",

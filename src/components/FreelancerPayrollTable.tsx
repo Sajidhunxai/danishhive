@@ -2,8 +2,9 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -39,6 +40,7 @@ export const FreelancerPayrollTable: React.FC<FreelancerPayrollTableProps> = ({
   onViewDetails
 }) => {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [freelancers, setFreelancers] = useState<FreelancerPayroll[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState(new Date());
@@ -54,18 +56,19 @@ export const FreelancerPayrollTable: React.FC<FreelancerPayrollTableProps> = ({
       const periodStart = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 19);
       const periodEnd = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 19);
       
-      // Get earnings for the period
-      const { data: earnings, error: earningsError } = await supabase
-        .from('earnings')
-        .select('user_id, amount')
-        .eq('status', 'completed')
-        .gte('payment_period_start', periodStart.toISOString().split('T')[0])
-        .lt('payment_period_end', periodEnd.toISOString().split('T')[0]);
-
-      if (earningsError) throw earningsError;
+      // Get all earnings and filter by period
+      const allEarnings = await api.earnings.getMyEarnings();
+      
+      // Filter earnings by period and status
+      const earnings = allEarnings.filter((earning: any) => {
+        const earningDate = new Date(earning.createdAt);
+        return earningDate >= periodStart && 
+               earningDate < periodEnd &&
+               earning.status === 'paid';
+      });
 
       // Get unique user IDs
-      const userIds = [...new Set(earnings?.map(e => e.user_id) || [])];
+      const userIds = [...new Set(earnings.map((e: any) => e.userId))];
       
       if (userIds.length === 0) {
         setFreelancers([]);
@@ -73,54 +76,40 @@ export const FreelancerPayrollTable: React.FC<FreelancerPayrollTableProps> = ({
       }
 
       // Get freelancer profiles with all required data
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select(`
-          user_id,
-          full_name,
-          address,
-          city,
-          postal_code,
-          registration_number,
-          account_number,
-          iban,
-          bank_name,
-          payment_method,
-          role
-        `)
-        .in('user_id', userIds)
-        .eq('role', 'freelancer');
-
-      if (profilesError) throw profilesError;
+      const usersData = await api.admin.getUsersWithEmail();
+      const freelancerUsers = usersData.filter((u: any) => 
+        userIds.includes(u.id) && u.userType === 'FREELANCER'
+      );
 
       // Group earnings by user and combine with profile data
-      const payrollData: FreelancerPayroll[] = profiles?.map(profile => {
-        const userEarnings = earnings?.filter(e => e.user_id === profile.user_id) || [];
-        const totalEarnings = userEarnings.reduce((sum, e) => sum + Number(e.amount), 0);
+      const payrollData: FreelancerPayroll[] = freelancerUsers.map((user: any) => {
+        const userEarnings = earnings.filter((e: any) => e.userId === user.id);
+        const totalEarnings = userEarnings.reduce((sum: number, e: any) => sum + Number(e.amount), 0);
+        const profile = user.profile || {};
         
         return {
-          user_id: profile.user_id,
-          full_name: profile.full_name,
+          user_id: user.id,
+          full_name: profile.fullName || user.fullName,
           address: profile.address,
           city: profile.city,
-          postal_code: profile.postal_code,
-          registration_number: profile.registration_number,
+          postal_code: profile.postalCode,
+          registration_number: profile.registration_number || profile.cvrNumber,
           account_number: profile.account_number,
           iban: profile.iban,
-          bank_name: profile.bank_name,
+          bank_name: profile.bankName,
           payment_method: profile.payment_method,
           total_earnings: totalEarnings,
           earnings_count: userEarnings.length
         };
-      }).filter(f => f.total_earnings > 0) || [];
+      }).filter(f => f.total_earnings > 0);
 
       setFreelancers(payrollData.sort((a, b) => b.total_earnings - a.total_earnings));
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching freelancer payroll:', error);
       toast({
         title: "Fejl",
-        description: "Kunne ikke hente løndata",
+        description: error.message || "Kunne ikke hente løndata",
         variant: "destructive",
       });
     } finally {
@@ -154,26 +143,26 @@ export const FreelancerPayrollTable: React.FC<FreelancerPayrollTableProps> = ({
 
   const getPaymentMethodText = (method: string | null) => {
     switch (method) {
-      case 'danish_bank': return 'Dansk Bank';
+      case 'danish_bank': return t('payment.danskBank');
       case 'iban': return 'IBAN';
       case 'paypal': return 'PayPal';
-      default: return 'Ikke angivet';
+      default: return t('common.notSpecified') || 'Ikke angivet';
     }
   };
 
   const exportToCSV = () => {
     const headers = [
-      'Navn',
-      'Adresse',
-      'By',
-      'Postnummer',
-      'Registreringsnummer',
-      'Kontonummer',
-      'IBAN',
-      'Bank',
-      'Betalingsmetode',
-      'Total Indtjening',
-      'Antal Opgaver'
+      t('export.name'),
+      t('export.address'),
+      t('export.city'),
+      t('export.postalCode'),
+      t('export.registrationNumber'),
+      t('export.accountNumber'),
+      t('export.iban'),
+      t('export.bank'),
+      t('export.paymentMethod'),
+      t('export.totalEarnings'),
+      t('export.jobCount')
     ];
 
     const csvData = freelancers.map(f => [
@@ -223,10 +212,10 @@ export const FreelancerPayrollTable: React.FC<FreelancerPayrollTableProps> = ({
             <div className="flex items-center gap-4">
               <Button onClick={onBack} variant="outline" size="sm">
                 <ChevronLeft className="h-4 w-4 mr-1" />
-                Tilbage
+                {t('common.back')}
               </Button>
               <CardTitle>
-                Freelancer Lønninger - Periode 19. {formatMonth(selectedMonth)}
+{t('earnings.freelancerPayroll')} - {t('earnings.period')} 19. {formatMonth(selectedMonth)}
               </CardTitle>
             </div>
             <div className="flex items-center gap-2">
@@ -254,12 +243,12 @@ export const FreelancerPayrollTable: React.FC<FreelancerPayrollTableProps> = ({
         <CardContent>
           {freelancers.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">
-              Ingen freelancer løn data for {formatMonth(selectedMonth)}
+{t('earnings.noPayrollData')} {formatMonth(selectedMonth)}
             </p>
           ) : (
             <div className="space-y-4">
               <div className="text-sm text-muted-foreground mb-4">
-                {freelancers.length} freelancer{freelancers.length !== 1 ? 'e' : ''} har indtjening i denne periode
+{freelancers.length} {freelancers.length !== 1 ? t('earnings.freelancers') : t('earnings.freelancer')} {t('earnings.hasEarningsInPeriod')}
               </div>
               
               <div className="space-y-3">
@@ -293,13 +282,13 @@ export const FreelancerPayrollTable: React.FC<FreelancerPayrollTableProps> = ({
                                 ? `${freelancer.registration_number}-${freelancer.account_number}`
                                 : freelancer.payment_method === 'iban' && freelancer.iban
                                 ? freelancer.iban
-                                : 'Kontoinfo ikke angivet'
+                                : t('common.notSpecified')
                               }
                             </span>
                           </div>
                           
                           <div>
-                            <span>{freelancer.earnings_count} opgave{freelancer.earnings_count !== 1 ? 'r' : ''}</span>
+                            <span>{freelancer.earnings_count} {freelancer.earnings_count !== 1 ? t('earnings.jobs') : t('earnings.job')}</span>
                           </div>
                         </div>
                       </div>
@@ -310,7 +299,7 @@ export const FreelancerPayrollTable: React.FC<FreelancerPayrollTableProps> = ({
                             {formatCurrency(freelancer.total_earnings)}
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            Total indtjening
+{t('earnings.totalEarnings')}
                           </div>
                         </div>
                         

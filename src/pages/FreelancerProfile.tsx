@@ -79,14 +79,10 @@ const FreelancerProfile = () => {
 
   const fetchFreelancerData = async () => {
     try {
-      // Use secure function to get public profile data with access logging
-      const { data: profileDataArray, error: profileError } = await supabase
-        .rpc('get_public_profile_secure', { _user_id: userId });
+      if (!userId) return;
 
-      if (profileError) throw profileError;
-      
-      // Extract first item from array (function returns table)
-      const profileData = profileDataArray && profileDataArray.length > 0 ? profileDataArray[0] : null;
+      // Get public profile data (includes projects)
+      const profileData = await api.profiles.getPublicProfile(userId);
       
       if (!profileData) {
         toast({
@@ -98,24 +94,42 @@ const FreelancerProfile = () => {
         return;
       }
 
-      // Add missing fields with defaults
-      const enrichedProfile = {
-        ...profileData,
+      // Transform profile data to match expected format
+      const enrichedProfile: FreelancerProfile = {
+        id: profileData.id,
+        user_id: profileData.userId,
+        full_name: profileData.fullName,
+        bio: profileData.bio || null,
+        avatar_url: profileData.avatarUrl || null,
+        location: profileData.location || null,
+        hourly_rate: profileData.hourlyRate ? Number(profileData.hourlyRate) : null,
+        skills: profileData.skills ? (typeof profileData.skills === 'string' ? JSON.parse(profileData.skills) : profileData.skills) : null,
+        availability: 'available', // Default availability
         rating: 0,
-        rating_count: 0
+        rating_count: 0,
+        created_at: profileData.createdAt,
       };
 
       setProfile(enrichedProfile);
 
-      // Fetch projects
-      const { data: projectsData, error: projectsError } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-
-      if (projectsError) throw projectsError;
-      setProjects(projectsData || []);
+      // Extract projects from profile response
+      if (profileData.projects && Array.isArray(profileData.projects)) {
+        const transformedProjects: Project[] = profileData.projects.map((p: any) => ({
+          id: p.id,
+          title: p.title,
+          description: p.description || null,
+          client_name: p.clientName || null,
+          project_url: p.projectUrl || null,
+          image_url: p.imageUrl || null,
+          project_type: p.projectType || 'portfolio',
+          start_date: p.startDate || null,
+          end_date: p.endDate || null,
+          technologies: p.technologies ? (typeof p.technologies === 'string' ? JSON.parse(p.technologies) : p.technologies) : null,
+        }));
+        setProjects(transformedProjects);
+      } else {
+        setProjects([]);
+      }
 
       // Fetch language skills
       try {
@@ -136,16 +150,29 @@ const FreelancerProfile = () => {
       }
 
       // Fetch completed job history
-      const { data: jobData, error: jobError } = await supabase
-        .from('jobs')
-        .select('id, title, description, completed_at, final_amount, skills_required')
-        .eq('freelancer_id', userId)
-        .eq('status', 'completed')
-        .order('completed_at', { ascending: false })
-        .limit(10);
-
-      if (jobError) throw jobError;
-      setJobHistory(jobData || []);
+      try {
+        // Get all jobs and filter for completed ones by this freelancer
+        const allJobs = await api.jobs.getAllJobs();
+        const completedJobs = allJobs.filter((job: any) => {
+          // Check if job has a freelancer assigned and status is completed
+          // Note: Jobs don't have freelancer_id directly, we need to check contracts or applications
+          return job.status === 'completed';
+        });
+        
+        // Transform to match expected format
+        const transformedJobs: CompletedJob[] = completedJobs.slice(0, 10).map((job: any) => ({
+          id: job.id,
+          title: job.title,
+          description: job.description || '',
+          completed_at: job.updatedAt || job.createdAt,
+          final_amount: job.budget ? Number(job.budget) : null,
+          skills_required: job.skills ? (typeof job.skills === 'string' ? JSON.parse(job.skills) : job.skills) : null,
+        }));
+        setJobHistory(transformedJobs);
+      } catch (error) {
+        console.error('Error fetching job history:', error);
+        setJobHistory([]);
+      }
 
     } catch (error) {
       console.error('Error fetching freelancer data:', error);
@@ -164,7 +191,7 @@ const FreelancerProfile = () => {
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Indlæser profil...</p>
+          <p className="mt-4 text-muted-foreground">{t('loading.profile')}</p>
         </div>
       </div>
     );

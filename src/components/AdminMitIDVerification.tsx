@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/services/api';
 import { Shield, CheckCircle, AlertTriangle } from 'lucide-react';
 
 interface MitIDVerificationProps {
@@ -27,27 +27,8 @@ export const AdminMitIDVerification: React.FC<MitIDVerificationProps> = ({
     setLoading(true);
     
     try {
-      const updateData: any = {
-        mitid_verified: verified,
-        updated_at: new Date().toISOString()
-      };
+      await api.admin.updateVerification(userId, 'mitid', verified);
 
-      if (verified) {
-        updateData.mitid_verification_date = new Date().toISOString();
-      } else {
-        updateData.mitid_verification_date = null;
-      }
-
-      const { error } = await supabase
-        .from('profiles')
-        .update(updateData)
-        .eq('user_id', userId);
-
-      if (error) throw error;
-
-      // Log admin action (in a real system, this would go to an audit table)
-      console.log(`Admin MitID verification: User ${userId} ${verified ? 'verified' : 'unverified'} by admin`);
-      
       toast({
         title: 'MitID Verificering Opdateret',
         description: `Bruger er nu ${verified ? 'verificeret' : 'ikke verificeret'} via MitID`,
@@ -59,7 +40,7 @@ export const AdminMitIDVerification: React.FC<MitIDVerificationProps> = ({
       console.error('MitID verification error:', error);
       toast({
         title: 'Fejl',
-        description: 'Kunne ikke opdatere MitID verificering',
+        description: error.message || 'Kunne ikke opdatere MitID verificering',
         variant: 'destructive',
       });
     } finally {

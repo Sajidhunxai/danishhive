@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/services/api";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { ContractDialog } from "@/components/ContractDialog";
@@ -79,14 +79,8 @@ export const ContractSystem = () => {
 
   const fetchUserRole = async () => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('user_id', user?.id)
-        .single();
-      
-      if (error) throw error;
-      setUserRole(data?.role || null);
+      const profile = await api.profiles.getMyProfile();
+      setUserRole(profile.userType?.toLowerCase() || null);
     } catch (error) {
       console.error('Error fetching user role:', error);
     }
@@ -94,25 +88,41 @@ export const ContractSystem = () => {
 
   const fetchContracts = async () => {
     try {
-      const { data, error } = await supabase
-        .from('contracts')
-        .select(`
-          *,
-          jobs (
-            title,
-            description
-          )
-        `)
-        .or(`client_id.eq.${user?.id},freelancer_id.eq.${user?.id}`)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setContracts(data || []);
-    } catch (error) {
+      const contractsData = await api.contracts.getMyContracts();
+      
+      // Map backend data to expected format
+      const mappedContracts = contractsData.map((contract: any) => ({
+        id: contract.id,
+        job_id: contract.jobId,
+        client_id: contract.clientId,
+        freelancer_id: contract.freelancerId,
+        contract_number: contract.contractNumber,
+        title: contract.title,
+        content: contract.content,
+        terms: contract.terms,
+        payment_terms: contract.paymentTerms,
+        status: contract.status,
+        total_amount: contract.totalAmount ? Number(contract.totalAmount) : null,
+        deadline: contract.deadline,
+        client_signature_date: contract.clientSignatureDate,
+        freelancer_signature_date: contract.freelancerSignatureDate,
+        client_signature_data: contract.clientSignatureData,
+        freelancer_signature_data: contract.freelancerSignatureData,
+        metadata: contract.metadata,
+        created_at: contract.createdAt,
+        updated_at: contract.updatedAt,
+        jobs: contract.job ? {
+          title: contract.job.title,
+          description: contract.job.description
+        } : undefined
+      }));
+      
+      setContracts(mappedContracts);
+    } catch (error: any) {
       console.error('Error fetching contracts:', error);
       toast({
         title: "Fejl",
-        description: "Kunne ikke hente kontrakter",
+        description: error.message || "Kunne ikke hente kontrakter",
         variant: "destructive",
       });
     } finally {
@@ -122,16 +132,22 @@ export const ContractSystem = () => {
 
   const fetchJobs = async () => {
     try {
-      const { data, error } = await supabase
-        .from('jobs')
-        .select('id, title, description, client_id, budget_min, budget_max')
-        .eq('client_id', user?.id)
-        .eq('status', 'open')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setJobs(data || []);
-    } catch (error) {
+      const jobsData = await api.jobs.getMyJobs();
+      
+      // Filter open jobs and map to expected format
+      const openJobs = jobsData
+        .filter((job: any) => job.status === 'open')
+        .map((job: any) => ({
+          id: job.id,
+          title: job.title,
+          description: job.description,
+          client_id: job.clientId,
+          budget_min: job.budget ? Number(job.budget) : null,
+          budget_max: job.budget ? Number(job.budget) : null
+        }));
+      
+      setJobs(openJobs);
+    } catch (error: any) {
       console.error('Error fetching jobs:', error);
     }
   };

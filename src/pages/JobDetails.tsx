@@ -172,15 +172,15 @@ const JobDetails = () => {
   }, [id, fetchJob]);
 
   const formatBudget = (min: number | null, max: number | null) => {
-    if (!min && !max) return 'Ikke angivet';
+    if (!min && !max) return t('common.notSpecified');
     if (min && max) return `${min.toLocaleString('da-DK')} - ${max.toLocaleString('da-DK')} kr.`;
-    if (min) return `Fra ${min.toLocaleString('da-DK')} kr.`;
-    if (max) return `Op til ${max.toLocaleString('da-DK')} kr.`;
-    return 'Ikke angivet';
+    if (min) return `${t('jobs.from')} ${min.toLocaleString('da-DK')} kr.`;
+    if (max) return `${t('jobs.upTo')} ${max.toLocaleString('da-DK')} kr.`;
+    return t('common.notSpecified');
   };
 
   const formatDeadline = (deadline: string | null) => {
-    if (!deadline) return 'Ikke angivet';
+    if (!deadline) return t('common.notSpecified');
     return new Date(deadline).toLocaleDateString('da-DK', {
       year: 'numeric',
       month: 'long',
@@ -191,11 +191,11 @@ const JobDetails = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'accepted':
-        return <Badge className="bg-green-100 text-green-800">Accepteret</Badge>;
+        return <Badge className="bg-green-100 text-green-800">{t('jobs.status.accepted')}</Badge>;
       case 'rejected':
-        return <Badge variant="destructive">Afvist</Badge>;
+        return <Badge variant="destructive">{t('jobs.status.rejected')}</Badge>;
       default:
-        return <Badge variant="outline">Afventer</Badge>;
+        return <Badge variant="outline">{t('jobs.status.pending')}</Badge>;
     }
   };
 
@@ -215,7 +215,7 @@ const JobDetails = () => {
           <p className="text-muted-foreground mb-4">{t("job.notFound.desc")}</p>
           <Button onClick={() => navigate('/')}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Tilbage til forsiden
+            {t('job.notFound.back')}
           </Button>
         </div>
       </div>
@@ -241,16 +241,16 @@ const JobDetails = () => {
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <Clock className="h-4 w-4" />
-                      Opslået {new Date(job.created_at).toLocaleDateString('da-DK')}
+                      {t('jobs.posted')} {new Date(job.created_at).toLocaleDateString('da-DK')}
                     </div>
                     <div className="flex items-center gap-1">
                       <Briefcase className="h-4 w-4" />
-                      {job.project_type === 'one-time' ? 'Enkelt opgave' : 'Løbende projekt'}
+                      {job.project_type === 'one-time' ? t('jobs.singleJob') : t('jobs.ongoingProject')}
                     </div>
                   </div>
                 </div>
                 <Badge variant={job.status === 'open' ? 'default' : 'secondary'}>
-                  {job.status === 'open' ? 'Åben' : 'Lukket'}
+                  {job.status === 'open' ? t('jobs.status.open') : t('jobs.status.closed')}
                 </Badge>
               </div>
             </CardHeader>
@@ -268,9 +268,9 @@ const JobDetails = () => {
                 <div className="flex items-center gap-3">
                   <MapPin className="h-5 w-5 text-muted-foreground" />
                   <div>
-                    <p className="font-medium">Lokation</p>
+                    <p className="font-medium">{t('jobs.location')}</p>
                     <p className="text-sm text-muted-foreground">
-                      {job.is_remote ? 'Remote arbejde' : job.location || 'Ikke angivet'}
+                      {job.is_remote ? t('jobs.remoteWork') : job.location || t('common.notSpecified')}
                     </p>
                   </div>
                 </div>
@@ -288,7 +288,7 @@ const JobDetails = () => {
 
               {/* Description */}
               <div>
-                <h3 className="text-lg font-semibold mb-3">Beskrivelse</h3>
+                <h3 className="text-lg font-semibold mb-3">{t('jobs.description')}</h3>
                 <div className="prose prose-sm max-w-none">
                   <p className="text-muted-foreground whitespace-pre-wrap">{job.description}</p>
                 </div>
@@ -297,7 +297,7 @@ const JobDetails = () => {
               {/* Skills Required */}
               {job.skills_required && job.skills_required.length > 0 && (
                 <div>
-                  <h3 className="text-lg font-semibold mb-3">Påkrævet kompetencer</h3>
+                  <h3 className="text-lg font-semibold mb-3">{t('jobs.requiredSkills')}</h3>
                   <div className="flex flex-wrap gap-2">
                     {job.skills_required.map((skill, index) => (
                       <Badge key={index} variant="outline" className="text-black dark:text-white">
@@ -315,7 +315,7 @@ const JobDetails = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
-                Om klienten
+                {t('jobs.aboutClient')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -478,12 +478,12 @@ const JobDetails = () => {
                       }}
                     >
                       <Star className="h-4 w-4 mr-2" />
-                      Ansøg om opgaven
+                      {t('jobs.applyForJob')}
                     </Button>
                   </div>
                   
                   <p className="text-xs text-muted-foreground mt-3 text-center">
-                    Ved at ansøge accepterer du vores vilkår og betingelser
+                    {t('jobs.byApplyingAccept')}
                   </p>
                 </div>
               </CardContent>
@@ -494,10 +494,10 @@ const JobDetails = () => {
             <Card>
               <CardContent className="pt-6 text-center">
                 <p className="text-muted-foreground mb-4">
-                  Log ind for at ansøge om denne opgave
+                  {t('jobs.loginToApply')}
                 </p>
                 <Button onClick={() => navigate('/auth')}>
-                  Log ind / Tilmeld dig
+                  {t('jobs.loginSignup')}
                 </Button>
               </CardContent>
             </Card>

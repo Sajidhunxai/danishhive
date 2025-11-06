@@ -369,48 +369,313 @@ async function main() {
 
   console.log('✅ Created contracts');
 
-  // Create Messages
+  // Create Messages - Comprehensive test data
+  const now = new Date();
+  const messages = [
+    // Conversation 1: Client1 <-> Freelancer1 (About Job Application)
+    {
+      senderId: client1.id,
+      receiverId: freelancer1.id,
+      content: 'Hi Emma, I saw your application for the Full-Stack Developer position. Your portfolio looks impressive!',
+      conversationId: 'conv-1',
+      isRead: true,
+      readAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000 + 10 * 60 * 60 * 1000),
+      createdAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000 + 10 * 60 * 60 * 1000),
+    },
+    {
+      senderId: freelancer1.id,
+      receiverId: client1.id,
+      content: 'Thank you! I would love to discuss the project in more detail. When would be a good time for a call?',
+      conversationId: 'conv-1',
+      isRead: true,
+      readAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000 + 10 * 45 * 60 * 1000),
+      createdAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000 + 10 * 45 * 60 * 1000),
+    },
+    {
+      senderId: client1.id,
+      receiverId: freelancer1.id,
+      content: 'How about tomorrow at 2 PM? We can discuss the technical requirements and timeline.',
+      conversationId: 'conv-1',
+      isRead: true,
+      readAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000 + 11 * 15 * 60 * 1000),
+      createdAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000 + 11 * 15 * 60 * 1000),
+    },
+    {
+      senderId: freelancer1.id,
+      receiverId: client1.id,
+      content: 'That works perfectly for me! I\'ll send you a calendar invite. Looking forward to our conversation.',
+      conversationId: 'conv-1',
+      isRead: true,
+      readAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000 + 11 * 30 * 60 * 1000),
+      createdAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000 + 11 * 30 * 60 * 1000),
+    },
+    {
+      senderId: client1.id,
+      receiverId: freelancer1.id,
+      content: 'Great! Also, I wanted to ask about your experience with AWS. We\'re planning to deploy on AWS infrastructure.',
+      conversationId: 'conv-1',
+      isRead: true,
+      readAt: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000 + 14 * 60 * 60 * 1000),
+      createdAt: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000 + 14 * 60 * 60 * 1000),
+    },
+    {
+      senderId: freelancer1.id,
+      receiverId: client1.id,
+      content: 'I have extensive experience with AWS. I\'ve deployed multiple projects using EC2, S3, RDS, and Lambda. I can share some examples during our call.',
+      conversationId: 'conv-1',
+      isRead: true,
+      readAt: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000 + 14 * 20 * 60 * 1000),
+      createdAt: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000 + 14 * 20 * 60 * 1000),
+    },
+
+    // Conversation 2: Client2 <-> Freelancer3 (Data Science Position)
+    {
+      senderId: client2.id,
+      receiverId: freelancer3.id,
+      content: 'Hi Sophie, are you available for a quick chat about the data science position?',
+      conversationId: 'conv-2',
+      isRead: false,
+      createdAt: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000 + 14 * 60 * 60 * 1000),
+    },
+    {
+      senderId: client2.id,
+      receiverId: freelancer3.id,
+      content: 'We\'re looking for someone with strong Python skills and experience in machine learning models. Your background looks very relevant!',
+      conversationId: 'conv-2',
+      isRead: false,
+      createdAt: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000 + 14 * 15 * 60 * 1000),
+    },
+    {
+      senderId: freelancer3.id,
+      receiverId: client2.id,
+      content: 'Hi Sarah! Yes, I\'m definitely interested. I\'m available for a call this week. What times work best for you?',
+      conversationId: 'conv-2',
+      isRead: false,
+      createdAt: new Date(now.getTime() - 5 * 60 * 1000),
+    },
+
+    // Conversation 3: Client1 <-> Freelancer2 (UI/UX Design)
+    {
+      senderId: client1.id,
+      receiverId: freelancer2.id,
+      content: 'Hi Michael, I saw your application for the UI/UX Designer position. Your portfolio is amazing!',
+      conversationId: 'conv-3',
+      isRead: true,
+      readAt: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000 + 16 * 60 * 60 * 1000),
+      createdAt: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000 + 16 * 60 * 60 * 1000),
+    },
+    {
+      senderId: freelancer2.id,
+      receiverId: client1.id,
+      content: 'Thank you so much! I\'m really excited about this opportunity. I\'ve been following your company for a while and love your brand aesthetic.',
+      conversationId: 'conv-3',
+      isRead: true,
+      readAt: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000 + 16 * 30 * 60 * 1000),
+      createdAt: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000 + 16 * 30 * 60 * 1000),
+    },
+    {
+      senderId: client1.id,
+      receiverId: freelancer2.id,
+      content: 'That\'s great to hear! We\'re looking for someone who can help us redesign our mobile app. Do you have experience with mobile-first design?',
+      conversationId: 'conv-3',
+      isRead: true,
+      readAt: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000 + 17 * 60 * 60 * 1000),
+      createdAt: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000 + 17 * 60 * 60 * 1000),
+    },
+    {
+      senderId: freelancer2.id,
+      receiverId: client1.id,
+      content: 'Absolutely! Mobile-first design is one of my specialties. I\'ve designed several mobile apps that have been downloaded over 100k times. I can share some case studies.',
+      conversationId: 'conv-3',
+      isRead: true,
+      readAt: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000 + 17 * 15 * 60 * 1000),
+      createdAt: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000 + 17 * 15 * 60 * 1000),
+    },
+    {
+      senderId: client1.id,
+      receiverId: freelancer2.id,
+      content: 'Hi Michael, I wanted to follow up on our previous conversation. Are you still interested in the mobile app design project?',
+      conversationId: 'conv-3',
+      isRead: false,
+      createdAt: new Date(now.getTime() - 2 * 60 * 60 * 1000),
+    },
+
+    // Conversation 4: Client2 <-> Freelancer1 (New Project Inquiry)
+    {
+      senderId: client2.id,
+      receiverId: freelancer1.id,
+      content: 'Hi Emma, I saw your profile and I\'m impressed with your React expertise. We have a new project starting next month and would love to discuss it with you.',
+      conversationId: 'conv-4',
+      isRead: true,
+      readAt: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000 + 9 * 60 * 60 * 1000),
+      createdAt: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000 + 9 * 60 * 60 * 1000),
+    },
+    {
+      senderId: freelancer1.id,
+      receiverId: client2.id,
+      content: 'Hi Sarah! Thank you for reaching out. I\'d be happy to learn more about the project. What kind of application are you building?',
+      conversationId: 'conv-4',
+      isRead: true,
+      readAt: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000 + 9 * 30 * 60 * 1000),
+      createdAt: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000 + 9 * 30 * 60 * 1000),
+    },
+    {
+      senderId: client2.id,
+      receiverId: freelancer1.id,
+      content: 'It\'s an e-commerce platform with a focus on user experience. We need someone who can build a responsive frontend with React and integrate with our backend API.',
+      conversationId: 'conv-4',
+      isRead: true,
+      readAt: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000 + 10 * 60 * 60 * 1000),
+      createdAt: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000 + 10 * 60 * 60 * 1000),
+    },
+    {
+      senderId: client2.id,
+      receiverId: freelancer1.id,
+      content: 'Emma, I sent you the project brief yesterday. Have you had a chance to review it? Let me know if you have any questions.',
+      conversationId: 'conv-4',
+      isRead: false,
+      createdAt: new Date(now.getTime() - 30 * 60 * 1000),
+    },
+
+    // Conversation 5: Client1 <-> Freelancer3 (Rejected Application Follow-up)
+    {
+      senderId: client1.id,
+      receiverId: freelancer3.id,
+      content: 'Hi Sophie, I wanted to personally reach out regarding your application. While we decided to go with another candidate for this position, we were very impressed with your data science background.',
+      conversationId: 'conv-5',
+      isRead: true,
+      readAt: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000 + 15 * 60 * 60 * 1000),
+      createdAt: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000 + 15 * 60 * 60 * 1000),
+    },
+    {
+      senderId: freelancer3.id,
+      receiverId: client1.id,
+      content: 'Thank you for letting me know. I appreciate the feedback. If you have any data science projects in the future, I\'d love to be considered.',
+      conversationId: 'conv-5',
+      isRead: true,
+      readAt: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000 + 15 * 30 * 60 * 1000),
+      createdAt: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000 + 15 * 30 * 60 * 1000),
+    },
+    {
+      senderId: client1.id,
+      receiverId: freelancer3.id,
+      content: 'Absolutely! We\'ll definitely keep you in mind. We actually have a data analytics project starting in Q2 next year that might be a perfect fit.',
+      conversationId: 'conv-5',
+      isRead: true,
+      readAt: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000 + 16 * 60 * 60 * 1000),
+      createdAt: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000 + 16 * 60 * 60 * 1000),
+    },
+
+    // Conversation 6: Freelancer2 <-> Admin (Support/Technical Issue)
+    {
+      senderId: freelancer2.id,
+      receiverId: admin.id,
+      content: 'Hi Admin, I\'m having trouble uploading my portfolio images. The upload keeps failing. Can you help?',
+      conversationId: 'conv-6',
+      isRead: true,
+      readAt: new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000 + 11 * 60 * 60 * 1000),
+      createdAt: new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000 + 11 * 60 * 60 * 1000),
+    },
+    {
+      senderId: admin.id,
+      receiverId: freelancer2.id,
+      content: 'Hi Michael, I\'m sorry to hear about the upload issue. Can you tell me what file size and format you\'re trying to upload? Also, what error message are you seeing?',
+      conversationId: 'conv-6',
+      isRead: true,
+      readAt: new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000 + 11 * 30 * 60 * 1000),
+      createdAt: new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000 + 11 * 30 * 60 * 1000),
+    },
+    {
+      senderId: freelancer2.id,
+      receiverId: admin.id,
+      content: 'I\'m trying to upload PNG files, each around 2MB. The error says "Upload failed. Please try again." I\'ve tried multiple times.',
+      conversationId: 'conv-6',
+      isRead: true,
+      readAt: new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000 + 12 * 60 * 60 * 1000),
+      createdAt: new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000 + 12 * 60 * 60 * 1000),
+    },
+    {
+      senderId: admin.id,
+      receiverId: freelancer2.id,
+      content: 'I see the issue. The file size limit is 5MB per file, so that should be fine. Let me check our server logs. In the meantime, can you try compressing the images or uploading them one at a time?',
+      conversationId: 'conv-6',
+      isRead: true,
+      readAt: new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000 + 12 * 30 * 60 * 1000),
+      createdAt: new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000 + 12 * 30 * 60 * 1000),
+    },
+    {
+      senderId: freelancer2.id,
+      receiverId: admin.id,
+      content: 'Thanks! I\'ll try that. One more question - when will the new messaging feature be available? I saw it mentioned in the roadmap.',
+      conversationId: 'conv-6',
+      isRead: false,
+      createdAt: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000 + 10 * 60 * 60 * 1000),
+    },
+
+    // Conversation 7: Client2 <-> Freelancer2 (Quick Questions)
+    {
+      senderId: client2.id,
+      receiverId: freelancer2.id,
+      content: 'Hi Michael, quick question - do you have experience designing dashboards for SaaS products?',
+      conversationId: 'conv-7',
+      isRead: true,
+      readAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000 + 13 * 60 * 60 * 1000),
+      createdAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000 + 13 * 60 * 60 * 1000),
+    },
+    {
+      senderId: freelancer2.id,
+      receiverId: client2.id,
+      content: 'Yes, absolutely! I\'ve designed several SaaS dashboards for analytics and project management tools. I can show you examples if you\'d like.',
+      conversationId: 'conv-7',
+      isRead: true,
+      readAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000 + 13 * 15 * 60 * 1000),
+      createdAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000 + 13 * 15 * 60 * 1000),
+    },
+
+    // Conversation 8: Freelancer1 <-> Freelancer2 (Peer Discussion)
+    {
+      senderId: freelancer1.id,
+      receiverId: freelancer2.id,
+      content: 'Hey Michael! I saw your recent project on the forum. The design looks amazing! How long did it take you to complete?',
+      conversationId: 'conv-8',
+      isRead: true,
+      readAt: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000 + 14 * 60 * 60 * 1000),
+      createdAt: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000 + 14 * 60 * 60 * 1000),
+    },
+    {
+      senderId: freelancer2.id,
+      receiverId: freelancer1.id,
+      content: 'Hi Emma! Thanks so much! It took about 6 weeks from initial concept to final delivery. The client was really happy with the result.',
+      conversationId: 'conv-8',
+      isRead: true,
+      readAt: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000 + 14 * 30 * 60 * 1000),
+      createdAt: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000 + 14 * 30 * 60 * 1000),
+    },
+    {
+      senderId: freelancer1.id,
+      receiverId: freelancer2.id,
+      content: 'That\'s impressive! I\'m working on a similar timeline for my current project. Any tips for keeping the client happy throughout the process?',
+      conversationId: 'conv-8',
+      isRead: true,
+      readAt: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000 + 15 * 60 * 60 * 1000),
+      createdAt: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000 + 15 * 60 * 60 * 1000),
+    },
+    {
+      senderId: freelancer2.id,
+      receiverId: freelancer1.id,
+      content: 'Communication is key! I send weekly updates with progress screenshots and always ask for feedback early. It helps catch issues before they become big problems.',
+      conversationId: 'conv-8',
+      isRead: true,
+      readAt: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000 + 15 * 30 * 60 * 1000),
+      createdAt: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000 + 15 * 30 * 60 * 1000),
+    },
+  ];
+
   await prisma.message.createMany({
-    data: [
-      {
-        senderId: client1.id,
-        receiverId: freelancer1.id,
-        content: 'Hi Emma, I saw your application for the Full-Stack Developer position. Your portfolio looks impressive!',
-        conversationId: 'conv-1',
-        isRead: true,
-        readAt: new Date('2024-10-10T10:30:00'),
-        createdAt: new Date('2024-10-10T10:00:00'),
-      },
-      {
-        senderId: freelancer1.id,
-        receiverId: client1.id,
-        content: 'Thank you! I would love to discuss the project in more detail. When would be a good time for a call?',
-        conversationId: 'conv-1',
-        isRead: true,
-        readAt: new Date('2024-10-10T11:00:00'),
-        createdAt: new Date('2024-10-10T10:45:00'),
-      },
-      {
-        senderId: client1.id,
-        receiverId: freelancer1.id,
-        content: 'How about tomorrow at 2 PM? We can discuss the technical requirements and timeline.',
-        conversationId: 'conv-1',
-        isRead: true,
-        readAt: new Date('2024-10-10T11:30:00'),
-        createdAt: new Date('2024-10-10T11:15:00'),
-      },
-      {
-        senderId: client2.id,
-        receiverId: freelancer3.id,
-        content: 'Hi Sophie, are you available for a quick chat about the data science position?',
-        conversationId: 'conv-2',
-        isRead: false,
-        createdAt: new Date('2024-10-13T14:00:00'),
-      },
-    ],
+    data: messages,
   });
 
-  console.log('✅ Created messages');
+  console.log(`✅ Created ${messages.length} messages across ${new Set(messages.map(m => m.conversationId)).size} conversations`);
 
   // Create Forum Categories
   const forumCat1 = await prisma.forumCategory.create({

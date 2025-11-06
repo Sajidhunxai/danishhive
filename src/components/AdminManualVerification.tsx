@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { api } from '@/services/api';
 import { Search, CheckCircle, XCircle, Phone, CreditCard, Shield } from 'lucide-react';
 
 interface User {
@@ -28,6 +29,7 @@ export const AdminManualVerification: React.FC = () => {
   const [verifyingUser, setVerifyingUser] = useState<string | null>(null);
   const [verificationNotes, setVerificationNotes] = useState('');
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   useEffect(() => {
     fetchUsers();
@@ -49,35 +51,26 @@ export const AdminManualVerification: React.FC = () => {
 
   const fetchUsers = async () => {
     try {
-      const { data, error } = await supabase.rpc('admin_get_all_users');
-      
-      if (error) throw error;
+      const usersData = await api.admin.getUsersWithEmail();
 
-      // Get additional verification info for each user
-      const usersWithVerification = await Promise.all(
-        data.map(async (user: any) => {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('phone, phone_verified, mitid_verified, payment_verified')
-            .eq('user_id', user.user_id)
-            .single();
-
-          return {
-            ...user,
-            phone: profile?.phone,
-            phone_verified: profile?.phone_verified || false,
-            mitid_verified: profile?.mitid_verified || false,
-            payment_verified: profile?.payment_verified || false,
-          };
-        })
-      );
+      // Map backend data to expected format
+      const usersWithVerification = usersData.map((user: any) => ({
+        user_id: user.id,
+        full_name: user.fullName,
+        role: user.userType,
+        phone: user.phoneNumber,
+        phone_verified: user.phoneVerified || false,
+        mitid_verified: user.profile?.mitidVerified || false,
+        payment_verified: user.profile?.paymentVerified || false,
+        created_at: user.createdAt,
+      }));
 
       setUsers(usersWithVerification);
     } catch (error: any) {
       console.error('Error fetching users:', error);
       toast({
         title: 'Fejl',
-        description: 'Kunne ikke hente brugere',
+        description: error.message || 'Kunne ikke hente brugere',
         variant: 'destructive',
       });
     } finally {
@@ -89,34 +82,7 @@ export const AdminManualVerification: React.FC = () => {
     setVerifyingUser(userId);
     
     try {
-      const updateData: any = {
-        updated_at: new Date().toISOString()
-      };
-
-      switch (verificationType) {
-        case 'phone':
-          updateData.phone_verified = verified;
-          break;
-        case 'mitid':
-          updateData.mitid_verified = verified;
-          if (verified) {
-            updateData.mitid_verification_date = new Date().toISOString();
-          }
-          break;
-        case 'payment':
-          updateData.payment_verified = verified;
-          if (verified) {
-            updateData.payment_verification_date = new Date().toISOString();
-          }
-          break;
-      }
-
-      const { error } = await supabase
-        .from('profiles')
-        .update(updateData)
-        .eq('user_id', userId);
-
-      if (error) throw error;
+      await api.admin.updateVerification(userId, verificationType, verified);
 
       // Update local state
       setUsers(prevUsers => 
@@ -136,7 +102,7 @@ export const AdminManualVerification: React.FC = () => {
       console.error('Verification error:', error);
       toast({
         title: 'Fejl',
-        description: 'Kunne ikke opdatere verificering',
+        description: error.message || 'Kunne ikke opdatere verificering',
         variant: 'destructive',
       });
     } finally {
@@ -162,7 +128,7 @@ export const AdminManualVerification: React.FC = () => {
       <Card>
         <CardHeader>
           <CardTitle>Manuel Verificering</CardTitle>
-          <CardDescription>Indlæser brugere...</CardDescription>
+          <CardDescription>{t('loading.users')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-8">

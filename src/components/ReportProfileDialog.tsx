@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { AlertTriangle, Flag } from "lucide-react";
@@ -62,19 +62,13 @@ export const ReportProfileDialog: React.FC<ReportProfileDialogProps> = ({
 
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from('profile_reports')
-        .insert({
-          reporter_id: user.id,
-          reported_user_id: reportedUserId,
-          report_category: reportCategory,
-          report_reason: reportReason,
-          description: description || null,
-          conversation_data: conversationData || null,
-          status: 'pending'
-        });
-
-      if (error) throw error;
+      await api.reports.createReport({
+        reportedUserId,
+        reportCategory,
+        reportReason,
+        description: description || undefined,
+        conversationData: conversationData || undefined
+      });
 
       toast({
         title: "Rapport sendt",
@@ -91,7 +85,7 @@ export const ReportProfileDialog: React.FC<ReportProfileDialogProps> = ({
       console.error('Error submitting report:', error);
       toast({
         title: "Fejl",
-        description: "Kunne ikke sende rapport",
+        description: error.message || "Kunne ikke sende rapport",
         variant: "destructive",
       });
     } finally {

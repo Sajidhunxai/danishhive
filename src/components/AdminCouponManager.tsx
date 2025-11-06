@@ -7,7 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { api } from '@/services/api';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
@@ -40,6 +41,7 @@ interface CouponUsage {
 
 export const AdminCouponManager: React.FC = () => {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [coupons, setCoupons] = useState<CouponCode[]>([]);
   const [couponUsages, setCouponUsages] = useState<CouponUsage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -65,14 +67,26 @@ export const AdminCouponManager: React.FC = () => {
 
   const fetchCoupons = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('admin-get-coupons');
-      if (error) throw error;
-      setCoupons(data?.coupons || []);
-    } catch (error) {
+      const data = await api.admin.getAllCoupons();
+      // Map backend coupons to expected format
+      const mappedCoupons = data.map((coupon: any) => ({
+        id: coupon.id,
+        code: coupon.code,
+        type: 'freelancer', // Default type
+        benefit_type: 'fee_reduction', // Default benefit type
+        fee_rate: Number(coupon.discount),
+        max_uses: coupon.maxUses || 0,
+        current_uses: coupon.usedCount || 0,
+        expires_at: coupon.expiresAt,
+        created_at: coupon.createdAt,
+        is_active: coupon.isActive,
+      }));
+      setCoupons(mappedCoupons);
+    } catch (error: any) {
       console.error('Error fetching coupons:', error);
       toast({
         title: "Fejl",
-        description: "Kunne ikke hente kuponkoder",
+        description: error.message || "Kunne ikke hente kuponkoder",
         variant: "destructive",
       });
     } finally {
@@ -82,10 +96,10 @@ export const AdminCouponManager: React.FC = () => {
 
   const fetchCouponUsages = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('admin-get-coupon-usage');
-      if (error) throw error;
-      setCouponUsages(data?.usages || []);
-    } catch (error) {
+      // TODO: When backend has coupon usage endpoint, use it
+      // For now, return empty array
+      setCouponUsages([]);
+    } catch (error: any) {
       console.error('Error fetching coupon usage:', error);
     }
   };
@@ -93,24 +107,34 @@ export const AdminCouponManager: React.FC = () => {
   const generateCoupons = async () => {
     setGenerating(true);
     try {
-      const { data, error } = await supabase.functions.invoke('admin-generate-coupons', {
-        body: generateForm
-      });
-
-      if (error) throw error;
+      // Generate coupons using backend API
+      for (let i = 0; i < generateForm.quantity; i++) {
+        await api.admin.createCoupon({
+          code: generateForm.code_prefix 
+            ? `${generateForm.code_prefix}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`
+            : `COUPON-${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
+          discount: generateForm.benefit_type === 'fee_reduction' 
+            ? generateForm.fee_rate 
+            : generateForm.honey_drops_amount || 0,
+          maxUses: generateForm.max_uses_per_code,
+          expiresAt: generateForm.expires_in_days 
+            ? new Date(Date.now() + generateForm.expires_in_days * 24 * 60 * 60 * 1000).toISOString()
+            : null,
+        });
+      }
 
       toast({
         title: "Kuponkoder genereret!",
-        description: `${data.generated_count} kuponkoder er blevet oprettet`,
+        description: `${generateForm.quantity} kuponkoder er blevet oprettet`,
       });
 
       setShowGenerateDialog(false);
       fetchCoupons();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error generating coupons:', error);
       toast({
         title: "Fejl",
-        description: "Kunne ikke generere kuponkoder",
+        description: error.message || "Kunne ikke generere kuponkoder",
         variant: "destructive",
       });
     } finally {
@@ -120,11 +144,9 @@ export const AdminCouponManager: React.FC = () => {
 
   const toggleCouponStatus = async (couponId: string, isActive: boolean) => {
     try {
-      const { error } = await supabase.functions.invoke('admin-toggle-coupon', {
-        body: { coupon_id: couponId, is_active: !isActive }
+      await api.admin.updateCoupon(couponId, {
+        isActive: !isActive
       });
-
-      if (error) throw error;
 
       toast({
         title: "Status opdateret",
@@ -132,11 +154,11 @@ export const AdminCouponManager: React.FC = () => {
       });
 
       fetchCoupons();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error toggling coupon:', error);
       toast({
         title: "Fejl",
-        description: "Kunne ikke opdatere kupon status",
+        description: error.message || "Kunne ikke opdatere kupon status",
         variant: "destructive",
       });
     }
@@ -172,7 +194,7 @@ export const AdminCouponManager: React.FC = () => {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Indlæser kuponkoder...</CardTitle>
+          <CardTitle>{t('loading.coupons')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>

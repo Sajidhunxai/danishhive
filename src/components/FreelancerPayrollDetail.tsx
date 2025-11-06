@@ -2,8 +2,9 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { 
   ChevronLeft,
   User,
@@ -47,6 +48,7 @@ export const FreelancerPayrollDetail: React.FC<FreelancerPayrollDetailProps> = (
   onBack
 }) => {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [monthlyEarnings, setMonthlyEarnings] = useState<MonthlyEarning[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -58,20 +60,20 @@ export const FreelancerPayrollDetail: React.FC<FreelancerPayrollDetailProps> = (
     setLoading(true);
     try {
       // Get all earnings for this freelancer
-      const { data: earnings, error } = await supabase
-        .from('earnings')
-        .select('amount, payment_period_start, payment_period_end, created_at')
-        .eq('user_id', freelancer.user_id)
-        .eq('status', 'completed')
-        .order('payment_period_start', { ascending: false });
-
-      if (error) throw error;
+      // Note: This assumes earnings API supports filtering by userId
+      const allEarnings = await api.earnings.getMyEarnings();
+      
+      // Filter by freelancer and status
+      const earnings = allEarnings.filter((earning: any) => 
+        earning.userId === freelancer.user_id && 
+        earning.status === 'paid'
+      );
 
       // Group by payment period
       const monthlyMap = new Map<string, MonthlyEarning>();
       
-      earnings?.forEach(earning => {
-        const periodStart = new Date(earning.payment_period_start);
+      earnings.forEach((earning: any) => {
+        const periodStart = new Date(earning.paymentPeriodStart || earning.createdAt);
         const periodKey = `${periodStart.getFullYear()}-${periodStart.getMonth()}`;
         const monthName = periodStart.toLocaleDateString('da-DK', { month: 'long' });
         
@@ -85,8 +87,8 @@ export const FreelancerPayrollDetail: React.FC<FreelancerPayrollDetailProps> = (
             year: periodStart.getFullYear(),
             total_amount: Number(earning.amount),
             earnings_count: 1,
-            period_start: earning.payment_period_start,
-            period_end: earning.payment_period_end
+            period_start: earning.paymentPeriodStart || earning.createdAt,
+            period_end: earning.paymentPeriodEnd || earning.createdAt
           });
         }
       });
@@ -99,11 +101,11 @@ export const FreelancerPayrollDetail: React.FC<FreelancerPayrollDetailProps> = (
 
       setMonthlyEarnings(monthlyArray);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching monthly earnings:', error);
       toast({
         title: "Fejl",
-        description: "Kunne ikke hente månedlige indtægter",
+        description: error.message || t('earnings.couldNotFetch'),
         variant: "destructive",
       });
     } finally {
@@ -120,10 +122,10 @@ export const FreelancerPayrollDetail: React.FC<FreelancerPayrollDetailProps> = (
 
   const getPaymentMethodText = (method: string | null) => {
     switch (method) {
-      case 'danish_bank': return 'Dansk Bank';
+      case 'danish_bank': return t('payment.danskBank');
       case 'iban': return 'IBAN';
       case 'paypal': return 'PayPal';
-      default: return 'Ikke angivet';
+      default: return t('common.notSpecified') || 'Ikke angivet';
     }
   };
 
@@ -138,7 +140,7 @@ export const FreelancerPayrollDetail: React.FC<FreelancerPayrollDetailProps> = (
           <div className="flex items-center gap-4">
             <Button onClick={onBack} variant="outline" size="sm">
               <ChevronLeft className="h-4 w-4 mr-1" />
-              Tilbage
+              {t('common.back')}
             </Button>
             <div>
               <CardTitle className="flex items-center gap-2">
@@ -146,7 +148,7 @@ export const FreelancerPayrollDetail: React.FC<FreelancerPayrollDetailProps> = (
                 {freelancer.full_name || 'Unavngivet Freelancer'}
               </CardTitle>
               <p className="text-sm text-muted-foreground mt-1">
-                Detaljeret indtægtshistorik
+                {t('earnings.detailedHistory')}
               </p>
             </div>
           </div>
@@ -157,16 +159,16 @@ export const FreelancerPayrollDetail: React.FC<FreelancerPayrollDetailProps> = (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Kontaktoplysninger</CardTitle>
+            <CardTitle className="text-lg">{t('contact.contactInfo')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-start gap-3">
               <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground" />
               <div>
-                <p className="font-medium">Adresse</p>
+                <p className="font-medium">{t('contact.address')}</p>
                 <p className="text-sm text-muted-foreground">
                   {[freelancer.address, freelancer.postal_code, freelancer.city]
-                    .filter(Boolean).join(', ') || 'Ikke angivet'}
+                    .filter(Boolean).join(', ') || t('common.notSpecified')}
                 </p>
               </div>
             </div>
@@ -175,14 +177,14 @@ export const FreelancerPayrollDetail: React.FC<FreelancerPayrollDetailProps> = (
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Betalingsoplysninger</CardTitle>
+            <CardTitle className="text-lg">{t('payment.paymentInfo')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-start gap-3">
               <CreditCard className="h-4 w-4 mt-0.5 text-muted-foreground" />
               <div className="space-y-2 flex-1">
                 <div>
-                  <p className="font-medium">Betalingsmetode</p>
+                  <p className="font-medium">{t('payment.paymentMethod')}</p>
                   <Badge variant="outline">
                     {getPaymentMethodText(freelancer.payment_method)}
                   </Badge>
@@ -191,15 +193,15 @@ export const FreelancerPayrollDetail: React.FC<FreelancerPayrollDetailProps> = (
                 {freelancer.payment_method === 'danish_bank' && (
                   <>
                     <div>
-                      <p className="text-sm font-medium">Registreringsnummer</p>
+                      <p className="text-sm font-medium">{t('payment.registrationNumber')}</p>
                       <p className="text-sm text-muted-foreground">
-                        {freelancer.registration_number || 'Ikke angivet'}
+                        {freelancer.registration_number || t('common.notSpecified')}
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium">Kontonummer</p>
+                      <p className="text-sm font-medium">{t('payment.accountNumber')}</p>
                       <p className="text-sm text-muted-foreground">
-                        {freelancer.account_number || 'Ikke angivet'}
+                        {freelancer.account_number || t('common.notSpecified')}
                       </p>
                     </div>
                   </>
@@ -210,13 +212,13 @@ export const FreelancerPayrollDetail: React.FC<FreelancerPayrollDetailProps> = (
                     <div>
                       <p className="text-sm font-medium">IBAN</p>
                       <p className="text-sm text-muted-foreground">
-                        {freelancer.iban || 'Ikke angivet'}
+                        {freelancer.iban || t('common.notSpecified')}
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium">Bank</p>
+                      <p className="text-sm font-medium">{t('payment.bank')}</p>
                       <p className="text-sm text-muted-foreground">
-                        {freelancer.bank_name || 'Ikke angivet'}
+                        {freelancer.bank_name || t('common.notSpecified')}
                       </p>
                     </div>
                   </>
@@ -231,7 +233,7 @@ export const FreelancerPayrollDetail: React.FC<FreelancerPayrollDetailProps> = (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Indtjening</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('earnings.totalEarnings')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
@@ -257,7 +259,7 @@ export const FreelancerPayrollDetail: React.FC<FreelancerPayrollDetailProps> = (
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{monthlyEarnings.length}</div>
-            <p className="text-xs text-muted-foreground">Med indtjening</p>
+            <p className="text-xs text-muted-foreground">{t('earnings.withEarnings')}</p>
           </CardContent>
         </Card>
       </div>
@@ -267,7 +269,7 @@ export const FreelancerPayrollDetail: React.FC<FreelancerPayrollDetailProps> = (
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5" />
-            Månedlig Indtægtshistorik
+{t('earnings.monthlyHistory')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -277,7 +279,7 @@ export const FreelancerPayrollDetail: React.FC<FreelancerPayrollDetailProps> = (
             </div>
           ) : monthlyEarnings.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">
-              Ingen indtægtshistorik fundet
+{t('earnings.noHistoryFound')}
             </p>
           ) : (
             <div className="space-y-3">

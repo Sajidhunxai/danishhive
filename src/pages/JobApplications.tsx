@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/services/api';
 import { useAuth } from '@/hooks/useAuth';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { JobApplicationRefund } from '@/components/JobApplicationRefund';
@@ -68,13 +68,7 @@ const JobApplications = () => {
 
     try {
       // First fetch the job to verify ownership
-      const { data: jobData, error: jobError } = await supabase
-        .from('jobs')
-        .select('id, title, description, client_id')
-        .eq('id', id)
-        .maybeSingle();
-
-      if (jobError) throw jobError;
+      const jobData = await api.jobs.getJobById(id);
 
       if (!jobData) {
         toast({
@@ -87,7 +81,7 @@ const JobApplications = () => {
       }
 
       // Check if user is the job owner
-      if (jobData.client_id !== user.id) {
+      if (jobData.clientId !== user.id) {
         toast({
           title: 'Adgang nægtet',
           description: 'Du har ikke adgang til at se ansøgninger for denne opgave.',
@@ -97,56 +91,36 @@ const JobApplications = () => {
         return;
       }
 
-      setJob(jobData);
+      setJob({
+        id: jobData.id,
+        title: jobData.title,
+        description: jobData.description,
+        client_id: jobData.clientId,
+      });
 
-      // Fetch applications with applicant profiles
-      const { data: applicationsData, error: applicationsError } = await supabase
-        .from('job_applications')
-        .select('*')
-        .eq('job_id', id)
-        .order('applied_at', { ascending: false });
+      // Fetch applications using backend API
+      const applicationsData = await api.applications.getJobApplications(id);
 
-      if (applicationsError) throw applicationsError;
-
-      // Fetch profiles for each applicant
-      const applicantIds = applicationsData.map(app => app.applicant_id);
-      
-      if (applicantIds.length > 0) {
-        const { data: profilesData, error: profilesError } = await supabase
-          .from('profiles')
-          .select('user_id, full_name, avatar_url, location, bio, skills, hourly_rate')
-          .in('user_id', applicantIds);
-
-        if (profilesError) {
-          console.error('Error fetching profiles:', profilesError);
+      // Transform the data
+      const transformedApplications = applicationsData.map((app: any) => ({
+        id: app.id,
+        cover_letter: app.coverLetter,
+        proposed_rate: app.proposedRate ? Number(app.proposedRate) : null,
+        availability: null, // Not in backend schema yet
+        status: app.status,
+        applied_at: app.submittedAt,
+        applicant: {
+          user_id: app.freelancer?.id || app.freelancerId,
+          full_name: app.freelancer?.profile?.fullName || null,
+          avatar_url: app.freelancer?.profile?.avatarUrl || null,
+          location: app.freelancer?.profile?.location || null,
+          bio: app.freelancer?.profile?.bio || null,
+          skills: app.freelancer?.profile?.skills ? (typeof app.freelancer.profile.skills === 'string' ? JSON.parse(app.freelancer.profile.skills) : app.freelancer.profile.skills) : null,
+          hourly_rate: app.freelancer?.profile?.hourlyRate ? Number(app.freelancer.profile.hourlyRate) : null,
         }
+      }));
 
-        // Transform the data
-        const transformedApplications = applicationsData.map(app => {
-          const applicantProfile = profilesData?.find(profile => profile.user_id === app.applicant_id);
-          return {
-            id: app.id,
-            cover_letter: app.cover_letter,
-            proposed_rate: app.proposed_rate,
-            availability: app.availability,
-            status: app.status,
-            applied_at: app.applied_at,
-            applicant: applicantProfile || {
-              user_id: app.applicant_id,
-              full_name: null,
-              avatar_url: null,
-              location: null,
-              bio: null,
-              skills: null,
-              hourly_rate: null
-            }
-          };
-        });
-
-        setApplications(transformedApplications);
-      } else {
-        setApplications([]);
-      }
+      setApplications(transformedApplications);
 
     } catch (error) {
       console.error('Error fetching applications:', error);
@@ -162,12 +136,7 @@ const JobApplications = () => {
 
   const updateApplicationStatus = async (applicationId: string, status: 'accepted' | 'rejected') => {
     try {
-      const { error } = await supabase
-        .from('job_applications')
-        .update({ status })
-        .eq('id', applicationId);
-
-      if (error) throw error;
+      await api.applications.updateApplication(applicationId, { status });
 
       // If accepting an application, trigger refunds for others
       if (status === 'accepted' && job) {
@@ -192,11 +161,11 @@ const JobApplications = () => {
         description: `Ansøgning ${status === 'accepted' ? 'godkendt' : 'afvist'}!`,
       });
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating application status:', error);
       toast({
         title: 'Fejl',
-        description: 'Kunne ikke opdatere ansøgning status.',
+        description: error.message || 'Kunne ikke opdatere ansøgning status.',
         variant: 'destructive',
       });
     }

@@ -5,9 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { 
   AlertTriangle, 
   CheckCircle, 
@@ -47,6 +48,7 @@ interface AdminReportsManagementProps {
 export const AdminReportsManagement: React.FC<AdminReportsManagementProps> = ({ onBack }) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [reports, setReports] = useState<ProfileReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -61,41 +63,36 @@ export const AdminReportsManagement: React.FC<AdminReportsManagementProps> = ({ 
   const fetchReports = async () => {
     setLoading(true);
     try {
-      // First get the reports
-      const { data: reportsData, error: reportsError } = await supabase
-        .from('profile_reports')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const reportsData = await api.reports.getReports();
 
-      if (reportsError) throw reportsError;
-
-      // Then get profile information for each user
-      const reports = reportsData || [];
-      const allUserIds = [...new Set([
-        ...reports.map(r => r.reporter_id),
-        ...reports.map(r => r.reported_user_id)
-      ])];
-
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('user_id, full_name')
-        .in('user_id', allUserIds);
-
-      if (profilesError) throw profilesError;
-
-      // Map profiles to reports
-      const reportsWithProfiles = reports.map(report => ({
-        ...report,
-        reporter_profile: profilesData?.find(p => p.user_id === report.reporter_id) || null,
-        reported_profile: profilesData?.find(p => p.user_id === report.reported_user_id) || null
+      // Map backend data to expected format
+      const reportsWithProfiles = reportsData.map((report: any) => ({
+        id: report.id,
+        reporter_id: report.reporterId,
+        reported_user_id: report.reportedUserId,
+        report_reason: report.reportReason,
+        report_category: report.reportCategory,
+        description: report.description,
+        conversation_data: report.conversationData,
+        status: report.status,
+        admin_notes: report.adminNotes,
+        reviewed_by: report.reviewedBy,
+        reviewed_at: report.reviewedAt,
+        created_at: report.createdAt,
+        reporter_profile: report.reporter?.profile ? {
+          full_name: report.reporter.profile.fullName
+        } : null,
+        reported_profile: report.reportedProfile ? {
+          full_name: report.reportedProfile.fullName
+        } : null
       }));
       
       setReports(reportsWithProfiles);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching reports:', error);
       toast({
         title: "Fejl",
-        description: "Kunne ikke hente rapporter",
+        description: error.message || "Kunne ikke hente rapporter",
         variant: "destructive",
       });
     } finally {
@@ -114,21 +111,18 @@ export const AdminReportsManagement: React.FC<AdminReportsManagementProps> = ({ 
 
     setActionLoading(`review_${selectedReport.id}`);
     try {
-      const { error } = await supabase
-        .from('profile_reports')
-        .update({
-          status: action,
-          admin_notes: adminNotes || null,
-          reviewed_by: user.id,
-          reviewed_at: new Date().toISOString()
-        })
-        .eq('id', selectedReport.id);
-
-      if (error) throw error;
+      // Map action to status: 'approved' -> 'resolved', 'rejected' -> 'dismissed'
+      const status = action === 'approved' ? 'resolved' : 'dismissed';
+      
+      await api.reports.updateReportStatus(
+        selectedReport.id,
+        status,
+        adminNotes || undefined
+      );
 
       toast({
         title: "Succes",
-        description: `Rapport ${action === 'approved' ? 'godkendt' : 'afvist'}`,
+        description: `Rapport ${action === 'approved' ? 'løst' : 'afvist'}`,
       });
 
       setReviewDialog(false);
@@ -138,7 +132,7 @@ export const AdminReportsManagement: React.FC<AdminReportsManagementProps> = ({ 
       console.error('Error reviewing report:', error);
       toast({
         title: "Fejl",
-        description: "Kunne ikke gennemgå rapport",
+        description: error.message || "Kunne ikke gennemgå rapport",
         variant: "destructive",
       });
     } finally {
@@ -201,7 +195,7 @@ export const AdminReportsManagement: React.FC<AdminReportsManagementProps> = ({ 
           <div className="flex items-center gap-4">
             <Button onClick={onBack} variant="outline" size="sm">
               <ChevronLeft className="h-4 w-4 mr-1" />
-              Tilbage
+              {t('common.back')}
             </Button>
             <div>
               <CardTitle className="flex items-center gap-2">

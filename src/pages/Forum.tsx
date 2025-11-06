@@ -9,6 +9,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { api } from '@/services/api';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ForumCategory {
   id: string;
@@ -57,6 +58,7 @@ const iconMap: Record<string, React.ComponentType<any>> = {
 
 const Forum: React.FC = () => {
   const { user, userRole } = useAuth();
+  const { t } = useLanguage();
   const [categories, setCategories] = useState<ForumCategory[]>([]);
   const [recentPosts, setRecentPosts] = useState<ForumPost[]>([]);
   const [loading, setLoading] = useState(true);
@@ -119,7 +121,7 @@ const Forum: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse">Indlæser forum...</div>
+        <div className="animate-pulse">{t('loading.forum')}</div>
       </div>
     );
   }

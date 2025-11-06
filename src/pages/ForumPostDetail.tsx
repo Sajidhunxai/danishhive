@@ -10,6 +10,7 @@ import { ArrowLeft, Pin, Lock, Trash2, Edit, Send, MoreVertical } from 'lucide-r
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import { api } from '@/services/api';
+import { useLanguage } from '@/contexts/LanguageContext';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -75,6 +76,7 @@ const ForumPostDetail: React.FC = () => {
   const { postId } = useParams();
   const navigate = useNavigate();
   const { user, userRole } = useAuth();
+  const { t } = useLanguage();
   const [post, setPost] = useState<ForumPost | null>(null);
   const [replyContent, setReplyContent] = useState('');
   const [isSubmittingReply, setIsSubmittingReply] = useState(false);
@@ -218,7 +220,7 @@ const ForumPostDetail: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse">Indlæser indlæg...</div>
+        <div className="animate-pulse">{t('loading.post')}</div>
       </div>
     );
   }

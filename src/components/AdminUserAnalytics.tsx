@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, UserCheck, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
@@ -30,29 +30,27 @@ const AdminUserAnalytics: React.FC = () => {
 
   const fetchUserStats = async () => {
     try {
-      // Fetch freelancer statistics (simplified without gender since column doesn't exist)
-      const { data: freelancers, error: freelancerError } = await supabase
-        .from('profiles')
-        .select('phone_verified, mitid_verified, full_name')
-        .eq('role', 'freelancer')
-        .not('full_name', 'eq', 'Incomplete Profile');
+      // Get all users with profiles
+      const usersData = await api.admin.getUsersWithEmail();
 
-      if (freelancerError) throw freelancerError;
+      // Filter freelancers and clients
+      const freelancers = usersData.filter((u: any) => 
+        u.userType === 'FREELANCER' && 
+        u.profile?.fullName && 
+        u.profile.fullName !== 'Incomplete Profile'
+      );
 
-      // Fetch client statistics  
-      const { data: clients, error: clientError } = await supabase
-        .from('profiles')
-        .select('phone_verified, payment_verified, full_name')
-        .eq('role', 'client')
-        .not('full_name', 'eq', 'Incomplete Profile');
-
-      if (clientError) throw clientError;
+      const clients = usersData.filter((u: any) => 
+        u.userType === 'CLIENT' && 
+        u.profile?.fullName && 
+        u.profile.fullName !== 'Incomplete Profile'
+      );
 
       // Calculate freelancer stats
-      const totalFreelancers = freelancers?.length || 0;
-      const verifiedFreelancers = freelancers?.filter(f => 
-        f.phone_verified && f.mitid_verified
-      ).length || 0;
+      const totalFreelancers = freelancers.length;
+      const verifiedFreelancers = freelancers.filter((f: any) => 
+        f.phoneVerified && f.profile?.mitidVerified
+      ).length;
       
       // For gender, we'll use a simple approximation based on common Danish names
       const maleNames = ['Lars', 'Morten', 'Anders', 'Peter', 'Jesper', 'Thomas', 'Michael', 'Henrik', 'Martin', 'Søren'];
@@ -61,8 +59,8 @@ const AdminUserAnalytics: React.FC = () => {
       let estimatedMale = 0;
       let estimatedFemale = 0;
       
-      freelancers?.forEach(f => {
-        const firstName = f.full_name?.split(' ')[0]?.toLowerCase() || '';
+      freelancers.forEach((f: any) => {
+        const firstName = f.profile?.fullName?.split(' ')[0]?.toLowerCase() || '';
         if (maleNames.some(name => firstName.includes(name.toLowerCase()))) {
           estimatedMale++;
         } else if (femaleNames.some(name => firstName.includes(name.toLowerCase()))) {
@@ -71,10 +69,10 @@ const AdminUserAnalytics: React.FC = () => {
       });
 
       // Calculate client stats
-      const totalClients = clients?.length || 0;
-      const verifiedClients = clients?.filter(c => 
-        c.phone_verified && c.payment_verified
-      ).length || 0;
+      const totalClients = clients.length;
+      const verifiedClients = clients.filter((c: any) => 
+        c.phoneVerified && c.profile?.paymentVerified
+      ).length;
 
       setStats({
         totalFreelancers,
@@ -85,9 +83,9 @@ const AdminUserAnalytics: React.FC = () => {
         verifiedClients,
       });
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching user statistics:', error);
-      toast.error('Fejl ved indlæsning af brugerstatistik');
+      toast.error(error.message || 'Fejl ved indlæsning af brugerstatistik');
     } finally {
       setLoading(false);
     }

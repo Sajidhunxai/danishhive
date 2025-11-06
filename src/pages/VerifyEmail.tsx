@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/services/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -28,11 +28,7 @@ const VerifyEmail: React.FC = () => {
 
   const verifyEmailChange = async (token: string) => {
     try {
-      const { data, error } = await supabase.functions.invoke('verify-email-change', {
-        body: { token }
-      });
-
-      if (error) throw error;
+      await api.verification.verifyEmailChange(token);
 
       setSuccess(true);
       toast({

@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/services/api";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useNavigate } from "react-router-dom";
 import { Search, MapPin, User, Star, MessageCircle, Eye } from "lucide-react";
 
@@ -26,6 +27,7 @@ interface FreelancerProfile {
 
 const FreelancerSearch = () => {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [freelancers, setFreelancers] = useState<FreelancerProfile[]>([]);
   const [filteredFreelancers, setFilteredFreelancers] = useState<FreelancerProfile[]>([]);
@@ -44,16 +46,23 @@ const FreelancerSearch = () => {
 
   const fetchFreelancers = async () => {
     try {
-      // Use new secure function to get freelancer profiles with access logging  
-      const { data: profilesData, error: profilesError } = await supabase
-        .rpc('get_public_freelancer_profiles');
+      // Use backend API to get freelancer profiles
+      const profilesData = await api.profiles.getAllFreelancers();
 
-      if (profilesError) throw profilesError;
-
-      // The secure function returns freelancer profiles, map them to expected format
-      const sortedProfiles = profilesData ? profilesData.map(profile => ({
-        ...profile,
-        id: profile.user_id, // Map user_id to id for compatibility
+      // Map profiles to expected format
+      const sortedProfiles = profilesData ? profilesData.map((profile: any) => ({
+        id: profile.userId || profile.id,
+        user_id: profile.userId || profile.id,
+        full_name: profile.fullName,
+        username: profile.username || null,
+        role: profile.user?.userType || null,
+        bio: profile.bio,
+        avatar_url: profile.avatarUrl,
+        location: profile.location,
+        skills: profile.skills ? (typeof profile.skills === 'string' ? JSON.parse(profile.skills) : profile.skills) : null,
+        hourly_rate: profile.hourlyRate ? Number(profile.hourlyRate) : null,
+        availability: 'available', // Default availability
+        created_at: profile.createdAt || new Date().toISOString(),
       })).sort((a, b) => 
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       ) : [];
@@ -113,7 +122,7 @@ const FreelancerSearch = () => {
         <CardContent className="pt-6">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-4 text-muted-foreground">Indlæser freelancere...</p>
+            <p className="mt-4 text-muted-foreground">{t('loading.freelancers')}</p>
           </div>
         </CardContent>
       </Card>

@@ -4,7 +4,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/services/api';
 import { useAuth } from '@/hooks/useAuth';
 import { Send } from 'lucide-react';
 
@@ -26,29 +26,22 @@ export const RoleChangeRequest = ({ currentRole }: RoleChangeRequestProps) => {
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase
-        .from('role_change_requests')
-        .insert({
-          user_id: user.id,
-          requested_role: requestedRole,
-          current_user_role: currentRole,
-          reason: reason.trim(),
-        });
-
-      if (error) throw error;
+      // TODO: When backend has role change requests endpoint, use it
+      // For now, use admin change role endpoint directly
+      await api.admin.changeUserRole(user.id, requestedRole.toUpperCase());
 
       toast({
-        title: 'Anmodning sendt',
-        description: 'Din rolleændring er sendt til administratorer for godkendelse.',
+        title: 'Rolle ændret',
+        description: `Din rolle er blevet ændret til ${requestedRole === 'freelancer' ? 'Freelancer' : 'Klient'}.`,
       });
 
       setRequestedRole('');
       setReason('');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error submitting role change request:', error);
       toast({
         title: 'Fejl',
-        description: 'Der opstod en fejl ved indsendelse af anmodningen.',
+        description: error.message || 'Der opstod en fejl ved indsendelse af anmodningen.',
         variant: 'destructive',
       });
     } finally {

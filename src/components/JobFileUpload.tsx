@@ -2,7 +2,7 @@ import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { Upload, FileText, X, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -61,38 +61,54 @@ const JobFileUpload: React.FC<JobFileUploadProps> = ({ onFilesChange, uploadedFi
     setUploading(true);
 
     try {
-      // Generate a unique filename
-      const fileId = crypto.randomUUID();
-      const fileExt = 'pdf';
-      const fileName = `${fileId}.${fileExt}`;
-      const filePath = `temp/${fileName}`; // Will be moved when job is created
+      // Convert file to base64
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        try {
+          const base64File = reader.result as string;
+          
+          // Upload file using backend API
+          const result = await api.upload.uploadJobAttachment(base64File, undefined, file.name);
 
-      // Upload file to Supabase Storage
-      const { error: uploadError } = await supabase.storage
-        .from('job-attachments')
-        .upload(filePath, file);
+          const newFile: UploadedFile = {
+            id: result.fileId,
+            name: file.name,
+            size: file.size,
+            url: result.fileUrl
+          };
 
-      if (uploadError) throw uploadError;
+          const updatedFiles = [...uploadedFiles, newFile];
+          onFilesChange(updatedFiles);
 
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('job-attachments')
-        .getPublicUrl(filePath);
-
-      const newFile: UploadedFile = {
-        id: fileId,
-        name: file.name,
-        size: file.size,
-        url: publicUrl
+          toast({
+            title: "Fil uploadet!",
+            description: `${file.name} er uploadet succesfuldt`,
+          });
+        } catch (error: any) {
+          console.error('Upload error:', error);
+          toast({
+            title: "Upload fejl",
+            description: error.message || "Kunne ikke uploade filen. Prøv igen.",
+            variant: "destructive",
+          });
+        } finally {
+          setUploading(false);
+          if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+          }
+        }
       };
-
-      const updatedFiles = [...uploadedFiles, newFile];
-      onFilesChange(updatedFiles);
-
-      toast({
-        title: "Fil uploadet!",
-        description: `${file.name} er uploadet succesfuldt`,
-      });
+      
+      reader.onerror = () => {
+        toast({
+          title: "Upload fejl",
+          description: "Kunne ikke læse filen. Prøv igen.",
+          variant: "destructive",
+        });
+        setUploading(false);
+      };
+      
+      reader.readAsDataURL(file);
 
     } catch (error: any) {
       console.error('Upload error:', error);
@@ -101,21 +117,14 @@ const JobFileUpload: React.FC<JobFileUploadProps> = ({ onFilesChange, uploadedFi
         description: error.message || "Kunne ikke uploade filen. Prøv igen.",
         variant: "destructive",
       });
-    } finally {
       setUploading(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
     }
   };
 
   const removeFile = async (fileToRemove: UploadedFile) => {
     try {
-      // Remove from storage
-      const filePath = `temp/${fileToRemove.id}.pdf`;
-      await supabase.storage
-        .from('job-attachments')
-        .remove([filePath]);
+      // Remove from backend storage
+      await api.upload.deleteJobAttachment(fileToRemove.id);
 
       // Update state
       const updatedFiles = uploadedFiles.filter(file => file.id !== fileToRemove.id);

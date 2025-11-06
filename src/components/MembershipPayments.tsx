@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { 
   ChevronLeft,
   ChevronRight,
@@ -31,6 +31,7 @@ interface MembershipPaymentsProps {
 
 export const MembershipPayments: React.FC<MembershipPaymentsProps> = ({ onBack }) => {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [payments, setPayments] = useState<MembershipPayment[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState(new Date());
@@ -223,7 +224,7 @@ export const MembershipPayments: React.FC<MembershipPaymentsProps> = ({ onBack }
             <div className="flex items-center gap-4">
               <Button onClick={onBack} variant="outline" size="sm">
                 <ChevronLeft className="h-4 w-4 mr-1" />
-                Tilbage
+                {t('common.back')}
               </Button>
               <CardTitle>
                 Membership Betalinger - {formatMonth(selectedMonth)}

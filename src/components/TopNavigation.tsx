@@ -14,11 +14,13 @@ import {
 import { MessageCircle, User, Settings, LogOut, Home, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/services/api';
+import { useMessageNotifications } from '@/hooks/useMessageNotifications';
 
 export const TopNavigation: React.FC = () => {
   const { user, userRole, signOut } = useAuth();
   const { language } = useLanguage();
   const navigate = useNavigate();
+  const { unreadCount } = useMessageNotifications(true);
 
   const texts = {
     da: {
@@ -78,7 +80,7 @@ export const TopNavigation: React.FC = () => {
             className="flex items-center gap-2"
           >
             <Home className="h-4 w-4" />
-            <span className="font-medium">Hjem</span>
+            <span className="font-medium">{t.home}</span>
           </Button>
 
           {/* Right side menu */}
@@ -100,11 +102,26 @@ export const TopNavigation: React.FC = () => {
             <Button
               variant="ghost"
               size="sm"
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 relative"
               onClick={() => handleNavigation('/messages')}
             >
-              <MessageCircle className="h-4 w-4" />
-              <span className="hidden sm:inline">{t.messages}</span>
+              <div className="relative">
+                <MessageCircle className="h-4 w-4" />
+                {unreadCount > 0 && (
+                  <Badge 
+                    variant="destructive" 
+                    className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                  >
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </Badge>
+                )}
+              </div>
+              {/* <span className="hidden sm:inline">{t.messages}</span>
+              {unreadCount > 0 && (
+                <Badge variant="destructive" className="hidden sm:flex">
+                  {unreadCount}
+                </Badge>
+              )} */}
             </Button>
 
             {/* User menu */}

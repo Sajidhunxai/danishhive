@@ -179,7 +179,7 @@ const ReferralSystem = () => {
     return (
       <div className="text-center py-4">
         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto"></div>
-        <p className="mt-2 text-sm text-muted-foreground">Indlæser henvisninger...</p>
+        <p className="mt-2 text-sm text-muted-foreground">{t('loading.referrals')}</p>
       </div>
     );
   }

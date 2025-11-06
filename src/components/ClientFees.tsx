@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/services/api';
 import { useAuth } from '@/hooks/useAuth';
 import { Gift, Ticket, Percent, Calendar } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -36,35 +36,28 @@ export const ClientFees: React.FC<ClientFeesProps> = ({
 
     setValidatingCoupon(true);
     try {
-      const { data, error } = await supabase.functions.invoke('apply-client-coupon', {
-        body: {
-          coupon_code: couponCode.trim().toUpperCase(),
-          user_id: user.id
-        }
-      });
+      const result = await api.payments.applyClientCoupon(couponCode.trim().toUpperCase());
 
-      if (error) throw error;
-
-      if (data?.success) {
+      if (result.valid) {
         setAppliedCoupon(couponCode.trim().toUpperCase());
         setCouponCode('');
         toast({
           title: "Kupon anvendt!",
-          description: data.message,
+          description: `Du har fået ${result.discount}% rabat!`,
         });
         onUpdate(); // Refresh the fee info
       } else {
         toast({
           title: "Ugyldig kupon",
-          description: data?.message || "Kuponen kunne ikke anvendes",
+          description: result.error || "Kuponen kunne ikke anvendes",
           variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error applying coupon:', error);
       toast({
         title: "Fejl",
-        description: "Kunne ikke anvende kupon. Prøv igen senere.",
+        description: error.message || "Kunne ikke anvende kupon. Prøv igen senere.",
         variant: "destructive",
       });
     } finally {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/services/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -72,13 +72,11 @@ export const GDPRCompliance = () => {
 
     setExporting(true);
     try {
-      // Use the secure export function
-      const { data, error } = await supabase.functions.invoke('export-user-data');
-
-      if (error) throw error;
+      // Use backend API to export user data
+      const result = await api.gdpr.exportData();
 
       // Create downloadable JSON file from the response
-      const dataStr = JSON.stringify(data, null, 2);
+      const dataStr = JSON.stringify(result.data, null, 2);
       const dataBlob = new Blob([dataStr], { type: 'application/json' });
       const url = URL.createObjectURL(dataBlob);
       
@@ -94,11 +92,11 @@ export const GDPRCompliance = () => {
         title: "Data eksporteret",
         description: "Dine data er downloadet som JSON fil",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Export error:', error);
       toast({
         title: "Eksport fejlede",
-        description: "Der opstod en fejl ved eksport af data",
+        description: error.message || "Der opstod en fejl ved eksport af data",
         variant: "destructive",
       });
     } finally {
@@ -111,16 +109,17 @@ export const GDPRCompliance = () => {
 
     setDeleting(true);
     try {
-      const { error } = await supabase.functions.invoke('delete-user-account', {
-        body: { userId: user.id }
-      });
-
-      if (error) throw error;
+      await api.gdpr.deleteAccount('DELETE');
 
       toast({
         title: "Konto slettet",
         description: "Din konto og alle tilknyttede data er permanent slettet",
       });
+      
+      // Redirect to auth page after deletion
+      setTimeout(() => {
+        window.location.href = '/auth';
+      }, 2000);
     } catch (error: any) {
       console.error('Delete error:', error);
       toast({

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -56,6 +57,7 @@ interface TeamLeader {
 
 const AdminTranslationManager = () => {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [translations, setTranslations] = useState<AttachmentTranslation[]>([]);
   const [teamLeaders, setTeamLeaders] = useState<TeamLeader[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,6 +65,7 @@ const AdminTranslationManager = () => {
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [newRequestDialogOpen, setNewRequestDialogOpen] = useState(false);
   const [newRequestData, setNewRequestData] = useState({
+    job_id: "",
     attachment_id: "",
     target_language: "",
     notes: ""
@@ -103,53 +106,23 @@ const AdminTranslationManager = () => {
 
   const fetchTranslations = async () => {
     try {
-      const { data, error } = await supabase
-        .from('attachment_translations')
-        .select(`
-          *,
-          job_attachments (
-            id,
-            file_name,
-            file_path,
-            jobs (
-              id,
-              title,
-              client_id
-            )
-          )
-        `)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      // Fetch assigned user details for translations that are assigned
-      const translationsWithUsers = await Promise.all(
-        (data || []).map(async (translation) => {
-          if (translation.assigned_to) {
-            const { data: userData } = await supabase
-              .from('profiles')
-              .select('full_name')
-              .eq('user_id', translation.assigned_to)
-              .single();
-
-            return {
-              ...translation,
-              assigned_user: userData ? {
-                full_name: userData.full_name,
-                email: '' // We don't expose email for privacy
-              } : null
-            };
-          }
-          return translation;
-        })
-      );
+      const translationsData = await api.translations.getTranslations();
+      
+      // Map backend data to expected format
+      const translationsWithUsers = translationsData.map((translation: any) => ({
+        ...translation,
+        assigned_user: translation.assignedUser ? {
+          full_name: translation.assignedUser.fullName || translation.assignedUser.full_name,
+          email: '' // We don't expose email for privacy
+        } : null
+      }));
 
       setTranslations(translationsWithUsers);
     } catch (error: any) {
       console.error('Error fetching translations:', error);
       toast({
         title: "Fejl",
-        description: "Kunne ikke hente oversættelser",
+        description: error.message || "Kunne ikke hente oversættelser",
         variant: "destructive",
       });
     } finally {
@@ -159,15 +132,15 @@ const AdminTranslationManager = () => {
 
   const fetchTeamLeaders = async () => {
     try {
-      // For now, get all admin users as potential team leaders
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('user_id, full_name')
-        .eq('is_admin', true);
+      const teamLeadersData = await api.translations.getTeamLeaders();
+      
+      // Map backend data to expected format
+      const mappedLeaders = teamLeadersData.map((leader: any) => ({
+        user_id: leader.user_id || leader.userId,
+        full_name: leader.full_name || leader.fullName
+      }));
 
-      if (error) throw error;
-
-      setTeamLeaders(data || []);
+      setTeamLeaders(mappedLeaders);
     } catch (error: any) {
       console.error('Error fetching team leaders:', error);
     }
@@ -175,16 +148,7 @@ const AdminTranslationManager = () => {
 
   const assignTranslation = async (translationId: string, assignedTo: string) => {
     try {
-      const { error } = await supabase
-        .from('attachment_translations')
-        .update({
-          assigned_to: assignedTo,
-          assigned_at: new Date().toISOString(),
-          status: 'assigned'
-        })
-        .eq('id', translationId);
-
-      if (error) throw error;
+      await api.translations.assignTranslation(translationId, assignedTo);
 
       toast({
         title: "Tildelt!",
@@ -198,24 +162,20 @@ const AdminTranslationManager = () => {
       console.error('Error assigning translation:', error);
       toast({
         title: "Fejl",
-        description: "Kunne ikke tildele oversættelsen",
+        description: error.message || "Kunne ikke tildele oversættelsen",
         variant: "destructive",
       });
     }
   };
 
-  const createTranslationRequest = async (attachmentId: string, targetLanguage: string, notes?: string) => {
+  const createTranslationRequest = async (jobId: string, attachmentId: string, targetLanguage: string, notes?: string) => {
     try {
-      const { error } = await supabase
-        .from('attachment_translations')
-        .insert({
-          attachment_id: attachmentId,
-          target_language: targetLanguage,
-          status: 'pending',
-          notes: notes || null
-        });
-
-      if (error) throw error;
+      await api.translations.createTranslationRequest({
+        jobId,
+        attachmentId,
+        targetLanguage,
+        notes: notes || undefined
+      });
 
       toast({
         title: "Anmodning oprettet!",
@@ -224,12 +184,12 @@ const AdminTranslationManager = () => {
 
       fetchTranslations();
       setNewRequestDialogOpen(false);
-      setNewRequestData({ attachment_id: "", target_language: "", notes: "" });
+      setNewRequestData({ job_id: "", attachment_id: "", target_language: "", notes: "" });
     } catch (error: any) {
       console.error('Error creating translation request:', error);
       toast({
         title: "Fejl",
-        description: "Kunne ikke oprette oversættelsesanmodning",
+        description: error.message || "Kunne ikke oprette oversættelsesanmodning",
         variant: "destructive",
       });
     }
@@ -251,7 +211,7 @@ const AdminTranslationManager = () => {
   };
 
   if (loading) {
-    return <div className="flex justify-center p-8">Indlæser...</div>;
+    return <div className="flex justify-center p-8">{t('common.loading')}</div>;
   }
 
   return (
@@ -270,6 +230,14 @@ const AdminTranslationManager = () => {
               <DialogTitle>Opret ny oversättelsesanmodning</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
+              <div>
+                <Label>Job ID</Label>
+                <Input
+                  value={newRequestData.job_id}
+                  onChange={(e) => setNewRequestData(prev => ({ ...prev, job_id: e.target.value }))}
+                  placeholder="UUID af job"
+                />
+              </div>
               <div>
                 <Label>Vedhæftet fil ID</Label>
                 <Input
@@ -306,11 +274,12 @@ const AdminTranslationManager = () => {
               </div>
               <Button 
                 onClick={() => createTranslationRequest(
+                  newRequestData.job_id,
                   newRequestData.attachment_id,
                   newRequestData.target_language,
                   newRequestData.notes
                 )}
-                disabled={!newRequestData.attachment_id || !newRequestData.target_language}
+                disabled={!newRequestData.job_id || !newRequestData.attachment_id || !newRequestData.target_language}
               >
                 Opret anmodning
               </Button>

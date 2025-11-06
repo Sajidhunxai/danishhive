@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Droplets, History } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/services/api';
 import { useAuth } from '@/hooks/useAuth';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -31,21 +31,23 @@ export const HoneyDropsBalance: React.FC<HoneyDropsBalanceProps> = ({ drops, onU
     
     setLoading(true);
     try {
-      // For now, create mock transaction data since the table doesn't exist yet
-      const mockTransactions: HoneyTransaction[] = [
-        {
-          id: '1',
-          amount: 25,
-          type: 'purchase' as const,
-          description: 'Køb af honningdråber pakke',
-          created_at: new Date().toISOString(),
-          job_title: undefined
-        }
-      ];
+      // Use backend API to get honey transactions
+      const transactionsData = await api.honey.getTransactions();
+      
+      // Map backend data to expected format
+      const mappedTransactions: HoneyTransaction[] = transactionsData.map((tx: any) => ({
+        id: tx.id,
+        amount: tx.amount,
+        type: tx.type as 'purchase' | 'bid' | 'refund',
+        description: tx.description || 'Transaktion',
+        created_at: tx.createdAt,
+        job_title: tx.job?.title || undefined
+      }));
 
-      setTransactions(mockTransactions);
-    } catch (error) {
+      setTransactions(mappedTransactions);
+    } catch (error: any) {
       console.error('Error fetching honey transactions:', error);
+      setTransactions([]);
     } finally {
       setLoading(false);
     }

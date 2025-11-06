@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/services/api';
 import { useAuth } from '@/hooks/useAuth';
 import { Download, Droplets, Calendar, Receipt, Eye } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -35,20 +35,31 @@ export const HoneyDropsPurchaseHistory: React.FC = () => {
 
   const fetchPurchaseHistory = async () => {
     try {
-      // For now, we'll fetch from a generic payments table or create mock data
-      // Since honey_purchases table doesn't exist yet, we'll show placeholder
-      const mockPurchases: HoneyDropPurchase[] = [
-        // This will be replaced once the actual table is created
-      ];
+      // Use backend API to get honey transactions
+      const transactions = await api.honey.getTransactions({ type: 'purchase' });
       
-      setPurchases(mockPurchases);
-    } catch (error) {
+      // Map backend data to expected format
+      const mappedPurchases: HoneyDropPurchase[] = transactions.map((tx: any) => ({
+        id: tx.id,
+        created_at: tx.createdAt,
+        amount: tx.amount,
+        honey_drops: tx.amount, // Assuming amount is the honey drops amount
+        vat_amount: tx.amount * 0.25, // 25% VAT
+        total_amount: tx.amount * 1.25,
+        payment_method: 'Card',
+        mollie_payment_id: tx.paymentId,
+        status: 'completed'
+      }));
+      
+      setPurchases(mappedPurchases);
+    } catch (error: any) {
       console.error('Error fetching purchase history:', error);
       toast({
         title: "Fejl",
-        description: "Kunne ikke hente købshistorik",
+        description: error.message || "Kunne ikke hente købshistorik",
         variant: "destructive",
       });
+      setPurchases([]);
     } finally {
       setLoading(false);
     }

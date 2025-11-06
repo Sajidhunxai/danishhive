@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/services/api";
 import { useAuth } from "@/hooks/useAuth";
 import { MessageSquare, Briefcase, Euro, MapPin } from "lucide-react";
 
@@ -49,20 +49,30 @@ export const InviteFreelancerDialog: React.FC<InviteFreelancerDialogProps> = ({
     
     setFetchingJobs(true);
     try {
-      const { data, error } = await supabase
-        .from('jobs')
-        .select('id, title, description, budget_min, budget_max, location, skills_required, status, is_remote, deadline')
-        .eq('client_id', user.id)
-        .eq('status', 'open')
-        .order('created_at', { ascending: false });
+      const jobsData = await api.jobs.getMyJobs();
+      
+      // Filter open jobs and map to expected format
+      const openJobs = jobsData
+        .filter((job: any) => job.status === 'open')
+        .map((job: any) => ({
+          id: job.id,
+          title: job.title,
+          description: job.description,
+          budget_min: job.budget ? Number(job.budget) : null,
+          budget_max: job.budget ? Number(job.budget) : null,
+          location: job.location,
+          skills_required: job.skills ? (typeof job.skills === 'string' ? JSON.parse(job.skills) : job.skills) : null,
+          status: job.status,
+          is_remote: job.isRemote || null,
+          deadline: job.deadline || null
+        }));
 
-      if (error) throw error;
-      setJobs(data || []);
-    } catch (error) {
+      setJobs(openJobs);
+    } catch (error: any) {
       console.error('Error fetching jobs:', error);
       toast({
         title: "Fejl",
-        description: "Kunne ikke hente dine opgaver",
+        description: error.message || "Kunne ikke hente dine opgaver",
         variant: "destructive",
       });
     } finally {
@@ -109,20 +119,14 @@ export const InviteFreelancerDialog: React.FC<InviteFreelancerDialogProps> = ({
 
     setLoading(true);
     try {
-      // Create invitations for each selected job
-      const invitations = selectedJobs.map(jobId => ({
-        client_id: user.id,
-        freelancer_id: freelancerId,
-        job_id: jobId,
-        message: message.trim(),
-        status: 'pending'
-      }));
-
-      const { error } = await supabase
-        .from('invitations')
-        .insert(invitations);
-
-      if (error) throw error;
+      // Send invitations via messages for each selected job
+      for (const jobId of selectedJobs) {
+        await api.messages.sendMessage({
+          receiverId: freelancerId,
+          content: message.trim(),
+          conversationId: `job-${jobId}`
+        });
+      }
 
       toast({
         title: "Invitationer sendt!",

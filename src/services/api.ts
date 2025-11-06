@@ -140,6 +140,10 @@ class ApiService {
 
   // Profile endpoints
   profiles = {
+    getPublicProfile: async (userId: string) => {
+      const response = await this.api.get(`/profiles/public/${userId}`);
+      return response.data.profile;
+    },
     getMyProfile: async () => {
       const response = await this.api.get('/profiles/me');
       return response.data;
@@ -247,6 +251,10 @@ class ApiService {
 
   // Contract endpoints
   contracts = {
+    getMyContracts: async () => {
+      const response = await this.api.get('/contracts/my-contracts');
+      return response.data.contracts;
+    },
     getAllContracts: async () => {
       const response = await this.api.get('/contracts');
       return response.data.contracts;
@@ -297,6 +305,11 @@ class ApiService {
     getConversationWithUser: async (userId: string) => {
       const response = await this.api.get(`/messages/conversation/${userId}`);
       return response.data.messages;
+    },
+
+    getMessagesByConversationId: async (conversationId: string) => {
+      const response = await this.api.get(`/messages/conversation-id/${conversationId}`);
+      return response.data;
     },
 
     markAsRead: async (id: string) => {
@@ -500,6 +513,11 @@ class ApiService {
       return response.data;
     },
 
+    getUsersWithEmail: async () => {
+      const response = await this.api.get('/admin/users/with-email');
+      return response.data;
+    },
+
     updateUser: async (id: string, data: any) => {
       const response = await this.api.put(`/admin/users/${id}`, data);
       return response.data.user;
@@ -507,6 +525,21 @@ class ApiService {
 
     deleteUser: async (id: string) => {
       const response = await this.api.delete(`/admin/users/${id}`);
+      return response.data;
+    },
+
+    changeUserRole: async (userId: string, newRole: string) => {
+      const response = await this.api.post('/admin/users/change-role', { userId, newRole });
+      return response.data;
+    },
+
+    createAdminUser: async (email: string, password: string, fullName: string) => {
+      const response = await this.api.post('/admin/users/create-admin', { email, password, fullName });
+      return response.data;
+    },
+
+    updateUserPassword: async (userId: string, newPassword: string) => {
+      const response = await this.api.post('/admin/users/update-password', { userId, newPassword });
       return response.data;
     },
 
@@ -539,6 +572,21 @@ class ApiService {
       const response = await this.api.post(`/admin/coupons/use/${code}`);
       return response.data;
     },
+
+    updateVerification: async (userId: string, verificationType: string, verified: boolean) => {
+      const response = await this.api.post(`/admin/users/${userId}/verification`, { verificationType, verified });
+      return response.data;
+    },
+
+    getRevenueOverview: async (month?: number, year?: number) => {
+      const response = await this.api.get('/admin/revenue/overview', { params: { month, year } });
+      return response.data;
+    },
+
+    getAdminUsers: async () => {
+      const response = await this.api.get('/admin/users/admin');
+      return response.data;
+    },
   };
 
   // Verification endpoints
@@ -559,6 +607,186 @@ class ApiService {
         countryCode,
         verificationCode,
       });
+      return response.data;
+    },
+
+    verifyEmailChange: async (token: string) => {
+      const response = await this.api.post('/auth/verify-email-change', { token });
+      return response.data;
+    },
+  };
+
+  // Upload endpoints
+  upload = {
+    uploadJobAttachment: async (file: string, jobId?: string, fileName?: string) => {
+      const response = await this.api.post('/upload/job-attachment', { file, jobId, fileName });
+      return response.data;
+    },
+
+    deleteJobAttachment: async (fileId: string, jobId?: string) => {
+      const response = await this.api.delete('/upload/job-attachment', { data: { fileId, jobId } });
+      return response.data;
+    },
+
+    moveTempFilesToJob: async (jobId: string, fileIds: string[]) => {
+      const response = await this.api.post('/upload/move-temp-files', {
+        jobId,
+        fileIds,
+      });
+      return response.data;
+    },
+  };
+
+  // Payment endpoints
+  payments = {
+    applyCoupon: async (code: string) => {
+      const response = await this.api.post('/payments/coupon/apply', { code });
+      return response.data;
+    },
+
+    applyClientCoupon: async (code: string, jobId?: string) => {
+      const response = await this.api.post('/payments/coupon/apply-client', { code, jobId });
+      return response.data;
+    },
+
+    verifyPaymentMethod: async () => {
+      const response = await this.api.post('/payments/verify-method');
+      return response.data;
+    },
+
+    checkPaymentStatus: async (paymentId: string) => {
+      const response = await this.api.post('/payments/check-status', { paymentId });
+      return response.data;
+    },
+
+    createEscrowPayment: async (contractId: string, amount: number, description?: string) => {
+      const response = await this.api.post('/payments/escrow/create', { contractId, amount, description });
+      return response.data;
+    },
+
+    releaseEscrowPayment: async (contractId: string, paymentId: string) => {
+      const response = await this.api.post('/payments/escrow/release', { contractId, paymentId });
+      return response.data;
+    },
+
+    createHoneyPayment: async (amount: number, couponCode?: string) => {
+      const response = await this.api.post('/payments/honey/purchase', { amount, couponCode });
+      return response.data;
+    },
+  };
+
+  // GDPR endpoints
+  gdpr = {
+    exportData: async () => {
+      const response = await this.api.get('/gdpr/export-data');
+      return response.data;
+    },
+
+    deleteAccount: async (confirmation: string = 'DELETE') => {
+      const response = await this.api.post('/gdpr/delete-account', { confirmation });
+      return response.data;
+    },
+  };
+
+  // Image approval endpoints
+  imageApproval = {
+    getPendingImages: async () => {
+      const response = await this.api.get('/image-approval/pending');
+      return response.data.images;
+    },
+
+    approveImage: async (imageId: string, adminNotes?: string) => {
+      const response = await this.api.post(`/image-approval/${imageId}/approve`, { adminNotes });
+      return response.data;
+    },
+
+    rejectImage: async (imageId: string, adminNotes?: string) => {
+      const response = await this.api.post(`/image-approval/${imageId}/reject`, { adminNotes });
+      return response.data;
+    },
+  };
+
+  // Report endpoints
+  reports = {
+    createReport: async (data: {
+      reportedUserId: string;
+      reportCategory: string;
+      reportReason: string;
+      description?: string;
+      conversationData?: any;
+    }) => {
+      const response = await this.api.post('/reports', data);
+      return response.data;
+    },
+
+    getReports: async (status?: string) => {
+      const response = await this.api.get('/reports', { params: { status } });
+      return response.data.reports;
+    },
+
+    updateReportStatus: async (reportId: string, status: string, adminNotes?: string) => {
+      const response = await this.api.patch(`/reports/${reportId}/status`, { status, adminNotes });
+      return response.data;
+    },
+  };
+
+  // Refund endpoints
+  refunds = {
+    refundApplicationHoneyDrops: async (jobId: string, selectedApplicantId: string) => {
+      const response = await this.api.post('/refunds/application-honey-drops', { jobId, selectedApplicantId });
+      return response.data;
+    },
+  };
+
+  // University endpoints
+  universities = {
+    getUniversities: async () => {
+      // This endpoint doesn't require authentication - use direct axios call
+      const response = await axios.get(`${API_URL}/universities`);
+      return response.data.universities;
+    },
+  };
+
+  // Under-18 application endpoints
+  under18 = {
+    createApplication: async (data: {
+      email: string;
+      birthday: string;
+      languageSkills: string[];
+      softwareSkills: string[];
+      codeLanguages: string[];
+      educationInstitution?: string;
+      cvFile: string; // base64
+      cvFileName: string;
+    }) => {
+      // This endpoint doesn't require authentication - use direct axios call
+      const response = await axios.post(`${API_URL}/under18/applications`, data);
+      return response.data;
+    },
+  };
+
+  // Translation endpoints
+  translations = {
+    getTranslations: async () => {
+      const response = await this.api.get('/translations');
+      return response.data.translations;
+    },
+    getTeamLeaders: async () => {
+      const response = await this.api.get('/translations/team-leaders');
+      return response.data.teamLeaders;
+    },
+    assignTranslation: async (translationId: string, assignedTo: string) => {
+      const response = await this.api.post(`/translations/assign/${translationId}`, { assignedTo });
+      return response.data;
+    },
+    createTranslationRequest: async (data: {
+      jobId: string;
+      attachmentId: string;
+      originalLanguage?: string;
+      targetLanguage: string;
+      notes?: string;
+    }) => {
+      const response = await this.api.post('/translations/requests', data);
       return response.data;
     },
   };

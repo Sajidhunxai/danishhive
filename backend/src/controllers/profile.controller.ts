@@ -151,6 +151,40 @@ export const updateMyProfile = async (req: AuthRequest, res: Response) => {
   }
 };
 
+export const getPublicProfile = async (req: any, res: Response) => {
+  try {
+    const { userId } = req.params;
+    
+    const profile = await prisma.profile.findUnique({
+      where: { userId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            userType: true,
+            emailVerified: true,
+            phoneVerified: true,
+          },
+        },
+        projects: {
+          orderBy: { createdAt: 'desc' },
+        },
+      },
+    });
+    
+    if (!profile) {
+      return res.status(404).json({ error: 'Profile not found' });
+    }
+    
+    // Return public profile data (excluding sensitive information)
+    res.json({ profile });
+  } catch (error) {
+    console.error('Get public profile error:', error);
+    res.status(500).json({ error: 'Failed to fetch profile' });
+  }
+};
+
 export const getProfileById = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;

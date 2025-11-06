@@ -25,6 +25,14 @@ import honeyRoutes from './routes/honey.routes';
 import couponRoutes from './routes/coupon.routes';
 import adminRoutes from './routes/admin.routes';
 import verificationRoutes from './routes/verification.routes';
+import uploadRoutes from './routes/upload.routes';
+import gdprRoutes from './routes/gdpr.routes';
+import imageApprovalRoutes from './routes/imageApproval.routes';
+import reportRoutes from './routes/report.routes';
+import refundRoutes from './routes/refund.routes';
+import universityRoutes from './routes/university.routes';
+import under18Routes from './routes/under18.routes';
+import translationRoutes from './routes/translation.routes';
 
 // Load environment variables
 dotenv.config();
@@ -112,6 +120,14 @@ app.use('/api/honey', honeyRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/verification', verificationRoutes);
+app.use('/api/upload', uploadRoutes);
+app.use('/api/gdpr', gdprRoutes);
+app.use('/api/image-approval', imageApprovalRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/refunds', refundRoutes);
+app.use('/api/universities', universityRoutes);
+app.use('/api/under18', under18Routes);
+app.use('/api/translations', translationRoutes);
 
 // 404 handler
 app.use((req, res) => {

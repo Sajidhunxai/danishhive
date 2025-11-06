@@ -9,6 +9,7 @@ import { Send, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 import { da } from 'date-fns/locale';
+import { playMessageSound } from '@/utils/sound';
 
 interface Message {
   id: string;
@@ -49,16 +50,22 @@ export const MessageThread: React.FC<MessageThreadProps> = ({ conversation }) =>
   const [sending, setSending] = useState(false);
   const [newMessage, setNewMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const isFetchingRef = useRef(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   const fetchMessages = async () => {
+    // Prevent concurrent requests
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
+    
     try {
-      // Conversation ID is already provided from ConversationsList (backend uses conv-<sorted>
-      const otherUserId = conversation.client_id === user?.id ? conversation.freelancer_id : conversation.client_id;
-      const result = await api.messages.getConversationWithUser(otherUserId);
+      // Use conversation ID directly instead of generating a new one
+      console.log('Fetching messages for conversation:', conversation.id);
+      const result = await api.messages.getMessagesByConversationId(conversation.id);
+      console.log('Messages API response:', result);
       const msgs = (result?.messages || []).map((m: any) => ({
         id: m.id,
         conversation_id: conversation.id,
@@ -70,6 +77,19 @@ export const MessageThread: React.FC<MessageThreadProps> = ({ conversation }) =>
           ? { full_name: m.sender.profile.fullName, avatar_url: m.sender.profile.avatarUrl }
           : undefined,
       })) as Message[];
+      
+      // Check if there are new messages from other users
+      if (messages.length > 0 && user) {
+        const previousMessageIds = new Set(messages.map(m => m.id));
+        const newMessages = msgs.filter(m => !previousMessageIds.has(m.id));
+        const hasNewMessagesFromOthers = newMessages.some(m => m.sender_id !== user.id);
+        
+        if (hasNewMessagesFromOthers) {
+          // Play sound when a new message is received from another user
+          playMessageSound();
+        }
+      }
+      
       setMessages(msgs);
     } catch (error: any) {
       console.error('Error fetching messages:', error);
@@ -80,6 +100,7 @@ export const MessageThread: React.FC<MessageThreadProps> = ({ conversation }) =>
       });
     } finally {
       setLoading(false);
+      isFetchingRef.current = false;
     }
   };
 
@@ -114,6 +135,8 @@ export const MessageThread: React.FC<MessageThreadProps> = ({ conversation }) =>
       setMessages(prev => [...prev, appended]);
       setNewMessage('');
       scrollToBottom();
+      
+      // Note: Sound notification only plays for received messages, not sent messages
     } catch (error: any) {
       console.error('Error sending message:', error);
       toast({
@@ -134,11 +157,13 @@ export const MessageThread: React.FC<MessageThreadProps> = ({ conversation }) =>
     scrollToBottom();
   }, [messages]);
 
-  // Simple polling for updates
+  // Simple polling for updates (only when conversation is selected)
   useEffect(() => {
+    if (!conversation.id) return;
+    
     const id = setInterval(() => {
       fetchMessages();
-    }, 8000);
+    }, 15000); // Increased to 15 seconds
     return () => clearInterval(id);
   }, [conversation.id]);
 
