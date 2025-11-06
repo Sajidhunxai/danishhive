@@ -46,31 +46,35 @@ const FreelancerSearch = () => {
 
   const fetchFreelancers = async () => {
     try {
-      // Use backend API to get freelancer profiles
       const profilesData = await api.profiles.getAllFreelancers();
 
-      // Map profiles to expected format
-      const sortedProfiles = profilesData ? profilesData.map((profile: any) => ({
-        id: profile.userId || profile.id,
-        user_id: profile.userId || profile.id,
-        full_name: profile.fullName,
-        username: profile.username || null,
-        role: profile.user?.userType || null,
-        bio: profile.bio,
-        avatar_url: profile.avatarUrl,
-        location: profile.location,
-        skills: profile.skills ? (typeof profile.skills === 'string' ? JSON.parse(profile.skills) : profile.skills) : null,
-        hourly_rate: profile.hourlyRate ? Number(profile.hourlyRate) : null,
-        availability: 'available', // Default availability
-        created_at: profile.createdAt || new Date().toISOString(),
-      })).sort((a, b) => 
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      ) : [];
+      const sortedProfiles = profilesData
+        ? profilesData
+            .map((profile: any) => ({
+              id: profile.userId || profile.id,
+              user_id: profile.userId || profile.id,
+              full_name: profile.fullName,
+              username: profile.username || null,
+              role: profile.user?.userType || null,
+              bio: profile.bio,
+              avatar_url: profile.avatarUrl,
+              location: profile.location,
+              skills: profile.skills
+                ? typeof profile.skills === "string"
+                  ? JSON.parse(profile.skills)
+                  : profile.skills
+                : null,
+              hourly_rate: profile.hourlyRate ? Number(profile.hourlyRate) : null,
+              availability: "available",
+              created_at: profile.createdAt || new Date().toISOString(),
+            }))
+            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        : [];
 
       setFreelancers(sortedProfiles);
       setFilteredFreelancers(sortedProfiles);
     } catch (error) {
-      console.error('Error fetching freelancers:', error);
+      console.error("Error fetching freelancers:", error);
     } finally {
       setLoading(false);
     }
@@ -81,39 +85,34 @@ const FreelancerSearch = () => {
 
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(freelancer => 
-        freelancer.full_name?.toLowerCase().includes(query) ||
-        freelancer.username?.toLowerCase().includes(query) ||
-        freelancer.bio?.toLowerCase().includes(query) ||
-        freelancer.skills?.some(skill => skill.toLowerCase().includes(query))
+      filtered = filtered.filter(
+        (f) =>
+          f.full_name?.toLowerCase().includes(query) ||
+          f.username?.toLowerCase().includes(query) ||
+          f.bio?.toLowerCase().includes(query) ||
+          f.skills?.some((skill) => skill.toLowerCase().includes(query))
       );
     }
 
     if (skillFilter.trim()) {
       const skill = skillFilter.toLowerCase();
-      filtered = filtered.filter(freelancer => 
-        freelancer.skills?.some(s => s.toLowerCase().includes(skill))
+      filtered = filtered.filter((f) =>
+        f.skills?.some((s) => s.toLowerCase().includes(skill))
       );
     }
 
     if (locationFilter.trim()) {
       const location = locationFilter.toLowerCase();
-      filtered = filtered.filter(freelancer => 
-        freelancer.location?.toLowerCase().includes(location)
-      );
+      filtered = filtered.filter((f) => f.location?.toLowerCase().includes(location));
     }
 
     setFilteredFreelancers(filtered);
   };
 
   const getInitials = (name: string | null, username: string | null) => {
-    if (name) {
-      return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-    }
-    if (username) {
-      return username.slice(0, 2).toUpperCase();
-    }
-    return 'FL';
+    if (name) return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+    if (username) return username.slice(0, 2).toUpperCase();
+    return "FL";
   };
 
   if (loading) {
@@ -122,7 +121,7 @@ const FreelancerSearch = () => {
         <CardContent className="pt-6">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-4 text-muted-foreground">{t('loading.freelancers')}</p>
+            <p className="mt-4 text-muted-foreground">{t("loading.freelancers")}</p>
           </div>
         </CardContent>
       </Card>
@@ -133,13 +132,13 @@ const FreelancerSearch = () => {
     <div className="space-y-6">
       <div className="flex items-center gap-2">
         <User className="h-6 w-6" />
-        <h2 className="text-2xl font-bold text-foreground">Find Freelancere</h2>
+        <h2 className="text-2xl font-bold text-foreground">{t("freelancerSearch.title")}</h2>
       </div>
 
       {/* Search and Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>Søg og Filtrer</CardTitle>
+          <CardTitle>{t("freelancerSearch.searchFilter")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -147,7 +146,7 @@ const FreelancerSearch = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 type="text"
-                placeholder="Søg navn eller beskrivelse..."
+                placeholder={t("freelancerSearch.searchPlaceholder")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -155,13 +154,13 @@ const FreelancerSearch = () => {
             </div>
             <Input
               type="text"
-              placeholder="Filtrer efter kompetencer..."
+              placeholder={t("freelancerSearch.filterSkill")}
               value={skillFilter}
               onChange={(e) => setSkillFilter(e.target.value)}
             />
             <Input
               type="text"
-              placeholder="Filtrer efter lokation..."
+              placeholder={t("freelancerSearch.filterLocation")}
               value={locationFilter}
               onChange={(e) => setLocationFilter(e.target.value)}
             />
@@ -176,13 +175,17 @@ const FreelancerSearch = () => {
             {searchQuery || skillFilter || locationFilter ? (
               <>
                 <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Ingen freelancere fundet med de valgte kriterier.</p>
-                <p className="text-sm text-muted-foreground">Prøv at justere dine søgekriterier.</p>
+                <p className="text-muted-foreground">
+                  {t("freelancerSearch.noResults")}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {t("freelancerSearch.adjustCriteria")}
+                </p>
               </>
             ) : (
               <>
                 <User className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Ingen freelancere tilgængelige endnu.</p>
+                <p className="text-muted-foreground">{t("freelancerSearch.noFreelancersYet")}</p>
               </>
             )}
           </div>
@@ -199,7 +202,7 @@ const FreelancerSearch = () => {
                   </Avatar>
                   <div className="flex-1">
                     <CardTitle className="text-lg">
-                      {freelancer.full_name || freelancer.username || 'Unavngivet'}
+                      {freelancer.full_name || freelancer.username || t("freelancerSearch.unnamed")}
                     </CardTitle>
                     {freelancer.username && freelancer.full_name && (
                       <p className="text-sm text-muted-foreground">@{freelancer.username}</p>
@@ -207,12 +210,10 @@ const FreelancerSearch = () => {
                   </div>
                 </div>
               </CardHeader>
-              
+
               <CardContent className="space-y-4">
                 {freelancer.bio && (
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {freelancer.bio}
-                  </p>
+                  <p className="text-sm text-muted-foreground line-clamp-2">{freelancer.bio}</p>
                 )}
 
                 {freelancer.location && (
@@ -225,24 +226,31 @@ const FreelancerSearch = () => {
                 {freelancer.hourly_rate && (
                   <div className="flex items-center gap-2 text-sm">
                     <Star className="h-4 w-4" />
-                    <span>{freelancer.hourly_rate} DKK/time</span>
+                    <span>
+                      {freelancer.hourly_rate} {t("freelancerSearch.hourlyRate")}
+                    </span>
                   </div>
                 )}
 
                 {freelancer.availability && (
                   <div className="text-sm">
-                    <Badge 
-                      variant={freelancer.availability === 'available' ? 'default' : 'secondary'}
+                    <Badge
+                      variant={
+                        freelancer.availability === "available" ? "default" : "secondary"
+                      }
                     >
-                      {freelancer.availability === 'available' ? 'Tilgængelig' : 
-                       freelancer.availability === 'busy' ? 'Optaget' : 'Ikke tilgængelig'}
+                      {freelancer.availability === "available"
+                        ? t("freelancerSearch.available")
+                        : freelancer.availability === "busy"
+                        ? t("freelancerSearch.busy")
+                        : t("freelancerSearch.unavailable")}
                     </Badge>
                   </div>
                 )}
 
                 {freelancer.skills && freelancer.skills.length > 0 && (
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">Kompetencer:</p>
+                    <p className="text-sm font-medium">{t("freelancerSearch.skills")}:</p>
                     <div className="flex flex-wrap gap-1">
                       {freelancer.skills.slice(0, 4).map((skill, index) => (
                         <Badge key={index} variant="outline" className="text-xs">
@@ -251,7 +259,7 @@ const FreelancerSearch = () => {
                       ))}
                       {freelancer.skills.length > 4 && (
                         <Badge variant="outline" className="text-xs">
-                          +{freelancer.skills.length - 4} mere
+                          +{freelancer.skills.length - 4} {t("freelancerSearch.more")}
                         </Badge>
                       )}
                     </div>
@@ -259,22 +267,22 @@ const FreelancerSearch = () => {
                 )}
 
                 <div className="pt-2 space-y-2">
-                  <Button 
-                    className="w-full" 
+                  <Button
+                    className="w-full"
                     size="sm"
                     onClick={() => navigate(`/freelancer/${freelancer.user_id}`)}
                   >
                     <Eye className="h-4 w-4 mr-2" />
-                    Se Profil
+                    {t("freelancerSearch.viewProfile")}
                   </Button>
-                  <Button 
-                    className="w-full" 
+                  <Button
+                    className="w-full"
                     size="sm"
                     variant="outline"
                     onClick={() => navigate(`/freelancer/${freelancer.user_id}`)}
                   >
                     <MessageCircle className="h-4 w-4 mr-2" />
-                    Kontakt Freelancer
+                    {t("freelancerSearch.contactFreelancer")}
                   </Button>
                 </div>
               </CardContent>

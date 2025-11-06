@@ -199,7 +199,7 @@ const translations = {
     "language.intermediate": "Mellem",
     "language.advanced": "Avanceret",
     "language.native": "Modersmål",
-    
+
     // Language names
     "language.danish": "Dansk",
     "language.english": "Engelsk",
@@ -211,7 +211,7 @@ const translations = {
     "language.arabic": "Arabisk",
     "language.chinese": "Kinesisk",
     "language.japanese": "Japansk",
-    
+
     // Loading states
     "loading.jobs": "Indlæser opgaver...",
     "loading.languages": "Indlæser sprog...",
@@ -223,11 +223,11 @@ const translations = {
     "loading.post": "Indlæser indlæg...",
     "loading.category": "Indlæser kategori...",
     "loading.forum": "Indlæser forum...",
-    
+
     // Payment methods
     "payment.danskBank": "Dansk Bank",
     "payment.danskeBank": "Danske Bank",
-    
+
     // Earnings and payment details
     "earnings.detailedHistory": "Detaljeret indtægtshistorik",
     "earnings.totalEarnings": "Total Indtjening",
@@ -244,20 +244,20 @@ const translations = {
     "earnings.jobs": "opgaver",
     "earnings.freelancer": "freelancer",
     "earnings.freelancers": "freelancere",
-    
+
     // Contact and address
     "contact.contactInfo": "Kontaktoplysninger",
     "contact.address": "Adresse",
     "contact.addressNotSpecified": "Adresse ikke angivet",
     "contact.city": "By",
     "contact.postalCode": "Postnummer",
-    
+
     // Payment details
     "payment.paymentInfo": "Betalingsoplysninger",
     "payment.bank": "Bank",
     "payment.name": "Navn",
     "payment.paymentMethod": "Betalingsmetode",
-    
+
     // CSV export headers
     "export.name": "Navn",
     "export.address": "Adresse",
@@ -270,18 +270,20 @@ const translations = {
     "export.paymentMethod": "Betalingsmetode",
     "export.totalEarnings": "Total Indtjening",
     "export.jobCount": "Antal Opgaver",
-    
+
     // VAT/MOMS
     "vat.danishVAT": "dansk moms",
     "vat.danishVAT25": "25% dansk moms",
     "vat.pricesIncludeVAT": "Priser inkluderer 25% dansk moms",
     "vat.youAreResponsible": "Du er selv ansvarlig for skat og moms",
-    
+
     // Legal terms
     "legal.danishLaw": "dansk ret",
     "legal.danishCourts": "danske domstole",
-    "legal.disputesInDanishCourts": "Disse vilkår er underlagt dansk ret og eventuelle tvister skal afgøres ved danske domstole",
-    "legal.lastResortDanishCourts": "Som sidste udvej: danske domstole (København)",
+    "legal.disputesInDanishCourts":
+      "Disse vilkår er underlagt dansk ret og eventuelle tvister skal afgøres ved danske domstole",
+    "legal.lastResortDanishCourts":
+      "Som sidste udvej: danske domstole (København)",
     // Referral
     "referral.title": "Henvis en ven til Danish Hive",
     "referral.description":
@@ -409,19 +411,21 @@ const translations = {
     "jobs.totalJobs": "Samlede opgaver",
     "jobs.openJobs": "Åbne opgaver",
     "jobs.totalApplications": "Samlede ansøgninger",
-    "jobs.pendingResponse": "Afventer svar",
+    "jobs.pendingApplications": "Afventer ansøgninger",
     "jobs.latestApplications": "Seneste ansøgninger",
     "jobs.newestApplications": "De nyeste ansøgninger til dine opgaver",
     "jobs.anonymousApplicant": "Anonym ansøger",
     "jobs.applied": "Ansøgte",
     "jobs.viewApplication": "Se ansøgning",
-    "jobs.overviewFreelancers": "Oversigt over freelancere fra dine afsluttede opgaver",
+    "jobs.overviewFreelancers":
+      "Oversigt over freelancere fra dine afsluttede opgaver",
     "jobs.paymentForJob": "Betaling for opgave",
     "jobs.inviteFreelancer": "Inviter freelancer til opgave",
     "jobs.applyForJob": "Ansøg om opgaven",
     "jobs.loginToApply": "Log ind for at ansøge om denne opgave",
     "jobs.loginSignup": "Log ind / Tilmeld dig",
-    "jobs.byApplyingAccept": "Ved at ansøge accepterer du vores vilkår og betingelser",
+    "jobs.byApplyingAccept":
+      "Ved at ansøge accepterer du vores vilkår og betingelser",
     "job.notFound.title": "Opgave ikke fundet",
     "job.notFound.desc": "Den opgave du prøver at ansøge om eksisterer ikke.",
     "job.notFound.back": "Tilbage til forsiden",
@@ -841,7 +845,7 @@ const translations = {
     // Admin Dashboard
     "admin.dashboard": "Admin Dashboard",
     "admin.subtitle": "Administrer brugere, opgaver og systemindstillinger",
-    "admin.logged_in_as": "Logget ind som admin",
+    "admin.logged_in_as": "Logget ind som",
     "admin.overview": "Oversigt",
     "admin.revenue": "Omsætning",
     "admin.users": "Brugere",
@@ -875,6 +879,105 @@ const translations = {
     "honey.receipt": "Kvittering",
     "honey.viewReceipt": "Se kvittering",
     "honey.download": "Download",
+    // new
+    "index.client_dashboard": "Klient Dashboard",
+    "index.client_dashboard_description":
+      "Administrer dine opgaver, se ansøgninger og find freelancere",
+    "index.create_job": "Opret opgave",
+    "index.view_contracts": "Se kontrakter",
+    "index.search_freelancers": "Søg freelancere",
+    "index.total_jobs": "Samlede opgaver",
+    "index.open_jobs": "Åbne opgaver",
+    "index.total_applications": "Samlede ansøgninger",
+    "index.pending_applications": "Afventer svar",
+    "index.total_spent": "Total brugt",
+    "index.total_payments": "Betalinger",
+    "index.my_jobs": "Mine opgaver",
+    "index.overview_of_your_jobs": "Oversigt over dine oprettede opgaver",
+    "index.no_jobs_yet": "Ingen opgaver endnu",
+    "index.create_your_first_job_to_get_started":
+      "Opret din første opgave for at komme i gang",
+    "index.invite_freelancer": "Inviter freelancer",
+    "index.view_applications": "Se ansøgninger",
+    "index.view_details": "Se detaljer",
+    "index.delete": "Slet",
+    "index.view_all_jobs": "Se alle opgaver",
+    "index.my_contracts": "Mine kontrakter",
+    "index.manage_your_contracts":
+      "Administrer dine kontrakter og se status på igangværende og afsluttede aftaler",
+
+    "index.overview_of_your_created_jobs":
+      "Oversigt over dine oprettede opgaver",
+    "index.newest_applications_to_your_jobs":
+      "Nye ansøgninger til dine opgaver",
+
+    "jobs.pendingResponse": "Afventer",
+    "jobs.accepted": "Godkendt",
+    "jobs.rejected": "Afvist",
+
+    "jobs.anonymousFreelancer": "Anonym freelancer",
+    "jobs.hourlyRate": "kr/time",
+    "jobs.viewFreelancerProfile": "Se profil",
+    "jobs.latestPayments": "Seneste betalinger",
+    "jobs.overviewLatestPayments":
+      "Oversigt over dine seneste betalinger til freelancere",
+
+    "jobs.status": "Status",
+
+    "jobs.pending": "Afventer",
+    "jobs.paid": "Betalt",
+
+    "jobs.inviteFreelancerDescription":
+      "Denne funktion vil snart være tilgængelig. Du kan i stedet bruge 'Søg freelancere' sektionen nedenfor.",
+    "jobs.close": "Luk",
+    "jobs.goToFreelancerSearch": "Gå til freelancer søgning",
+
+    "freelancerSearch.title": "Find Freelancere",
+    "freelancerSearch.searchFilter": "Søg og Filtrer",
+    "freelancerSearch.searchPlaceholder":
+      "Søg efter navn, beskrivelse eller kompetence...",
+    "freelancerSearch.filterSkill": "Filtrer efter kompetence...",
+    "freelancerSearch.filterLocation": "Filtrer efter lokation...",
+    "freelancerSearch.noResults":
+      "Ingen freelancere fundet med de valgte kriterier.",
+    "freelancerSearch.adjustCriteria": "Prøv at justere dine søgekriterier.",
+    "freelancerSearch.noFreelancersYet":
+      "Ingen freelancere tilgængelige endnu.",
+    "freelancerSearch.unnamed": "Unavngivet",
+    "freelancerSearch.hourlyRate": "DKK/time",
+    "freelancerSearch.available": "Tilgængelig",
+    "freelancerSearch.busy": "Optaget",
+    "freelancerSearch.unavailable": "Ikke tilgængelig",
+    "freelancerSearch.skills": "Kompetencer",
+    "freelancerSearch.more": "mere",
+    "freelancerSearch.viewProfile": "Se Profil",
+    "freelancerSearch.contactFreelancer": "Kontakt Freelancer",
+    "contracts.titleClient": "Kontraktsystem",
+    "contracts.titleFreelancer": "Mine Kontrakter",
+    "contracts.createContract": "Opret Kontrakt",
+    "contracts.searchPlaceholder": "Søg i kontrakter...",
+    "contracts.status.all": "Alle status",
+    "contracts.status.sent": "Sendt",
+    "contracts.status.signed": "Signeret",
+    "contracts.stats.sent": "Sendte Kontrakter",
+    "contracts.stats.signed": "Signerede Kontrakter",
+    "contracts.listTitle": "Kontrakter ",
+    "contracts.noneCreated": "Ingen kontrakter oprettet endnu",
+    "contracts.createFirst": "Opret din første kontrakt for en opgave",
+    "contracts.noMatch": "Ingen kontrakter matcher søgekriterierne",
+    "contracts.adjustSearch": "Prøv at justere søgning eller filter",
+    "contracts.number": "Kontrakt nr ",
+    "contracts.jobTitle": "Opgave: ",
+    "contracts.amount": "Beløb:  DKK",
+    "contracts.deadline": "Deadline",
+    "contracts.created": "Oprettet",
+    "contracts.view": "Vis",
+    "contracts.sent": "Sendt",
+    "contracts.signed": "Signeret",
+    "contracts.tipTitle": "Tip:",
+    "contracts.tipText":
+      "Du skal først have oprettet opgaver for at kunne oprette kontrakter. Gå til forsiden og opret en opgave først.",
+    "contracts.errorFetching": "Kunne ikke hente kontrakter.",
   },
   en: {
     // Auth translations
@@ -1161,13 +1264,14 @@ const translations = {
     "jobs.totalJobs": "Total jobs",
     "jobs.openJobs": "Open jobs",
     "jobs.totalApplications": "Total applications",
-    "jobs.pendingResponse": "Pending response",
+    "jobs.pendingApplications": "Pending applications",
     "jobs.latestApplications": "Latest applications",
     "jobs.newestApplications": "The newest applications to your jobs",
     "jobs.anonymousApplicant": "Anonymous applicant",
     "jobs.applied": "Applied",
     "jobs.viewApplication": "View application",
-    "jobs.overviewFreelancers": "Overview of freelancers from your completed jobs",
+    "jobs.overviewFreelancers":
+      "Overview of freelancers from your completed jobs",
     "jobs.paymentForJob": "Payment for job",
     "jobs.inviteFreelancer": "Invite freelancer to job",
     "jobs.applyForJob": "Apply for the job",
@@ -1199,7 +1303,9 @@ const translations = {
       "💡 Average price for similar jobs: {min} - {max} DKK (based on {count} completed jobs)",
     "job.apply.termsNote":
       "By submitting your application, you agree to our terms and conditions",
-
+"index.overview_of_your_created_jobs":
+      "Overview of your created jobs",
+      
     // Cookies
     "cookies.title": "We use cookies",
     "cookies.description":
@@ -1324,7 +1430,7 @@ const translations = {
     "language.intermediate": "Intermediate",
     "language.advanced": "Advanced",
     "language.native": "Native",
-    
+
     // Language names
     "language.danish": "Danish",
     "language.english": "English",
@@ -1336,7 +1442,7 @@ const translations = {
     "language.arabic": "Arabic",
     "language.chinese": "Chinese",
     "language.japanese": "Japanese",
-    
+
     // Loading states
     "loading.jobs": "Loading jobs...",
     "loading.languages": "Loading languages...",
@@ -1348,11 +1454,11 @@ const translations = {
     "loading.post": "Loading post...",
     "loading.category": "Loading category...",
     "loading.forum": "Loading forum...",
-    
+
     // Payment methods
     "payment.danskBank": "Danish Bank",
     "payment.danskeBank": "Danske Bank",
-    
+
     // Earnings and payment details
     "earnings.detailedHistory": "Detailed Earnings History",
     "earnings.totalEarnings": "Total Earnings",
@@ -1369,20 +1475,20 @@ const translations = {
     "earnings.jobs": "jobs",
     "earnings.freelancer": "freelancer",
     "earnings.freelancers": "freelancers",
-    
+
     // Contact and address
     "contact.contactInfo": "Contact Information",
     "contact.address": "Address",
     "contact.addressNotSpecified": "Address not specified",
     "contact.city": "City",
     "contact.postalCode": "Postal Code",
-    
+
     // Payment details
     "payment.paymentInfo": "Payment Information",
     "payment.bank": "Bank",
     "payment.name": "Name",
     "payment.paymentMethod": "Payment Method",
-    
+
     // CSV export headers
     "export.name": "Name",
     "export.address": "Address",
@@ -1395,18 +1501,20 @@ const translations = {
     "export.paymentMethod": "Payment Method",
     "export.totalEarnings": "Total Earnings",
     "export.jobCount": "Number of Jobs",
-    
+
     // VAT/MOMS
     "vat.danishVAT": "Danish VAT",
     "vat.danishVAT25": "25% Danish VAT",
     "vat.pricesIncludeVAT": "Prices include 25% Danish VAT",
     "vat.youAreResponsible": "You are responsible for tax and VAT yourself",
-    
+
     // Legal terms
     "legal.danishLaw": "Danish law",
     "legal.danishCourts": "Danish courts",
-    "legal.disputesInDanishCourts": "These terms are subject to Danish law and any disputes must be resolved in Danish courts",
-    "legal.lastResortDanishCourts": "As a last resort: Danish courts (Copenhagen)",
+    "legal.disputesInDanishCourts":
+      "These terms are subject to Danish law and any disputes must be resolved in Danish courts",
+    "legal.lastResortDanishCourts":
+      "As a last resort: Danish courts (Copenhagen)",
 
     // Complete Profile page
     "completeProfile.title": "Complete Your {role} Profile",
@@ -1731,6 +1839,98 @@ const translations = {
     "honey.receipt": "Receipt",
     "honey.viewReceipt": "View Receipt",
     "honey.download": "Download",
+    // new
+    "index.client_dashboard": "Client Dashboard",
+    "index.client_dashboard_description":
+      "Manage your jobs, view applications, and find freelancers",
+    "index.create_job": "Create Job",
+    "index.view_contracts": "View Contracts",
+    "index.search_freelancers": "Search Freelancers",
+    "index.total_jobs": "Total Jobs",
+    "index.open_jobs": "Open Jobs",
+    "index.total_applications": "Total Applications",
+    "index.pending_applications": "Pending Applications",
+    "index.total_spent": "Total Spent",
+    "index.total_payments": "Payments",
+    "index.my_jobs": "My Jobs",
+    "index.overview_of_your_jobs": "Overview of your created jobs",
+    "index.no_jobs_yet": "No jobs yet",
+    "index.create_your_first_job_to_get_started":
+      "Create your first job to get started",
+    "index.invite_freelancer": "Invite Freelancer",
+    "index.view_applications": "View Applications",
+    "index.view_details": "View Details",
+    "index.delete": "Delete",
+    "index.view_all_jobs": "View All Jobs",
+    "index.my_contracts": "My Contracts",
+    "index.manage_your_contracts":
+      "Manage your contracts and view ongoing and completed deals",
+    "index.newest_applications_to_your_jobs": "New applications to your jobs",
+    "jobs.pendingResponse": "Pending",
+    "jobs.accepted": "Accepted",
+    "jobs.rejected": "Rejected",
+
+    "jobs.anonymousFreelancer": "Anonymous freelancer",
+    "jobs.hourlyRate": "DKK/hour",
+    "jobs.viewFreelancerProfile": "View Profile",
+    "jobs.latestPayments": "Latest Payments",
+    "jobs.overviewLatestPayments":
+      "Overview of your latest freelancer payments",
+
+    "jobs.status": "Status",
+
+    "jobs.pending": "Pending",
+    "jobs.paid": "Paid",
+
+    "jobs.inviteFreelancerDescription":
+      "This feature will be available soon. In the meantime, use the Search Freelancers section below.",
+    "jobs.close": "Close",
+    "jobs.goToFreelancerSearch": "Go to Freelancer Search",
+    "freelancerSearch.title": "Find Freelancers",
+    "freelancerSearch.searchFilter": "Search and Filter",
+    "freelancerSearch.searchPlaceholder":
+      "Search by name, description or skill...",
+    "freelancerSearch.filterSkill": "Filter by skill...",
+    "freelancerSearch.filterLocation": "Filter by location...",
+    "freelancerSearch.noResults":
+      "No freelancers found for the selected criteria.",
+    "freelancerSearch.adjustCriteria": "Try adjusting your search filters.",
+    "freelancerSearch.noFreelancersYet": "No freelancers available yet.",
+    "freelancerSearch.unnamed": "Unnamed",
+    "freelancerSearch.hourlyRate": "DKK/hour",
+    "freelancerSearch.available": "Available",
+    "freelancerSearch.busy": "Busy",
+    "freelancerSearch.unavailable": "Unavailable",
+    "freelancerSearch.skills": "Skills",
+    "freelancerSearch.more": "more",
+    "freelancerSearch.viewProfile": "View Profile",
+    "freelancerSearch.contactFreelancer": "Contact Freelancer",
+    "contracts.titleClient": "Contract System",
+  "contracts.titleFreelancer": "My Contracts",
+  "contracts.createContract": "Create Contract",
+  "contracts.searchPlaceholder": "Search contracts...",
+  "contracts.status.all": "All statuses",
+  "contracts.status.sent": "Sent",
+  "contracts.status.signed": "Signed",
+  "contracts.stats.sent": "Sent Contracts",
+  "contracts.stats.signed": "Signed Contracts",
+  "contracts.listTitle": "Contracts ",
+  "contracts.noneCreated": "No contracts created yet",
+  "contracts.createFirst": "Create your first contract for a job",
+  "contracts.noMatch": "No contracts match your search",
+  "contracts.adjustSearch": "Try adjusting your search or filter",
+  "contracts.number": "Contract No.: ",
+  "contracts.jobTitle": "Job: ",
+  "contracts.amount": "Amount:  DKK",
+  "contracts.deadline": "Deadline",
+  "contracts.created": "Created",
+  "contracts.view": "View",
+  "contracts.sent": "Sent",
+  "contracts.signed": "Signed",
+  "contracts.tipTitle": "Tip:",
+  "contracts.tipText": "You must first create jobs before you can create contracts. Go to the homepage and create a job.",
+  "contracts.errorFetching": "Failed to fetch contracts."
+    
   },
   zh: {
     // Auth translations
@@ -2022,7 +2222,7 @@ const translations = {
     "jobs.totalJobs": "总任务数",
     "jobs.openJobs": "开放任务",
     "jobs.totalApplications": "总申请数",
-    "jobs.pendingResponse": "待回复",
+    "jobs.pendingApplications": "待处理申请",
     "jobs.latestApplications": "最新申请",
     "jobs.newestApplications": "您任务的最新申请",
     "jobs.anonymousApplicant": "匿名申请者",
@@ -2057,6 +2257,7 @@ const translations = {
     "job.apply.averagePrice":
       "💡 类似任务的平均价格：{min} - {max} 丹麦克朗（基于 {count} 个已完成任务）",
     "job.apply.termsNote": "提交申请即表示您同意我们的条款和条件",
+"job.overview_of_your_created_jobs": "您创建的任务概览",
 
     // cookies
     "cookies.title": "我们使用 Cookie",
@@ -2131,7 +2332,7 @@ const translations = {
     "language.intermediate": "中级",
     "language.advanced": "高级",
     "language.native": "母语",
-    
+
     // Language names
     "language.danish": "丹麦语",
     "language.english": "英语",
@@ -2143,7 +2344,7 @@ const translations = {
     "language.arabic": "阿拉伯语",
     "language.chinese": "中文",
     "language.japanese": "日语",
-    
+
     // Loading states
     "loading.jobs": "加载任务中...",
     "loading.languages": "加载语言中...",
@@ -2155,11 +2356,11 @@ const translations = {
     "loading.post": "加载帖子中...",
     "loading.category": "加载分类中...",
     "loading.forum": "加载论坛中...",
-    
+
     // Payment methods
     "payment.danskBank": "丹麦银行",
     "payment.danskeBank": "丹麦银行",
-    
+
     // Earnings and payment details
     "earnings.detailedHistory": "详细收入历史",
     "earnings.totalEarnings": "总收入",
@@ -2176,20 +2377,20 @@ const translations = {
     "earnings.jobs": "工作",
     "earnings.freelancer": "自由职业者",
     "earnings.freelancers": "自由职业者",
-    
+
     // Contact and address
     "contact.contactInfo": "联系信息",
     "contact.address": "地址",
     "contact.addressNotSpecified": "未指定地址",
     "contact.city": "城市",
     "contact.postalCode": "邮政编码",
-    
+
     // Payment details
     "payment.paymentInfo": "支付信息",
     "payment.bank": "银行",
     "payment.name": "姓名",
     "payment.paymentMethod": "支付方式",
-    
+
     // CSV export headers
     "export.name": "姓名",
     "export.address": "地址",
@@ -2202,19 +2403,20 @@ const translations = {
     "export.paymentMethod": "支付方式",
     "export.totalEarnings": "总收入",
     "export.jobCount": "工作数量",
-    
+
     // VAT/MOMS
     "vat.danishVAT": "丹麦增值税",
     "vat.danishVAT25": "25% 丹麦增值税",
     "vat.pricesIncludeVAT": "价格包含 25% 丹麦增值税",
     "vat.youAreResponsible": "您需要自行负责税务和增值税",
-    
+
     // Legal terms
     "legal.danishLaw": "丹麦法律",
     "legal.danishCourts": "丹麦法院",
-    "legal.disputesInDanishCourts": "这些条款受丹麦法律管辖，任何争议必须在丹麦法院解决",
+    "legal.disputesInDanishCourts":
+      "这些条款受丹麦法律管辖，任何争议必须在丹麦法院解决",
     "legal.lastResortDanishCourts": "最后手段：丹麦法院（哥本哈根）",
-    
+
     // Referral
     "referral.title": "邀请朋友加入 Danish Hive",
     "referral.description":
@@ -2538,6 +2740,96 @@ const translations = {
     "honey.receipt": "收据",
     "honey.viewReceipt": "查看收据",
     "honey.download": "下载",
+    // new
+
+    "index.client_dashboard": "客户控制台",
+    "index.client_dashboard_description":
+      "管理您的工作、查看申请并寻找自由职业者",
+    "index.create_job": "创建任务",
+    "index.view_contracts": "查看合同",
+    "index.search_freelancers": "搜索自由职业者",
+    "index.total_jobs": "总任务数",
+    "index.open_jobs": "开放任务",
+    "index.total_applications": "总申请数",
+    "index.pending_applications": "待处理申请",
+    "index.total_spent": "总支出",
+    "index.total_payments": "付款",
+    "index.my_jobs": "我的任务",
+    "index.overview_of_your_jobs": "您创建的任务概览",
+    "index.no_jobs_yet": "还没有任务",
+    "index.create_your_first_job_to_get_started": "创建您的第一个任务以开始",
+    "index.invite_freelancer": "邀请自由职业者",
+    "index.view_applications": "查看申请",
+    "index.view_details": "查看详情",
+    "index.delete": "删除",
+    "index.view_all_jobs": "查看所有任务",
+    "index.my_contracts": "我的合同",
+    "index.manage_your_contracts": "管理您的合同并查看正在进行和已完成的交易",
+    "index.overview_of_your_created_jobs": "您创建的任务概览",
+    "index.newest_applications_to_your_jobs": "您的新任务申请",
+
+    "jobs.pendingResponse": "待处理",
+    "jobs.accepted": "已接受",
+    "jobs.rejected": "已拒绝",
+
+    "jobs.anonymousFreelancer": "匿名自由职业者",
+    "jobs.hourlyRate": "克朗/小时",
+    "jobs.viewFreelancerProfile": "查看资料",
+    "jobs.latestPayments": "最新付款",
+    "jobs.overviewLatestPayments": "您最近支付的自由职业者款项概览",
+
+    "jobs.status": "状态",
+
+    "jobs.pending": "待处理",
+    "jobs.paid": "已支付",
+
+    "jobs.inviteFreelancerDescription":
+      "该功能即将上线。现在您可以使用下面的“搜索自由职业者”部分。",
+    "jobs.close": "关闭",
+    "jobs.goToFreelancerSearch": "前往自由职业者搜索",
+    "freelancerSearch.title": "寻找自由职业者",
+    "freelancerSearch.searchFilter": "搜索与筛选",
+    "freelancerSearch.searchPlaceholder": "按姓名、简介或技能搜索...",
+    "freelancerSearch.filterSkill": "按技能筛选...",
+    "freelancerSearch.filterLocation": "按地区筛选...",
+    "freelancerSearch.noResults": "未找到符合条件的自由职业者。",
+    "freelancerSearch.adjustCriteria": "请尝试调整搜索条件。",
+    "freelancerSearch.noFreelancersYet": "目前还没有可用的自由职业者。",
+    "freelancerSearch.unnamed": "未命名",
+    "freelancerSearch.hourlyRate": "DKK/小时",
+    "freelancerSearch.available": "可用",
+    "freelancerSearch.busy": "忙碌",
+    "freelancerSearch.unavailable": "不可用",
+    "freelancerSearch.skills": "技能",
+    "freelancerSearch.more": "更多",
+    "freelancerSearch.viewProfile": "查看资料",
+    "freelancerSearch.contactFreelancer": "联系自由职业者",
+    "contracts.titleClient": "合同系统",
+    "contracts.titleFreelancer": "我的合同",
+    "contracts.createContract": "创建合同",
+    "contracts.searchPlaceholder": "搜索合同...",
+    "contracts.status.all": "所有状态",
+    "contracts.status.sent": "已发送",
+    "contracts.status.signed": "已签署",
+    "contracts.stats.sent": "已发送的合同",
+    "contracts.stats.signed": "已签署的合同",
+    "contracts.listTitle": "合同 ",
+    "contracts.noneCreated": "尚未创建任何合同",
+    "contracts.createFirst": "为项目创建您的第一个合同",
+    "contracts.noMatch": "没有符合搜索条件的合同",
+    "contracts.adjustSearch": "请尝试调整搜索或筛选条件",
+    "contracts.number": "合同编号: ",
+    "contracts.jobTitle": "任务: ",
+    "contracts.amount": "金额:  DKK",
+    "contracts.deadline": "截止日期",
+    "contracts.created": "创建时间",
+    "contracts.view": "查看",
+    "contracts.sent": "已发送",
+    "contracts.signed": "已签署",
+    "contracts.tipTitle": "提示：",
+    "contracts.tipText": "您必须先创建任务才能创建合同。请前往主页并创建一个任务。",
+    "contracts.errorFetching": "获取合同失败。"
+    
   },
   hi: {
     // Auth translations
@@ -2814,7 +3106,6 @@ const translations = {
     "jobs.firstToCreate": "पहला कार्य बनाने वाले बनें!",
     "jobs.deadlineLabel": "समय सीमा: {date}",
     "jobs.viewDetails": "विवरण देखें",
-    "jobs.completed": "पूर्ण हुआ",
     "jobs.anonymousClient": "गुमनाम ग्राहक",
     "jobs.moreSkills": "+{count} और",
     "jobs.remote": "रिमोट",
@@ -2844,7 +3135,7 @@ const translations = {
     "jobs.totalJobs": "कुल नौकरियां",
     "jobs.openJobs": "खुली नौकरियां",
     "jobs.totalApplications": "कुल आवेदन",
-    "jobs.pendingResponse": "लंबित प्रतिक्रिया",
+    "jobs.pendingApplications": "लंबित आवेदन",
     "jobs.latestApplications": "नवीनतम आवेदन",
     "jobs.newestApplications": "आपकी नौकरियों के नवीनतम आवेदन",
     "jobs.anonymousApplicant": "अज्ञात आवेदक",
@@ -2856,7 +3147,8 @@ const translations = {
     "jobs.applyForJob": "नौकरी के लिए आवेदन करें",
     "jobs.loginToApply": "इस नौकरी के लिए आवेदन करने के लिए लॉगिन करें",
     "jobs.loginSignup": "लॉगिन / साइन अप",
-    "jobs.byApplyingAccept": "आवेदन करके आप हमारे नियम और शर्तों को स्वीकार करते हैं",
+    "jobs.byApplyingAccept":
+      "आवेदन करके आप हमारे नियम और शर्तों को स्वीकार करते हैं",
     "job.notFound.title": "कार्य नहीं मिला",
     "job.notFound.desc":
       "जिस कार्य के लिए आप आवेदन करने की कोशिश कर रहे हैं वह मौजूद नहीं है।",
@@ -2883,7 +3175,8 @@ const translations = {
       "💡 समान कार्यों के लिए औसत मूल्य: {min} - {max} DKK (आधारित {count} पूर्ण कार्यों पर)",
     "job.apply.termsNote":
       "आवेदन भेजकर, आप हमारी शर्तों और नियमों से सहमत होते हैं",
-
+    "job.overview_of_your_created_jobs": "आपके द्वारा बनाई गई नौकरियों का अवलोकन",
+"index.overview_of_your_created_jobs": "आपके द्वारा बनाई गई नौकरियों का अवलोकन",
     // Setting
     "settings.forRealVerification": "वास्तविक सत्यापन के लिए।",
     "settings.mitidDeveloperAPI": "MitID डेवलपर API",
@@ -2984,7 +3277,7 @@ const translations = {
     "language.intermediate": "मध्यम",
     "language.advanced": "उन्नत",
     "language.native": "मातृभाषा",
-    
+
     // Language names
     "language.danish": "डैनिश",
     "language.english": "अंग्रेजी",
@@ -2996,7 +3289,7 @@ const translations = {
     "language.arabic": "अरबी",
     "language.chinese": "चीनी",
     "language.japanese": "जापानी",
-    
+
     // Loading states
     "loading.jobs": "काम लोड हो रहे हैं...",
     "loading.languages": "भाषाएं लोड हो रही हैं...",
@@ -3008,11 +3301,11 @@ const translations = {
     "loading.post": "पोस्ट लोड हो रही है...",
     "loading.category": "श्रेणी लोड हो रही है...",
     "loading.forum": "फोरम लोड हो रहा है...",
-    
+
     // Payment methods
     "payment.danskBank": "डैनिश बैंक",
     "payment.danskeBank": "डैनिश बैंक",
-    
+
     // Earnings and payment details
     "earnings.detailedHistory": "विस्तृत आय इतिहास",
     "earnings.totalEarnings": "कुल आय",
@@ -3029,20 +3322,20 @@ const translations = {
     "earnings.jobs": "नौकरियां",
     "earnings.freelancer": "फ्रीलांसर",
     "earnings.freelancers": "फ्रीलांसर",
-    
+
     // Contact and address
     "contact.contactInfo": "संपर्क जानकारी",
     "contact.address": "पता",
     "contact.addressNotSpecified": "पता निर्दिष्ट नहीं",
     "contact.city": "शहर",
     "contact.postalCode": "पिन कोड",
-    
+
     // Payment details
     "payment.paymentInfo": "भुगतान जानकारी",
     "payment.bank": "बैंक",
     "payment.name": "नाम",
     "payment.paymentMethod": "भुगतान विधि",
-    
+
     // CSV export headers
     "export.name": "नाम",
     "export.address": "पता",
@@ -3055,19 +3348,20 @@ const translations = {
     "export.paymentMethod": "भुगतान विधि",
     "export.totalEarnings": "कुल आय",
     "export.jobCount": "नौकरियों की संख्या",
-    
+
     // VAT/MOMS
     "vat.danishVAT": "डैनिश वैट",
     "vat.danishVAT25": "25% डैनिश वैट",
     "vat.pricesIncludeVAT": "कीमतों में 25% डैनिश वैट शामिल है",
     "vat.youAreResponsible": "आप स्वयं कर और वैट के लिए जिम्मेदार हैं",
-    
+
     // Legal terms
     "legal.danishLaw": "डैनिश कानून",
     "legal.danishCourts": "डैनिश अदालतें",
-    "legal.disputesInDanishCourts": "ये शर्तें डैनिश कानून के अधीन हैं और किसी भी विवाद का निपटारा डैनिश अदालतों में होना चाहिए",
+    "legal.disputesInDanishCourts":
+      "ये शर्तें डैनिश कानून के अधीन हैं और किसी भी विवाद का निपटारा डैनिश अदालतों में होना चाहिए",
     "legal.lastResortDanishCourts": "अंतिम उपाय: डैनिश अदालतें (कोपेनहेगन)",
-    
+
     // GDPR
     "gdpr.rightsTitle": "आपके GDPR अधिकार",
     "gdpr.accessRight": "पहुंच का अधिकार",
@@ -3390,6 +3684,96 @@ const translations = {
     "honey.receipt": "रसीद",
     "honey.viewReceipt": "रसीद देखें",
     "honey.download": "डाउनलोड करें",
+    // New
+    "index.client_dashboard": "क्लाइंट डैशबोर्ड",
+    "index.client_dashboard_description":
+      "अपनी नौकरियों का प्रबंधन करें, आवेदनों को देखें और फ्रीलांसर खोजें",
+    "index.create_job": "नई नौकरी बनाएँ",
+    "index.view_contracts": "अनुबंध देखें",
+    "index.search_freelancers": "फ्रीलांसर खोजें",
+    "index.total_jobs": "कुल नौकरियाँ",
+    "index.open_jobs": "खुली नौकरियाँ",
+    "index.total_applications": "कुल आवेदन",
+    "index.pending_applications": "लंबित आवेदन",
+    "index.total_spent": "कुल खर्च",
+    "index.total_payments": "भुगतान",
+    "index.my_jobs": "मेरी नौकरियाँ",
+    "index.overview_of_your_jobs": "आपकी बनाई गई नौकरियों का अवलोकन",
+    "index.no_jobs_yet": "अभी तक कोई नौकरी नहीं",
+    "index.create_your_first_job_to_get_started":
+      "शुरू करने के लिए अपनी पहली नौकरी बनाएँ",
+    "index.invite_freelancer": "फ्रीलांसर को आमंत्रित करें",
+    "index.view_applications": "आवेदन देखें",
+    "index.view_details": "विवरण देखें",
+    "index.delete": "हटाएं",
+    "index.view_all_jobs": "सभी नौकरियाँ देखें",
+    "index.my_contracts": "मेरे अनुबंध",
+    "index.manage_your_contracts":
+      "अपने अनुबंधों का प्रबंधन करें और चल रहे तथा पूर्ण सौदों को देखें",
+    "index.newest_applications_to_your_jobs":
+      "आपकी नौकरियों के लिए नवीनतम आवेदन",
+
+    "jobs.pendingResponse": "लंबित",
+    "jobs.accepted": "स्वीकृत",
+    "jobs.rejected": "अस्वीकृत",
+
+    "jobs.anonymousFreelancer": "गुमनाम फ्रीलांसर",
+    "jobs.hourlyRate": "क्रो/घंटा",
+    "jobs.viewFreelancerProfile": "प्रोफ़ाइल देखें",
+    "jobs.latestPayments": "नवीनतम भुगतान",
+    "jobs.overviewLatestPayments": "आपके नवीनतम फ्रीलांसर भुगतान का अवलोकन",
+
+    "jobs.status": "स्थिति",
+    "jobs.completed": "पूर्ण",
+    "jobs.pending": "लंबित",
+    "jobs.paid": "भुगतान किया गया",
+
+    "jobs.inviteFreelancerDescription":
+      "यह सुविधा जल्द ही उपलब्ध होगी। इस बीच, नीचे दिए गए 'फ्रीलांसर खोजें' अनुभाग का उपयोग करें।",
+    "jobs.close": "बंद करें",
+    "jobs.goToFreelancerSearch": "फ्रीलांसर खोज पर जाएं",
+    "freelancerSearch.title": "फ्रीलांसर खोजें",
+    "freelancerSearch.searchFilter": "खोजें और फ़िल्टर करें",
+    "freelancerSearch.searchPlaceholder": "नाम, विवरण या कौशल द्वारा खोजें...",
+    "freelancerSearch.filterSkill": "कौशल द्वारा फ़िल्टर करें...",
+    "freelancerSearch.filterLocation": "स्थान द्वारा फ़िल्टर करें...",
+    "freelancerSearch.noResults": "चयनित मानदंडों से कोई फ्रीलांसर नहीं मिला।",
+    "freelancerSearch.adjustCriteria": "कृपया अपने खोज मानदंड समायोजित करें।",
+    "freelancerSearch.noFreelancersYet": "अभी तक कोई फ्रीलांसर उपलब्ध नहीं है।",
+    "freelancerSearch.unnamed": "बिना नाम का",
+    "freelancerSearch.hourlyRate": "DKK/घंटा",
+    "freelancerSearch.available": "उपलब्ध",
+    "freelancerSearch.busy": "व्यस्त",
+    "freelancerSearch.unavailable": "उपलब्ध नहीं",
+    "freelancerSearch.skills": "कौशल",
+    "freelancerSearch.more": "और",
+    "freelancerSearch.viewProfile": "प्रोफ़ाइल देखें",
+    "freelancerSearch.contactFreelancer": "फ्रीलांसर से संपर्क करें",
+    "contracts.titleClient": "कॉन्ट्रैक्ट सिस्टम",
+  "contracts.titleFreelancer": "मेरे कॉन्ट्रैक्ट",
+  "contracts.createContract": "नया कॉन्ट्रैक्ट बनाएं",
+  "contracts.searchPlaceholder": "कॉन्ट्रैक्ट खोजें...",
+  "contracts.status.all": "सभी स्थिति",
+  "contracts.status.sent": "भेजा गया",
+  "contracts.status.signed": "हस्ताक्षरित",
+  "contracts.stats.sent": "भेजे गए कॉन्ट्रैक्ट",
+  "contracts.stats.signed": "हस्ताक्षरित कॉन्ट्रैक्ट",
+  "contracts.listTitle": "कॉन्ट्रैक्ट ",
+  "contracts.noneCreated": "अभी तक कोई कॉन्ट्रैक्ट नहीं बनाया गया है",
+  "contracts.createFirst": "किसी नौकरी के लिए अपना पहला कॉन्ट्रैक्ट बनाएं",
+  "contracts.noMatch": "आपकी खोज से कोई कॉन्ट्रैक्ट मेल नहीं खाता",
+  "contracts.adjustSearch": "कृपया खोज या फ़िल्टर समायोजित करें",
+  "contracts.number": "कॉन्ट्रैक्ट नंबर: ",
+  "contracts.jobTitle": "नौकरी: ",
+  "contracts.amount": "राशि: DKK",
+  "contracts.deadline": "अंतिम तिथि",
+  "contracts.created": "बनाया गया",
+  "contracts.view": "देखें",
+  "contracts.sent": "भेजा गया",
+  "contracts.signed": "हस्ताक्षरित",
+  "contracts.tipTitle": "सुझाव:",
+  "contracts.tipText": "आपको पहले नौकरियाँ बनानी होंगी ताकि आप कॉन्ट्रैक्ट बना सकें। होमपेज पर जाएँ और नौकरी बनाएँ।",
+  "contracts.errorFetching": "कॉन्ट्रैक्ट प्राप्त करने में विफल।"
   },
 };
 

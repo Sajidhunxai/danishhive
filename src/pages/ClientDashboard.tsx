@@ -315,12 +315,12 @@ const ClientDashboard = () => {
         {/* Welcome Section */}
         <div className="text-center py-8">
           <h2 className="mb-4 text-4xl font-bold text-header-dark">
-            Klient Dashboard
+            {t('index.client_dashboard')}
           </h2>
           <p className="text-xl text-muted-foreground mb-4">
-            Administrer dine opgaver, se ansøgninger og find freelancere
+            {t('index.client_dashboard_description')}
           </p>
-          <p className="text-lg text-muted-foreground">Logget ind som: {user.email}</p>
+          <p className="text-lg text-muted-foreground">{t('admin.logged_in_as')} {user.email}</p>
         </div>
 
         {/* Quick Actions */}
@@ -331,7 +331,7 @@ const ClientDashboard = () => {
             className="flex items-center gap-2"
           >
             <Plus className="h-5 w-5" />
-            Opret ny opgave
+            {t('jobs.createNewJob')}
           </Button>
           <Button 
             variant="outline" 
@@ -340,7 +340,7 @@ const ClientDashboard = () => {
             className="flex items-center gap-2"
           >
             <FileText className="h-5 w-5" />
-            Se kontrakter
+            {t('index.view_contracts')}
           </Button>
           <Button 
             variant="outline" 
@@ -349,7 +349,7 @@ const ClientDashboard = () => {
             className="flex items-center gap-2"
           >
             <Users className="h-5 w-5" />
-            Søg freelancere
+                {t('index.search_freelancers')}
           </Button>
         </div>
 
@@ -358,7 +358,7 @@ const ClientDashboard = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Samlede opgaver
+                        {t('jobs.totalJobs')}
               </CardTitle>
               <FileText className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -370,7 +370,7 @@ const ClientDashboard = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Åbne opgaver
+                {t('jobs.openJobs')}
               </CardTitle>
               <CheckCircle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -382,7 +382,7 @@ const ClientDashboard = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Samlede ansøgninger
+                {t('jobs.totalApplications')}
               </CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -394,7 +394,7 @@ const ClientDashboard = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Afventer svar
+                {t('jobs.pendingApplications')}
               </CardTitle>
               <AlertCircle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -406,7 +406,7 @@ const ClientDashboard = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Total brugt
+                {t('index.total_spent')}
               </CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -418,7 +418,7 @@ const ClientDashboard = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Betalinger
+                {t('index.total_payments')}
               </CardTitle>
               <CreditCard className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -433,23 +433,23 @@ const ClientDashboard = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
-              Mine opgaver
+                                      {t('index.my_jobs')}
             </CardTitle>
             <CardDescription>
-              Oversigt over dine oprettede opgaver
+              {t('index.overview_of_your_created_jobs')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             {myJobs.length === 0 ? (
               <div className="text-center py-12">
                 <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">Ingen opgaver endnu</h3>
+                <h3 className="text-lg font-medium mb-2">{t('index.no_jobs_yet')}</h3>
                 <p className="text-muted-foreground mb-4">
-                  Opret din første opgave for at komme i gang
+                            {t('index.create_your_first_job_to_get_started')}
                 </p>
                 <Button onClick={() => navigate('/create-job')}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Opret opgave
+                  {t('index.create_job')}
                 </Button>
               </div>
             ) : (
@@ -483,7 +483,7 @@ const ClientDashboard = () => {
                         className="text-blue-600 border-blue-200 hover:bg-blue-50"
                       >
                         <UserPlus className="h-4 w-4 mr-2" />
-                        Inviter freelancer
+                            {t('jobs.inviteFreelancer')}
                       </Button>
                       <Button 
                         variant="outline" 
@@ -491,7 +491,7 @@ const ClientDashboard = () => {
                         onClick={() => navigate(`/job/${job.id}/applications`)}
                       >
                         <Users className="h-4 w-4 mr-2" />
-                        Se ansøgninger
+                        {t('index.view_applications')}
                       </Button>
                       <Button 
                         variant="outline" 
@@ -499,7 +499,7 @@ const ClientDashboard = () => {
                         onClick={() => navigate(`/job/${job.id}`)}
                       >
                         <Eye className="h-4 w-4 mr-2" />
-                        Se detaljer
+                              {t('index.view_details')}
                       </Button>
                       <Button 
                         variant="outline" 
@@ -508,7 +508,7 @@ const ClientDashboard = () => {
                         className="text-red-600 border-red-200 hover:bg-red-50"
                       >
                         <Trash2 className="h-4 w-4 mr-2" />
-                        Slet
+                            {t('index.delete')}
                       </Button>
                     </div>
                   </div>
@@ -517,7 +517,7 @@ const ClientDashboard = () => {
                 {myJobs.length > 5 && (
                   <div className="text-center pt-4">
                     <Button variant="outline">
-                      Se alle opgaver ({myJobs.length})
+                      {t('index.view_all_jobs')} ({myJobs.length})
                     </Button>
                   </div>
                 )}
@@ -532,10 +532,10 @@ const ClientDashboard = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
-                Seneste ansøgninger
+                {t('jobs.latestApplications')}
               </CardTitle>
               <CardDescription>
-                De nyeste ansøgninger til dine opgaver
+                {t('index.newest_applications_to_your_jobs')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -546,28 +546,28 @@ const ClientDashboard = () => {
                     <div key={application.id} className="flex items-center justify-between p-3 border rounded">
                       <div>
                         <p className="font-medium">
-                          {application.applicant.full_name || 'Anonym ansøger'}
+                                                                    {application.applicant.full_name || t('jobs.anonymousApplicant')}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          Ansøgte: {job?.title} - {new Date(application.applied_at).toLocaleDateString('da-DK')}
+                          {t('jobs.applied')}: {job?.title} - {new Date(application.applied_at).toLocaleDateString('da-DK')}
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
                         {application.status === 'pending' && (
-                          <Badge variant="outline">Afventer</Badge>
+                          <Badge variant="outline">{t('jobs.pendingResponse')}</Badge>
                         )}
                         {application.status === 'accepted' && (
-                          <Badge className="bg-green-100 text-green-800 border-green-200">Godkendt</Badge>
+                          <Badge className="bg-green-100 text-green-800 border-green-200">{t('jobs.accepted')}</Badge>
                         )}
                         {application.status === 'rejected' && (
-                          <Badge variant="destructive">Afvist</Badge>
+                          <Badge variant="destructive">{t('jobs.rejected')}</Badge>
                         )}
                         <Button 
                           variant="outline" 
                           size="sm"
                           onClick={() => navigate(`/job/${application.job_id}/applications`)}
                         >
-                          Se ansøgning
+                                    {t('jobs.viewApplication')}
                         </Button>
                       </div>
                     </div>
@@ -584,10 +584,10 @@ const ClientDashboard = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
-                Freelancere du har arbejdet med
+                {t('jobs.overviewFreelancers')}
               </CardTitle>
               <CardDescription>
-                Oversigt over freelancere fra dine afsluttede opgaver
+                {t('jobs.overviewFreelancers')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -599,10 +599,10 @@ const ClientDashboard = () => {
                         {freelancer.full_name?.charAt(0) || 'F'}
                       </div>
                       <div>
-                        <h4 className="font-medium">{freelancer.full_name || 'Anonym freelancer'}</h4>
+                                  <h4 className="font-medium">{freelancer.full_name || t('jobs.anonymousFreelancer')}</h4>
                         {freelancer.hourly_rate && (
                           <p className="text-sm text-muted-foreground">
-                            {freelancer.hourly_rate} kr/time
+                            {freelancer.hourly_rate} {t('jobs.hourlyRate')}
                           </p>
                         )}
                       </div>
@@ -616,7 +616,7 @@ const ClientDashboard = () => {
                         ))}
                         {freelancer.skills.length > 3 && (
                           <Badge variant="outline" className="text-xs">
-                            +{freelancer.skills.length - 3} flere
+                            +{freelancer.skills.length - 3} {t('jobs.moreSkills')}
                           </Badge>
                         )}
                       </div>
@@ -627,7 +627,7 @@ const ClientDashboard = () => {
                       className="w-full"
                       onClick={() => navigate(`/freelancer/${freelancer.user_id}`)}
                     >
-                      Se profil
+                                            {t('jobs.viewFreelancerProfile')}
                     </Button>
                   </div>
                 ))}
@@ -642,10 +642,10 @@ const ClientDashboard = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CreditCard className="h-5 w-5" />
-                Seneste betalinger
+                {t('jobs.latestPayments')}
               </CardTitle>
               <CardDescription>
-                Oversigt over dine seneste betalinger til freelancere
+                {t('jobs.overviewLatestPayments')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -654,10 +654,10 @@ const ClientDashboard = () => {
                   <div key={payment.id} className="flex items-center justify-between p-3 border rounded">
                     <div>
                       <p className="font-medium">
-                        {payment.description || 'Betaling for opgave'}
+                        {payment.description || t('jobs.paymentForJob')}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        Status: {payment.status === 'completed' ? 'Gennemført' : 'Pending'} • {new Date(payment.created_at).toLocaleDateString('da-DK')}
+                        {t('jobs.status')}: {payment.status === 'completed' ? t('jobs.completed') : t('jobs.pending')} • {new Date(payment.created_at).toLocaleDateString('da-DK')}
                       </p>
                     </div>
                     <div className="text-right">
@@ -666,7 +666,7 @@ const ClientDashboard = () => {
                       </p>
                       {payment.status === 'completed' && (
                         <Badge className="bg-green-100 text-green-800 border-green-200">
-                          Betalt
+                          {t('jobs.paid')}
                         </Badge>
                       )}
                     </div>
@@ -683,10 +683,10 @@ const ClientDashboard = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
-                Mine kontrakter
+                {t('index.my_contracts')}
               </CardTitle>
               <CardDescription>
-                Administrer dine kontrakter og se status på igangværende og afsluttede aftaler
+                {t('index.manage_your_contracts')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -705,19 +705,19 @@ const ClientDashboard = () => {
         {showInviteDialog && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div className="bg-white dark:bg-gray-900 rounded-lg p-6 max-w-md w-full mx-4">
-              <h3 className="text-lg font-semibold mb-4">Inviter freelancer til opgave</h3>
+                      <h3 className="text-lg font-semibold mb-4">{t('index.invite_freelancer')}</h3>
               <p className="text-muted-foreground mb-4">
-                Denne funktion vil snart være tilgængelig. Du kan i stedet bruge "Søg freelancere" sektionen nedenfor.
+                {t('index.invite_freelancer_description')}
               </p>
               <div className="flex gap-2 justify-end">
                 <Button variant="outline" onClick={() => setShowInviteDialog(false)}>
-                  Luk
+                  {t('index.close')}
                 </Button>
                 <Button onClick={() => {
                   setShowInviteDialog(false);
                   window.location.href = '#freelancer-search';
                 }}>
-                  Gå til freelancer søgning
+                    {t('index.go_to_freelancer_search')}
                 </Button>
               </div>
             </div>
