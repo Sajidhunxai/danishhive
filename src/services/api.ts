@@ -4,10 +4,27 @@ import axios, { AxiosInstance, AxiosError } from 'axios';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
+interface CacheEntry {
+  data: any;
+  timestamp: number;
+  expiresAt: number;
+}
+
+interface PendingRequest {
+  resolve: (value: any) => void;
+  reject: (error: any) => void;
+  retryCount: number;
+  url: string;
+}
+
 class ApiService {
   private api: AxiosInstance;
-  private cache: Map<string, { data: any; timestamp: number }> = new Map();
+  private memoryCache: Map<string, CacheEntry> = new Map();
+  private requestQueue: Map<string, PendingRequest[]> = new Map();
   private readonly CACHE_TTL = 30000; // 30 seconds cache
+  private readonly PERSISTENT_CACHE_TTL = 300000; // 5 minutes for persistent cache
+  private readonly MAX_RETRIES = 3;
+  private readonly RETRY_DELAY_BASE = 1000; // 1 second base delay
 
   constructor() {
     this.api = axios.create({
@@ -112,6 +129,190 @@ class ApiService {
     );
   }
 
+  // Persistent cache using localStorage
+  private getPersistentCache(key: string): CacheEntry | null {
+    try {
+      const cached = localStorage.getItem(`api_cache_${key}`);
+      if (!cached) return null;
+      
+      const entry: CacheEntry = JSON.parse(cached);
+      if (Date.now() > entry.expiresAt) {
+        localStorage.removeItem(`api_cache_${key}`);
+        return null;
+      }
+      return entry;
+    } catch (error) {
+      console.error('Error reading persistent cache:', error);
+      return null;
+    }
+  }
+
+  private setPersistentCache(key: string, data: any, ttl: number = this.PERSISTENT_CACHE_TTL): void {
+    try {
+      const entry: CacheEntry = {
+        data,
+        timestamp: Date.now(),
+        expiresAt: Date.now() + ttl,
+      };
+      localStorage.setItem(`api_cache_${key}`, JSON.stringify(entry));
+    } catch (error) {
+      console.error('Error writing persistent cache:', error);
+      // If localStorage is full, clear old entries
+      this.clearOldCacheEntries();
+    }
+  }
+
+  private clearOldCacheEntries(): void {
+    try {
+      const keys = Object.keys(localStorage);
+      const cacheKeys = keys.filter(k => k.startsWith('api_cache_'));
+      const now = Date.now();
+      
+      cacheKeys.forEach(key => {
+        try {
+          const entry = JSON.parse(localStorage.getItem(key) || '{}');
+          if (entry.expiresAt && now > entry.expiresAt) {
+            localStorage.removeItem(key);
+          }
+        } catch (e) {
+          localStorage.removeItem(key);
+        }
+      });
+    } catch (error) {
+      console.error('Error clearing old cache entries:', error);
+    }
+  }
+
+  // Get cache from memory or persistent storage
+  private getCache(key: string): CacheEntry | null {
+    // Check memory cache first
+    const memoryEntry = this.memoryCache.get(key);
+    if (memoryEntry && Date.now() < memoryEntry.expiresAt) {
+      return memoryEntry;
+    }
+    
+    // Check persistent cache
+    return this.getPersistentCache(key);
+  }
+
+  // Set cache in both memory and persistent storage
+  private setCache(key: string, data: any, ttl: number = this.CACHE_TTL): void {
+    const entry: CacheEntry = {
+      data,
+      timestamp: Date.now(),
+      expiresAt: Date.now() + ttl,
+    };
+    
+    // Store in memory cache
+    this.memoryCache.set(key, entry);
+    
+    // Store in persistent cache for important endpoints
+    if (key.includes('my-jobs') || key.includes('users:with-email') || key.includes('profiles:me')) {
+      this.setPersistentCache(key, data, this.PERSISTENT_CACHE_TTL);
+    }
+  }
+
+  // Request queuing to prevent duplicate requests
+  private async queueRequest<T>(
+    key: string,
+    requestFn: () => Promise<T>,
+    useCache: boolean = true
+  ): Promise<T> {
+    // Check cache first if enabled
+    if (useCache) {
+      const cached = this.getCache(key);
+      if (cached) {
+        console.log(`Returning cached data for ${key}`);
+        return cached.data;
+      }
+    }
+
+    // Check if there's already a pending request for this key
+    const pending = this.requestQueue.get(key);
+    if (pending && pending.length > 0) {
+      console.log(`Request already pending for ${key}, queuing...`);
+      return new Promise((resolve, reject) => {
+        pending.push({ resolve, reject, retryCount: 0, url: key });
+      });
+    }
+
+    // Create new queue for this request
+    this.requestQueue.set(key, []);
+
+    try {
+      const result = await requestFn();
+      
+      // Cache the result
+      if (useCache) {
+        this.setCache(key, result);
+      }
+      
+      // Resolve all pending requests
+      const queue = this.requestQueue.get(key) || [];
+      queue.forEach(pending => pending.resolve(result));
+      this.requestQueue.delete(key);
+      
+      return result;
+    } catch (error: any) {
+      // Handle 429 errors with retry logic
+      if (error.response?.status === 429) {
+        const queue = this.requestQueue.get(key) || [];
+        const retryAfter = this.getRetryAfter(error.response);
+        
+        console.log(`Rate limited for ${key}, retrying after ${retryAfter}ms`);
+        
+        // Wait and retry
+        await this.delay(retryAfter);
+        
+        try {
+          const result = await requestFn();
+          if (useCache) {
+            this.setCache(key, result);
+          }
+          
+          queue.forEach(pending => pending.resolve(result));
+          this.requestQueue.delete(key);
+          return result;
+        } catch (retryError) {
+          // If retry fails, check for cached data
+          const cached = this.getCache(key);
+          if (cached) {
+            console.log(`Retry failed, returning stale cached data for ${key}`);
+            queue.forEach(pending => pending.resolve(cached.data));
+            this.requestQueue.delete(key);
+            return cached.data;
+          }
+          
+          queue.forEach(pending => pending.reject(retryError));
+          this.requestQueue.delete(key);
+          throw retryError;
+        }
+      }
+      
+      // For other errors, reject all pending requests
+      const queue = this.requestQueue.get(key) || [];
+      queue.forEach(pending => pending.reject(error));
+      this.requestQueue.delete(key);
+      throw error;
+    }
+  }
+
+  private getRetryAfter(response: any): number {
+    // Check Retry-After header
+    const retryAfter = response?.headers?.['retry-after'];
+    if (retryAfter) {
+      const seconds = parseInt(retryAfter, 10);
+      return seconds * 1000;
+    }
+    
+    // Default exponential backoff
+    return this.RETRY_DELAY_BASE * 2; // 2 seconds
+  }
+
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
   // Get backend URL for static files (images, etc.)
   getBackendUrl = () => {
     return BACKEND_URL;
@@ -191,8 +392,11 @@ class ApiService {
       return response.data.profile;
     },
     getMyProfile: async () => {
-      const response = await this.api.get('/profiles/me');
-      return response.data;
+      const cacheKey = 'profiles:me';
+      return this.queueRequest(cacheKey, async () => {
+        const response = await this.api.get('/profiles/me');
+        return response.data;
+      }, true);
     },
     isMyProfileComplete: async () => {
       const response = await this.api.get('/profiles/me/verification');
@@ -200,8 +404,15 @@ class ApiService {
     },
 
     updateMyProfile: async (data: any) => {
-      const response = await this.api.put('/profiles/me', data);
-      return response.data;
+      try {
+        const response = await this.api.put('/profiles/me', data);
+        // Invalidate cache when profile is updated
+        this.memoryCache.delete('profiles:me');
+        localStorage.removeItem('api_cache_profiles:me');
+        return response.data;
+      } catch (error: any) {
+        throw error;
+      }
     },
 
     getProfileById: async (id: string) => {
@@ -243,22 +454,34 @@ class ApiService {
     },
 
     getMyJobs: async () => {
-      const response = await this.api.get('/jobs/my/jobs');
-      return response.data.jobs;
+      const cacheKey = 'jobs:my-jobs';
+      return this.queueRequest(cacheKey, async () => {
+        const response = await this.api.get('/jobs/my/jobs');
+        return response.data.jobs;
+      });
     },
 
     createJob: async (data: any) => {
       const response = await this.api.post('/jobs', data);
+      // Invalidate cache when job is created
+      this.memoryCache.delete('jobs:my-jobs');
+      localStorage.removeItem('api_cache_jobs:my-jobs');
       return response.data.job;
     },
 
     updateJob: async (id: string, data: any) => {
       const response = await this.api.put(`/jobs/${id}`, data);
+      // Invalidate cache when job is updated
+      this.memoryCache.delete('jobs:my-jobs');
+      localStorage.removeItem('api_cache_jobs:my-jobs');
       return response.data.job;
     },
 
     deleteJob: async (id: string) => {
       const response = await this.api.delete(`/jobs/${id}`);
+      // Invalidate cache when job is deleted
+      this.memoryCache.delete('jobs:my-jobs');
+      localStorage.removeItem('api_cache_jobs:my-jobs');
       return response.data;
     },
   };
@@ -561,57 +784,41 @@ class ApiService {
 
     getUsersWithEmail: async () => {
       const cacheKey = 'admin:users:with-email';
-      const cached = this.cache.get(cacheKey);
-      
-      // Return cached data if it's still valid
-      if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
-        console.log('Returning cached users data');
-        return cached.data;
-      }
-      
-      try {
+      return this.queueRequest(cacheKey, async () => {
         const response = await this.api.get('/admin/users/with-email');
-        // Cache the response
-        this.cache.set(cacheKey, {
-          data: response.data,
-          timestamp: Date.now()
-        });
         return response.data;
-      } catch (error: any) {
-        // If we have cached data and got a 429, return cached data
-        if (error.response?.status === 429 && cached) {
-          console.log('Rate limited, returning stale cached data');
-          return cached.data;
-        }
-        throw error;
-      }
+      });
     },
 
     updateUser: async (id: string, data: any) => {
       const response = await this.api.put(`/admin/users/${id}`, data);
       // Invalidate cache when user is updated
-      this.cache.delete('admin:users:with-email');
+      this.memoryCache.delete('admin:users:with-email');
+      localStorage.removeItem('api_cache_admin:users:with-email');
       return response.data.user;
     },
 
     deleteUser: async (id: string) => {
       const response = await this.api.delete(`/admin/users/${id}`);
       // Invalidate cache when user is deleted
-      this.cache.delete('admin:users:with-email');
+      this.memoryCache.delete('admin:users:with-email');
+      localStorage.removeItem('api_cache_admin:users:with-email');
       return response.data;
     },
 
     changeUserRole: async (userId: string, newRole: string) => {
       const response = await this.api.post('/admin/users/change-role', { userId, newRole });
       // Invalidate cache when role is changed
-      this.cache.delete('admin:users:with-email');
+      this.memoryCache.delete('admin:users:with-email');
+      localStorage.removeItem('api_cache_admin:users:with-email');
       return response.data;
     },
 
     createAdminUser: async (email: string, password: string, fullName: string) => {
       const response = await this.api.post('/admin/users/create-admin', { email, password, fullName });
       // Invalidate cache when user is created
-      this.cache.delete('admin:users:with-email');
+      this.memoryCache.delete('admin:users:with-email');
+      localStorage.removeItem('api_cache_admin:users:with-email');
       return response.data;
     },
 

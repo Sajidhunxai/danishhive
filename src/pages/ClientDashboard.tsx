@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -107,6 +107,8 @@ const ClientDashboard = () => {
     // Allow both clients and admin users to access this dashboard
   }, [user, loading, navigate]);
   const { t } = useLanguage();
+  const fetchingDataRef = useRef(false);
+
   useEffect(() => {
     if (user && (userRole === 'client' || userRole === 'admin')) {
       fetchClientData();
@@ -114,6 +116,13 @@ const ClientDashboard = () => {
   }, [user, userRole]);
 
   const fetchClientData = async () => {
+    // Prevent concurrent calls
+    if (fetchingDataRef.current) {
+      console.log('fetchClientData already in progress, skipping...');
+      return;
+    }
+    
+    fetchingDataRef.current = true;
     try {
       // Fetch user's jobs from backend
       const jobs: BackendJob[] = await api.jobs.getMyJobs();
@@ -217,11 +226,24 @@ const ClientDashboard = () => {
 
     } catch (error: unknown) {
       console.error('Error fetching client data:', error);
-      toast({
-        title: 'Fejl',
-        description: 'Kunne ikke hente data.',
-        variant: 'destructive',
-      });
+      
+      // Handle rate limit errors specifically
+      const err = error as { response?: { status?: number } };
+      if (err.response?.status === 429) {
+        toast({
+          title: 'For mange anmodninger',
+          description: 'Vent venligst et øjeblik og prøv igen.',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Fejl',
+          description: 'Kunne ikke hente data.',
+          variant: 'destructive',
+        });
+      }
+    } finally {
+      fetchingDataRef.current = false;
     }
   };
 

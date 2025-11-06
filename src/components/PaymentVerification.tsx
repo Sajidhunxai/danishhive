@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { CreditCard, Shield, Check, AlertCircle } from 'lucide-react';
@@ -22,20 +22,28 @@ export const PaymentVerification: React.FC<PaymentVerificationProps> = ({
   const [paymentId, setPaymentId] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Check initial verification status
+  // Check initial verification status (only once)
+  const hasCheckedRef = useRef(false);
   useEffect(() => {
+    if (hasCheckedRef.current) return;
+    
     const checkInitialStatus = async () => {
       try {
         if (!user) return;
-
+        
+        hasCheckedRef.current = true;
         const profile = await api.profiles.getMyProfile();
 
         if (profile?.paymentVerified) {
           setIsVerified(true);
           onVerificationComplete?.(true);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error checking initial payment status:', error);
+        // If rate limited, don't block the component
+        if (error.response?.status === 429) {
+          console.log('Rate limited while checking payment status, continuing anyway');
+        }
       }
     };
 

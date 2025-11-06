@@ -43,6 +43,7 @@ const CompleteProfile = () => {
   const { language, setLanguage, t } = useLanguage();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); // Prevent double submissions
   const [currentStep, setCurrentStep] = useState(1);
   const [phoneVerified, setPhoneVerified] = useState(false);
   const [paymentVerified, setPaymentVerified] = useState(false);
@@ -240,6 +241,12 @@ const CompleteProfile = () => {
   };
 
   const handleComplete = async () => {
+    // Prevent double submissions
+    if (isSubmitting || loading) {
+      console.log('Profile submission already in progress, ignoring duplicate request');
+      return;
+    }
+
     // Double-check all validations before submission
     if (!user) {
       toast({
@@ -309,6 +316,7 @@ const CompleteProfile = () => {
       return;
     }
 
+    setIsSubmitting(true);
     setLoading(true);
     try {
       // Validate all required fields are present and not empty
@@ -353,9 +361,23 @@ const CompleteProfile = () => {
       let errorMessage = "Kunne ikke gemme profil. Prøv igen.";
       
       // Handle API errors
-      const err = error as { response?: { data?: { error?: string } }, message?: string };
+      const err = error as { response?: { status?: number; data?: { error?: string; message?: string } }, message?: string };
+      
+      // Handle rate limit errors specifically
+      if (err.response?.status === 429) {
+        errorMessage = "For mange anmodninger. Vent venligst et øjeblik og prøv igen.";
+        toast({
+          title: "For mange anmodninger",
+          description: errorMessage,
+          variant: "destructive",
+        });
+        return; // Don't show the generic error toast
+      }
+      
       if (err.response?.data?.error) {
         errorMessage = err.response.data.error;
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
       } else if (err.message) {
         errorMessage = err.message;
       }
@@ -372,6 +394,7 @@ const CompleteProfile = () => {
       });
     } finally {
       setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -607,10 +630,10 @@ const CompleteProfile = () => {
                 </Button>
                 <Button 
                   onClick={handleComplete}
-                  disabled={loading || !validateStep2()}
+                  disabled={loading || isSubmitting || !validateStep2()}
                 >
                   <Save className="h-4 w-4 mr-2" />
-                  {loading ? t('completeProfile.saving') : t('completeProfile.completeProfile')}
+                  {(loading || isSubmitting) ? t('completeProfile.saving') : t('completeProfile.completeProfile')}
                 </Button>
               </div>
             </CardContent>

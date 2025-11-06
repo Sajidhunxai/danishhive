@@ -41,12 +41,16 @@ export const ProfileCompletionGuard: React.FC<ProfileCompletionGuardProps> = ({
           } } = await api.profiles.getMyProfile();
           const data = response.profile || (response as unknown as any);
 
+          // Check if phone number exists (it might be in user object or could be empty string)
+          const hasPhoneNumber = data.user?.phoneNumber && 
+                                 data.user.phoneNumber.trim() !== '' &&
+                                 data.user.phoneNumber !== null;
+          
           const isComplete = !!(data &&
             data.fullName && 
             data.fullName.trim() !== '' &&
             data.fullName !== 'Incomplete Profile' &&
-            data.user?.phoneNumber && 
-            data.user.phoneNumber.trim() !== '' &&
+            hasPhoneNumber &&
             data.address && 
             data.address.trim() !== '' &&
             data.city && 
@@ -54,6 +58,16 @@ export const ProfileCompletionGuard: React.FC<ProfileCompletionGuardProps> = ({
             data.postalCode && 
             data.postalCode.trim() !== '' &&
             data.user?.phoneVerified === true);
+          
+          console.log('Profile completion check:', {
+            fullName: data.fullName,
+            phoneNumber: data.user?.phoneNumber,
+            phoneVerified: data.user?.phoneVerified,
+            address: data.address,
+            city: data.city,
+            postalCode: data.postalCode,
+            isComplete,
+          });
 
           setProfileComplete(isComplete);
 

@@ -163,24 +163,43 @@ export const ContractDialog = ({
 
     // Check if user profile is complete before allowing contract creation
     try {
-      const profile = await api.profiles.getMyProfile();
+      const profileResponse = await api.profiles.getMyProfile();
+      const profile = (profileResponse as any)?.profile || profileResponse;
       const userData = await api.auth.getCurrentUser();
 
+      // Check phone number - it might be in profile.user or profile directly
+      const phoneNumber = profile.user?.phoneNumber || profile.phoneNumber;
+      const phoneVerified = profile.user?.phoneVerified !== undefined 
+        ? profile.user.phoneVerified 
+        : userData?.phoneVerified;
+      
+      const hasPhoneNumber = phoneNumber && phoneNumber.trim() !== '' && phoneNumber !== null;
+      
       const isProfileComplete = profile &&
         profile.fullName && 
         profile.fullName.trim() !== '' &&
         profile.fullName !== 'Incomplete Profile' &&
-        profile.phoneNumber && 
-        profile.phoneNumber.trim() !== '' &&
+        hasPhoneNumber &&
         profile.address && 
         profile.address.trim() !== '' &&
         profile.city && 
         profile.city.trim() !== '' &&
         profile.postalCode && 
         profile.postalCode.trim() !== '' &&
-        userData?.phoneVerified === true &&
+        phoneVerified === true &&
         // Only require payment verification for clients, not freelancers
         userData?.userType === 'CLIENT' ? profile.paymentVerified === true : true;
+      
+      console.log('Contract dialog profile check:', {
+        fullName: profile.fullName,
+        phoneNumber,
+        phoneVerified,
+        address: profile.address,
+        city: profile.city,
+        postalCode: profile.postalCode,
+        paymentVerified: profile.paymentVerified,
+        isComplete: isProfileComplete,
+      });
 
       if (!isProfileComplete) {
         toast({
