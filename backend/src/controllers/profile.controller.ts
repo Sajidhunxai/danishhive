@@ -20,7 +20,32 @@ export const getMyProfile = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Profile not found' });
     }
     
-    res.json({ profile });
+    // Get user data including phoneNumber and phoneVerified
+    const user = await prisma.user.findUnique({
+      where: { id: req.user!.id },
+      select: {
+        phoneNumber: true,
+        phoneVerified: true,
+        phoneVerifiedAt: true,
+        email: true,
+        userType: true,
+        isAdmin: true,
+      },
+    });
+    
+    res.json({ 
+      profile: {
+        ...profile,
+        user: user ? {
+          phoneNumber: user.phoneNumber,
+          phoneVerified: user.phoneVerified,
+          phoneVerifiedAt: user.phoneVerifiedAt,
+          email: user.email,
+          userType: user.userType,
+          isAdmin: user.isAdmin,
+        } : null,
+      }
+    });
   } catch (error) {
     console.error('Get profile error:', error);
     res.status(500).json({ error: 'Failed to fetch profile' });
