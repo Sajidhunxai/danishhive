@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -117,6 +117,9 @@ export const AdminPanel = () => {
   const [currentView, setCurrentView] = useState<AdminView>('overview');
   const [selectedFreelancer, setSelectedFreelancer] = useState<FreelancerPayroll | null>(null);
   
+  // Ref to prevent concurrent fetchUsers calls
+  const fetchingUsersRef = useRef(false);
+  
   // Create user form state
   const [createUserForm, setCreateUserForm] = useState({
     email: '',
@@ -150,15 +153,29 @@ export const AdminPanel = () => {
     userRole: ''
   });
 
+  // Separate useEffect for users and role requests (only depends on user)
   useEffect(() => {
     if (user) {
       fetchUsers();
       fetchRoleRequests();
+    }
+  }, [user]);
+
+  // Separate useEffect for earnings (depends on user and selectedMonth)
+  useEffect(() => {
+    if (user) {
       fetchFreelancerEarnings();
     }
   }, [user, selectedMonth]);
 
   const fetchUsers = async () => {
+    // Prevent concurrent calls
+    if (fetchingUsersRef.current) {
+      console.log('fetchUsers already in progress, skipping...');
+      return;
+    }
+    
+    fetchingUsersRef.current = true;
     console.log('Fetching users as admin...');
     try {
       const data = await api.admin.getUsersWithEmail();
@@ -166,6 +183,7 @@ export const AdminPanel = () => {
       if (!data || data.length === 0) {
         console.log('No users returned - user might not have admin rights');
         setUsers([]);
+        fetchingUsersRef.current = false;
         return;
       }
 
@@ -184,7 +202,19 @@ export const AdminPanel = () => {
       setUsers(mappedUsers);
     } catch (error: any) {
       console.error('Error fetching users:', error);
+      
+      // Handle rate limit errors specifically
+      if (error.response?.status === 429) {
+        toast({
+          title: "For mange anmodninger",
+          description: "Vent venligst et øjeblik før du prøver igen.",
+          variant: "destructive",
+        });
+      }
+      
       setUsers([]);
+    } finally {
+      fetchingUsersRef.current = false;
     }
   };
 

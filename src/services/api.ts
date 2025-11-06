@@ -6,6 +6,8 @@ const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 class ApiService {
   private api: AxiosInstance;
+  private cache: Map<string, { data: any; timestamp: number }> = new Map();
+  private readonly CACHE_TTL = 30000; // 30 seconds cache
 
   constructor() {
     this.api = axios.create({
@@ -83,6 +85,13 @@ class ApiService {
               window.location.href = '/auth';
             }
           }
+        }
+        
+        // Don't retry on rate limit errors (429)
+        if (error.response?.status === 429) {
+          const errorData = error.response.data as any;
+          error.message = errorData?.message || errorData?.error || 'Too many requests. Please wait a moment and try again.';
+          return Promise.reject(error);
         }
         
         // Enhance error object with better error message
@@ -551,27 +560,58 @@ class ApiService {
     },
 
     getUsersWithEmail: async () => {
-      const response = await this.api.get('/admin/users/with-email');
-      return response.data;
+      const cacheKey = 'admin:users:with-email';
+      const cached = this.cache.get(cacheKey);
+      
+      // Return cached data if it's still valid
+      if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
+        console.log('Returning cached users data');
+        return cached.data;
+      }
+      
+      try {
+        const response = await this.api.get('/admin/users/with-email');
+        // Cache the response
+        this.cache.set(cacheKey, {
+          data: response.data,
+          timestamp: Date.now()
+        });
+        return response.data;
+      } catch (error: any) {
+        // If we have cached data and got a 429, return cached data
+        if (error.response?.status === 429 && cached) {
+          console.log('Rate limited, returning stale cached data');
+          return cached.data;
+        }
+        throw error;
+      }
     },
 
     updateUser: async (id: string, data: any) => {
       const response = await this.api.put(`/admin/users/${id}`, data);
+      // Invalidate cache when user is updated
+      this.cache.delete('admin:users:with-email');
       return response.data.user;
     },
 
     deleteUser: async (id: string) => {
       const response = await this.api.delete(`/admin/users/${id}`);
+      // Invalidate cache when user is deleted
+      this.cache.delete('admin:users:with-email');
       return response.data;
     },
 
     changeUserRole: async (userId: string, newRole: string) => {
       const response = await this.api.post('/admin/users/change-role', { userId, newRole });
+      // Invalidate cache when role is changed
+      this.cache.delete('admin:users:with-email');
       return response.data;
     },
 
     createAdminUser: async (email: string, password: string, fullName: string) => {
       const response = await this.api.post('/admin/users/create-admin', { email, password, fullName });
+      // Invalidate cache when user is created
+      this.cache.delete('admin:users:with-email');
       return response.data;
     },
 
