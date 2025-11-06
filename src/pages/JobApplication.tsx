@@ -470,7 +470,7 @@ const JobApplication = () => {
                     )}
                     {honeyDrops < 3
                       ? t("job.apply.insufficientDrops")
-                      : t("job.apply.cancel")}
+                      : t("common.submitApplication")}
                   </Button>
                 </div>
               </form>
