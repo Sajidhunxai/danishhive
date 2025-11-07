@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 import { da } from 'date-fns/locale';
 import { playMessageSound } from '@/utils/sound';
-
+import { useLanguage } from "@/contexts/LanguageContext";
 interface Message {
   id: string;
   conversation_id: string;
@@ -51,7 +51,7 @@ export const MessageThread: React.FC<MessageThreadProps> = ({ conversation }) =>
   const [newMessage, setNewMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isFetchingRef = useRef(false);
-
+  const { t } = useLanguage();
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -293,7 +293,7 @@ export const MessageThread: React.FC<MessageThreadProps> = ({ conversation }) =>
           />
           <div className="flex justify-between items-center">
             <p className="text-xs text-muted-foreground">
-              Tryk Enter for at sende, Shift+Enter for ny linje
+            {t("chat.sendHint")}
             </p>
             <Button
               onClick={sendMessage}

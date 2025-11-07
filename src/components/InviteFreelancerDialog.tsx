@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/services/api";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { MessageSquare, Briefcase, Euro, MapPin } from "lucide-react";
 
 interface Job {
@@ -33,7 +40,7 @@ interface InviteFreelancerDialogProps {
 export const InviteFreelancerDialog: React.FC<InviteFreelancerDialogProps> = ({
   freelancerId,
   freelancerName,
-  children
+  children,
 }) => {
   const [open, setOpen] = useState(false);
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -43,17 +50,15 @@ export const InviteFreelancerDialog: React.FC<InviteFreelancerDialogProps> = ({
   const [fetchingJobs, setFetchingJobs] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   const fetchClientJobs = async () => {
     if (!user?.id) return;
-    
     setFetchingJobs(true);
     try {
       const jobsData = await api.jobs.getMyJobs();
-      
-      // Filter open jobs and map to expected format
       const openJobs = jobsData
-        .filter((job: any) => job.status === 'open')
+        .filter((job: any) => job.status === "open")
         .map((job: any) => ({
           id: job.id,
           title: job.title,
@@ -61,18 +66,21 @@ export const InviteFreelancerDialog: React.FC<InviteFreelancerDialogProps> = ({
           budget_min: job.budget ? Number(job.budget) : null,
           budget_max: job.budget ? Number(job.budget) : null,
           location: job.location,
-          skills_required: job.skills ? (typeof job.skills === 'string' ? JSON.parse(job.skills) : job.skills) : null,
+          skills_required: job.skills
+            ? typeof job.skills === "string"
+              ? JSON.parse(job.skills)
+              : job.skills
+            : null,
           status: job.status,
           is_remote: job.isRemote || null,
-          deadline: job.deadline || null
+          deadline: job.deadline || null,
         }));
-
       setJobs(openJobs);
     } catch (error: any) {
-      console.error('Error fetching jobs:', error);
+      console.error("Error fetching jobs:", error);
       toast({
-        title: "Fejl",
-        description: error.message || "Kunne ikke hente dine opgaver",
+        title: t("inviteFreelancer.error"),
+        description: t("inviteFreelancer.fetchError"),
         variant: "destructive",
       });
     } finally {
@@ -87,22 +95,18 @@ export const InviteFreelancerDialog: React.FC<InviteFreelancerDialogProps> = ({
   }, [open, user?.id]);
 
   const handleJobToggle = (jobId: string) => {
-    console.log('Toggling job:', jobId, 'Current selected:', selectedJobs);
-    setSelectedJobs(prev => {
-      const isSelected = prev.includes(jobId);
-      const newSelection = isSelected 
-        ? prev.filter(id => id !== jobId)
-        : [...prev, jobId];
-      console.log('New selection:', newSelection);
-      return newSelection;
-    });
+    setSelectedJobs((prev) =>
+      prev.includes(jobId)
+        ? prev.filter((id) => id !== jobId)
+        : [...prev, jobId]
+    );
   };
 
   const handleSendInvitations = async () => {
     if (!user?.id || selectedJobs.length === 0) {
       toast({
-        title: "Fejl",
-        description: "Vælg mindst én opgave at invitere til",
+        title: t("inviteFreelancer.error"),
+        description: t("inviteFreelancer.selectJobError"),
         variant: "destructive",
       });
       return;
@@ -110,8 +114,8 @@ export const InviteFreelancerDialog: React.FC<InviteFreelancerDialogProps> = ({
 
     if (message.trim().length < 100 || message.trim().length > 300) {
       toast({
-        title: "Fejl",
-        description: "Beskeden skal være mellem 100 og 300 tegn",
+        title: t("inviteFreelancer.error"),
+        description: t("inviteFreelancer.messageLengthError"),
         variant: "destructive",
       });
       return;
@@ -119,28 +123,30 @@ export const InviteFreelancerDialog: React.FC<InviteFreelancerDialogProps> = ({
 
     setLoading(true);
     try {
-      // Send invitations via messages for each selected job
       for (const jobId of selectedJobs) {
         await api.messages.sendMessage({
           receiverId: freelancerId,
           content: message.trim(),
-          conversationId: `job-${jobId}`
+          conversationId: `job-${jobId}`,
         });
       }
 
       toast({
-        title: "Invitationer sendt!",
-        description: `${selectedJobs.length} invitation(er) er sendt til ${freelancerName || 'freelanceren'}`,
+        title: t("inviteFreelancer.sentTitle"),
+        description: t("inviteFreelancer.sentDesc", {
+          count: selectedJobs.length,
+          name: freelancerName || t("inviteFreelancer.freelancer"),
+        }),
       });
 
       setOpen(false);
       setSelectedJobs([]);
       setMessage("");
     } catch (error) {
-      console.error('Error sending invitations:', error);
+      console.error("Error sending invitations:", error);
       toast({
-        title: "Fejl",
-        description: "Kunne ikke sende invitationer",
+        title: t("inviteFreelancer.error"),
+        description: t("inviteFreelancer.sendError"),
         variant: "destructive",
       });
     } finally {
@@ -150,25 +156,25 @@ export const InviteFreelancerDialog: React.FC<InviteFreelancerDialogProps> = ({
 
   const formatBudget = (min: number | null, max: number | null) => {
     if (min && max) {
-      return `${min.toLocaleString('da-DK')} - ${max.toLocaleString('da-DK')} DKK`;
+      return `${min.toLocaleString("da-DK")} - ${max.toLocaleString("da-DK")} DKK`;
     } else if (min) {
-      return `Fra ${min.toLocaleString('da-DK')} DKK`;
+      return t("inviteFreelancer.budgetFrom", { amount: min });
     } else if (max) {
-      return `Op til ${max.toLocaleString('da-DK')} DKK`;
+      return t("inviteFreelancer.budgetUpTo", { amount: max });
     }
-    return "Budget ikke angivet";
+    return t("inviteFreelancer.noBudget");
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {children}
-      </DialogTrigger>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <MessageSquare className="h-5 w-5" />
-            Inviter {freelancerName || 'Freelancer'} til opgave
+            {t("inviteFreelancer.title", {
+              name: freelancerName || t("inviteFreelancer.freelancer"),
+            })}
           </DialogTitle>
         </DialogHeader>
 
@@ -176,21 +182,29 @@ export const InviteFreelancerDialog: React.FC<InviteFreelancerDialogProps> = ({
           {fetchingJobs ? (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-              <p className="mt-4 text-muted-foreground">Henter dine opgaver...</p>
+              <p className="mt-4 text-muted-foreground">
+                {t("inviteFreelancer.loadingJobs")}
+              </p>
             </div>
           ) : jobs.length === 0 ? (
             <div className="text-center py-8">
               <Briefcase className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium mb-2">Ingen aktive opgaver</h3>
-              <p className="text-muted-foreground">Du har ingen åbne opgaver at invitere til.</p>
+              <h3 className="text-lg font-medium mb-2">
+                {t("inviteFreelancer.noJobs")}
+              </h3>
+              <p className="text-muted-foreground">
+                {t("inviteFreelancer.noJobsDesc")}
+              </p>
             </div>
           ) : (
             <>
               <div>
-                <h3 className="text-lg font-medium mb-4">Vælg opgaver at invitere til:</h3>
+                <h3 className="text-lg font-medium mb-4">
+                  {t("inviteFreelancer.selectJobs")}
+                </h3>
                 <div className="space-y-4 max-h-60 overflow-y-auto">
                   {jobs.map((job) => (
-                    <Card key={job.id} className="relative">
+                    <Card key={job.id}>
                       <CardContent className="p-4">
                         <div className="flex items-start gap-3">
                           <div className="pt-1">
@@ -202,7 +216,7 @@ export const InviteFreelancerDialog: React.FC<InviteFreelancerDialogProps> = ({
                             />
                           </div>
                           <div className="flex-1 space-y-2">
-                            <Label 
+                            <Label
                               htmlFor={`job-${job.id}`}
                               className="text-base font-medium cursor-pointer"
                               onClick={() => handleJobToggle(job.id)}
@@ -212,47 +226,33 @@ export const InviteFreelancerDialog: React.FC<InviteFreelancerDialogProps> = ({
                             <p className="text-sm text-muted-foreground line-clamp-2">
                               {job.description}
                             </p>
-                            
+
                             <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
                               <div className="flex items-center gap-1">
                                 <Euro className="h-3 w-3" />
                                 {formatBudget(job.budget_min, job.budget_max)}
                               </div>
-                              
+
                               {job.location && (
                                 <div className="flex items-center gap-1">
                                   <MapPin className="h-3 w-3" />
                                   {job.location}
                                 </div>
                               )}
-                              
+
                               {job.is_remote && (
                                 <Badge variant="secondary" className="text-xs">
-                                  Remote
+                                  {t("inviteFreelancer.remote")}
                                 </Badge>
                               )}
-                              
+
                               {job.deadline && (
                                 <span>
-                                  Deadline: {new Date(job.deadline).toLocaleDateString('da-DK')}
+                                  {t("inviteFreelancer.deadline")}:{" "}
+                                  {new Date(job.deadline).toLocaleDateString("da-DK")}
                                 </span>
                               )}
                             </div>
-
-                            {job.skills_required && job.skills_required.length > 0 && (
-                              <div className="flex flex-wrap gap-1">
-                                {job.skills_required.slice(0, 5).map((skill) => (
-                                  <Badge key={skill} variant="outline" className="text-xs">
-                                    {skill}
-                                  </Badge>
-                                ))}
-                                {job.skills_required.length > 5 && (
-                                  <Badge variant="outline" className="text-xs">
-                                    +{job.skills_required.length - 5} flere
-                                  </Badge>
-                                )}
-                              </div>
-                            )}
                           </div>
                         </div>
                       </CardContent>
@@ -262,28 +262,42 @@ export const InviteFreelancerDialog: React.FC<InviteFreelancerDialogProps> = ({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="message">Besked til freelancer (påkrævet: 100-300 tegn)</Label>
+                <Label htmlFor="message">
+                  {t("inviteFreelancer.messageLabel")}
+                </Label>
                 <Textarea
                   id="message"
-                  placeholder="Skriv en personlig besked til freelanceren (minimum 100 tegn)..."
+                  placeholder={t("inviteFreelancer.messagePlaceholder")}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   rows={3}
                   maxLength={300}
                 />
                 <div className="flex justify-between items-center text-sm">
-                  <span className={`${
-                    message.length < 100 ? 'text-red-500' : 
-                    message.length > 300 ? 'text-red-500' : 
-                    'text-green-600'
-                  }`}>
-                    {message.length < 100 ? `Mangler ${100 - message.length} tegn` :
-                     message.length > 300 ? `${message.length - 300} tegn for mange` :
-                     'Beskedlængde er korrekt'}
+                  <span
+                    className={`${
+                      message.length < 100 || message.length > 300
+                        ? "text-red-500"
+                        : "text-green-600"
+                    }`}
+                  >
+                    {message.length < 100
+                      ? t("inviteFreelancer.missingChars", {
+                          count: 100 - message.length,
+                        })
+                      : message.length > 300
+                      ? t("inviteFreelancer.tooManyChars", {
+                          count: message.length - 300,
+                        })
+                      : t("inviteFreelancer.correctLength")}
                   </span>
-                  <span className={`${
-                    message.length > 300 ? 'text-red-500' : 'text-muted-foreground'
-                  }`}>
+                  <span
+                    className={`${
+                      message.length > 300
+                        ? "text-red-500"
+                        : "text-muted-foreground"
+                    }`}
+                  >
                     {message.length}/300
                   </span>
                 </div>
@@ -291,13 +305,22 @@ export const InviteFreelancerDialog: React.FC<InviteFreelancerDialogProps> = ({
 
               <div className="flex justify-end gap-2 pt-4 border-t">
                 <Button variant="outline" onClick={() => setOpen(false)}>
-                  Annuller
+                  {t("inviteFreelancer.cancel")}
                 </Button>
-                <Button 
+                <Button
                   onClick={handleSendInvitations}
-                  disabled={loading || selectedJobs.length === 0 || message.trim().length < 100 || message.trim().length > 300}
+                  disabled={
+                    loading ||
+                    selectedJobs.length === 0 ||
+                    message.trim().length < 100 ||
+                    message.trim().length > 300
+                  }
                 >
-                  {loading ? "Sender..." : `Send ${selectedJobs.length} invitation(er)`}
+                  {loading
+                    ? t("inviteFreelancer.sending")
+                    : t("inviteFreelancer.sendInvitations", {
+                        count: selectedJobs.length,
+                      })}
                 </Button>
               </div>
             </>
