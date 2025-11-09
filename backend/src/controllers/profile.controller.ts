@@ -210,6 +210,39 @@ export const getPublicProfile = async (req: any, res: Response) => {
   }
 };
 
+export const getPublicProfileByProfileId = async (req: any, res: Response) => {
+  try {
+    const { profileId } = req.params;
+
+    const profile = await prisma.profile.findUnique({
+      where: { id: profileId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            userType: true,
+            emailVerified: true,
+            phoneVerified: true,
+          },
+        },
+        projects: {
+          orderBy: { createdAt: 'desc' },
+        },
+      },
+    });
+
+    if (!profile) {
+      return res.status(404).json({ error: 'Profile not found' });
+    }
+
+    res.json({ profile });
+  } catch (error) {
+    console.error('Get public profile by id error:', error);
+    res.status(500).json({ error: 'Failed to fetch profile' });
+  }
+};
+
 export const getProfileById = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;

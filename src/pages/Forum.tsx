@@ -8,7 +8,7 @@ import { MessageCircle, Users, Briefcase, Lightbulb, HelpCircle, Plus, Pin, Lock
 import { formatDistanceToNow } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import { api } from '@/services/api';
+import { useApi } from '@/contexts/ApiContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ForumCategory {
@@ -62,6 +62,7 @@ const Forum: React.FC = () => {
   const [categories, setCategories] = useState<ForumCategory[]>([]);
   const [recentPosts, setRecentPosts] = useState<ForumPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const api = useApi();
 
   // Check if user has access (freelancer or admin)
   const hasAccess = userRole === 'freelancer' || userRole === 'admin';

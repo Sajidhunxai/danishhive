@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { api } from '@/services/api';
+import { useApi } from '@/contexts/ApiContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ToastAction } from '@/components/ui/toast';
 import { playMessageSound } from '@/utils/sound';
@@ -11,6 +11,7 @@ interface LastMessage {
   conversationId: string;
   messageId: string;
   createdAt: string;
+  senderId: string;
   senderName: string;
   content: string;
 }
@@ -21,6 +22,7 @@ export const useMessageNotifications = (enabled: boolean = true) => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
+  const api = useApi();
   const [unreadCount, setUnreadCount] = useState(0);
   const lastMessagesRef = useRef<Map<string, LastMessage>>(new Map());
   const isInitializedRef = useRef(false);
@@ -44,13 +46,13 @@ export const useMessageNotifications = (enabled: boolean = true) => {
       const newMessages: LastMessage[] = [];
 
       for (const conv of conversations) {
-        const convData = conv as {
+          const convData = conv as {
           conversationId: string;
           lastMessage?: {
             id: string;
             content: string;
             createdAt: string;
-            sender: { profile?: { fullName: string } };
+            sender?: { id?: string; profile?: { fullName: string } };
           };
           unreadCount?: number;
         };
@@ -60,11 +62,13 @@ export const useMessageNotifications = (enabled: boolean = true) => {
         }
 
         if (convData.lastMessage) {
+          const senderId = convData.lastMessage.sender?.id || '';
           const lastMsg = {
             conversationId: convData.conversationId,
             messageId: convData.lastMessage.id,
             createdAt: convData.lastMessage.createdAt,
-            senderName: convData.lastMessage.sender.profile?.fullName || 'Unknown',
+            senderId,
+            senderName: convData.lastMessage.sender?.profile?.fullName || 'Unknown',
             content: convData.lastMessage.content,
           };
 
@@ -77,7 +81,9 @@ export const useMessageNotifications = (enabled: boolean = true) => {
              new Date(lastMsg.createdAt) > new Date(lastKnown.createdAt))
           ) {
             // This is a new message - show notification
-            newMessages.push(lastMsg);
+            if (lastMsg.senderId && lastMsg.senderId !== user.id) {
+              newMessages.push(lastMsg);
+            }
           }
 
           lastMessagesRef.current.set(convData.conversationId, lastMsg);

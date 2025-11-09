@@ -16,7 +16,7 @@ import {
   AlertDialogHeader, 
   AlertDialogTitle 
 } from "@/components/ui/alert-dialog";
-import { api } from "@/services/api";
+import { useApi } from "@/contexts/ApiContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -105,6 +105,7 @@ export const AdminPanel = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { t } = useLanguage();
+  const api = useApi();
   const [users, setUsers] = useState<User[]>([]);
   const [roleRequests, setRoleRequests] = useState<RoleChangeRequest[]>([]);
   const [freelancerEarnings, setFreelancerEarnings] = useState<FreelancerEarnings[]>([]);

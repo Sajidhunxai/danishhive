@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { api } from '@/services/api';
+import { useApi } from '@/contexts/ApiContext';
 import { Image, Check, X, User, Building2 } from 'lucide-react';
 
 interface ProfileImage {
@@ -31,6 +31,7 @@ export const AdminImageApproval: React.FC = () => {
   const [adminNotes, setAdminNotes] = useState<{ [key: string]: string }>({});
   const { toast } = useToast();
   const { t } = useLanguage();
+  const api = useApi();
 
   const fetchPendingImages = async () => {
     try {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { api } from "@/services/api";
+import { useApi } from "@/contexts/ApiContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -58,6 +58,7 @@ interface TeamLeader {
 const AdminTranslationManager = () => {
   const { toast } = useToast();
   const { t } = useLanguage();
+  const api = useApi();
   const [translations, setTranslations] = useState<AttachmentTranslation[]>([]);
   const [teamLeaders, setTeamLeaders] = useState<TeamLeader[]>([]);
   const [loading, setLoading] = useState(true);

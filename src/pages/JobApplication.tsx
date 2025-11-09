@@ -14,7 +14,7 @@ import { ArrowLeft, Send, AlertTriangle } from "lucide-react";
 import { useFreelancerVerification } from "@/components/FreelancerVerificationGuard";
 import { HoneyDropsBalance } from "@/components/HoneyDropsBalance";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { api } from "@/services/api";
+import { useApi } from "@/contexts/ApiContext";
 import { getJobById } from "@/api/jobs";
 interface Job {
   id: string;
@@ -33,6 +33,7 @@ const JobApplication = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  const api = useApi();
   const { requireVerification } = useFreelancerVerification();
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
@@ -469,7 +470,7 @@ const JobApplication = () => {
                     )}
                     {honeyDrops < 3
                       ? t("job.apply.insufficientDrops")
-                      : t("common.submitApplication")}
+                      : t("common.submit")}
                   </Button>
                 </div>
               </form>

@@ -2,6 +2,7 @@ import { PrismaClient, UserType } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
+const PUBLIC_SHOWCASE_FREELANCER_ID = 'c47f5160-e2a3-4054-ab7e-8f0505b823fe';
 
 async function main() {
   console.log('🌱 Starting database seed...');
@@ -101,6 +102,7 @@ async function main() {
   // Create Freelancer Users
   const freelancer1 = await prisma.user.create({
     data: {
+      id: PUBLIC_SHOWCASE_FREELANCER_ID,
       email: 'freelancer1@example.com',
       password: hashedPassword,
       userType: UserType.FREELANCER,
@@ -235,6 +237,7 @@ async function main() {
   });
 
   console.log('✅ Created portfolio projects');
+  console.log(`🔗 Public showcase freelancer id: ${PUBLIC_SHOWCASE_FREELANCER_ID}`);
 
   // Create Jobs
   const job1 = await prisma.job.create({

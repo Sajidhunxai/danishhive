@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { api } from '@/services/api';
+import { useApi } from '@/contexts/ApiContext';
 import { useAuth } from '@/hooks/useAuth';
 import { Download, Droplets, Calendar, Receipt, Eye } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -23,6 +23,7 @@ interface HoneyDropPurchase {
 export const HoneyDropsPurchaseHistory: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const api = useApi();
   const [purchases, setPurchases] = useState<HoneyDropPurchase[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPurchase, setSelectedPurchase] = useState<HoneyDropPurchase | null>(null);

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { api } from '@/services/api';
+import { useApi } from '@/contexts/ApiContext';
 import { useToast } from '@/hooks/use-toast';
 
 interface JobApplicationRefundProps {
@@ -12,6 +12,7 @@ export const JobApplicationRefund: React.FC<JobApplicationRefundProps> = ({
   selectedApplicantId 
 }) => {
   const { toast } = useToast();
+  const api = useApi();
 
   useEffect(() => {
     const handleRefunds = async () => {

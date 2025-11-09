@@ -17,7 +17,7 @@ interface PendingRequest {
   url: string;
 }
 
-class ApiService {
+export class ApiService {
   private api: AxiosInstance;
   private memoryCache: Map<string, CacheEntry> = new Map();
   private requestQueue: Map<string, PendingRequest[]> = new Map();
@@ -388,8 +388,16 @@ class ApiService {
   // Profile endpoints
   profiles = {
     getPublicProfile: async (userId: string) => {
-      const response = await this.api.get(`/profiles/public/${userId}`);
-      return response.data.profile;
+      try {
+        const response = await this.api.get(`/profiles/public/${userId}`);
+        return response.data.profile;
+      } catch (error: any) {
+        if (error?.response?.status === 404) {
+          const fallback = await this.api.get(`/profiles/public/profile/${userId}`);
+          return fallback.data.profile;
+        }
+        throw error;
+      }
     },
     getMyProfile: async () => {
       const cacheKey = 'profiles:me';
@@ -427,17 +435,32 @@ class ApiService {
 
     createProject: async (data: any) => {
       const response = await this.api.post('/profiles/projects', data);
+      this.memoryCache.delete('profiles:me');
+      localStorage.removeItem('api_cache_profiles:me');
       return response.data.project;
     },
 
     updateProject: async (id: string, data: any) => {
       const response = await this.api.put(`/profiles/projects/${id}`, data);
+      this.memoryCache.delete('profiles:me');
+      localStorage.removeItem('api_cache_profiles:me');
       return response.data.project;
     },
 
     deleteProject: async (id: string) => {
-      const response = await this.api.delete(`/profiles/projects/${id}`);
-      return response.data;
+      try {
+        const response = await this.api.delete(`/profiles/projects/${id}`);
+        this.memoryCache.delete('profiles:me');
+        localStorage.removeItem('api_cache_profiles:me');
+        return response.data;
+      } catch (error: any) {
+        if (error.response?.status === 404) {
+          this.memoryCache.delete('profiles:me');
+          localStorage.removeItem('api_cache_profiles:me');
+          return { message: 'Project already deleted' };
+        }
+        throw error;
+      }
     },
   };
 

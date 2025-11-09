@@ -34,6 +34,8 @@ import ForumPostDetail from "./pages/ForumPostDetail";
 import { CookieConsent } from "@/components/CookieConsent";
 import { ContractSystem } from "@/components/ContractSystem";
 import { preloadSound } from "@/utils/sound";
+import Jobs from "./pages/Jobs";
+import Freelancers from "./pages/Freelancers";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -65,6 +67,8 @@ const App: React.FC = () => {
                 <Route path="/client" element={<ClientDashboard />} />
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/create-job" element={<CreateJob />} />
+                <Route path="/jobs" element={<Jobs />} />
+                <Route path="/freelancers" element={<Freelancers />} />
                 <Route path="/complete-profile" element={<CompleteProfile />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/profile" element={<Profile />} />

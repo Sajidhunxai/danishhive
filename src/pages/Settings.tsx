@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { api } from "@/services/api";
+import { useApi } from "@/contexts/ApiContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -60,6 +60,7 @@ interface Profile {
 }
 
 const Settings = () => {
+  const api = useApi();
   const { user, signOut } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();

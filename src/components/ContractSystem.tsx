@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { api } from "@/services/api";
+import { useApi } from "@/contexts/ApiContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -23,6 +23,7 @@ export const ContractSystem = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { t } = useLanguage();
+  const api = useApi();
   const [contracts, setContracts] = useState([]);
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);

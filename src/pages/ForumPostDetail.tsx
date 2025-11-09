@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeft, Pin, Lock, Trash2, Edit, Send, MoreVertical } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
-import { api } from '@/services/api';
+import { useApi } from '@/contexts/ApiContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
   DropdownMenu,
@@ -77,6 +77,7 @@ const ForumPostDetail: React.FC = () => {
   const navigate = useNavigate();
   const { user, userRole } = useAuth();
   const { t } = useLanguage();
+  const api = useApi();
   const [post, setPost] = useState<ForumPost | null>(null);
   const [replyContent, setReplyContent] = useState('');
   const [isSubmittingReply, setIsSubmittingReply] = useState(false);

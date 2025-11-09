@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { api } from '@/services/api';
+import { useApi } from '@/contexts/ApiContext';
 import { useAuth } from '@/hooks/useAuth';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { JobApplicationRefund } from '@/components/JobApplicationRefund';
@@ -48,6 +48,7 @@ interface Job {
 }
 
 const JobApplications = () => {
+  const api = useApi();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();

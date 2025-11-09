@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { api } from "@/services/api";
+import { useApi } from "@/contexts/ApiContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useFreelancerVerification } from '@/components/FreelancerVerificationGuard';
@@ -61,6 +61,7 @@ export const ContractView = ({
 }: ContractViewProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const api = useApi();
   const { requireVerification } = useFreelancerVerification();
   const [loading, setLoading] = useState(false);
   const [signatureData, setSignatureData] = useState("");

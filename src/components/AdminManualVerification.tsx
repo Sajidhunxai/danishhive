@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { api } from '@/services/api';
+import { useApi } from '@/contexts/ApiContext';
 import { Search, CheckCircle, XCircle, Phone, CreditCard, Shield } from 'lucide-react';
 
 interface User {
@@ -30,6 +30,7 @@ export const AdminManualVerification: React.FC = () => {
   const [verificationNotes, setVerificationNotes] = useState('');
   const { toast } = useToast();
   const { t } = useLanguage();
+  const api = useApi();
 
   useEffect(() => {
     fetchUsers();

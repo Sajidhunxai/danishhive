@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import { api } from "@/services/api";
+import { useApi } from "@/contexts/ApiContext";
 import { useToast } from "@/hooks/use-toast";
 import { 
   User, 
@@ -55,6 +55,7 @@ export function FreelancerProfilePopup({ isOpen, onClose, userId }: FreelancerPr
   const [profile, setProfile] = useState<FreelancerProfile | null>(null);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const api = useApi();
 
   const fetchProfile = async () => {
     if (!userId) return;

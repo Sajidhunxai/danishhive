@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ArrowLeft, Pin, Lock, MessageCircle, Plus } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
-import { api } from '@/services/api';
+import { useApi } from '@/contexts/ApiContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ForumPost {
@@ -42,6 +42,7 @@ const ForumCategory: React.FC = () => {
   const { categoryId } = useParams();
   const { user, userRole } = useAuth();
   const { t } = useLanguage();
+  const api = useApi();
   const [category, setCategory] = useState<ForumCategory | null>(null);
   const [posts, setPosts] = useState<ForumPost[]>([]);
   const [loading, setLoading] = useState(true);

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { api } from "@/services/api";
+import { useApi } from "@/contexts/ApiContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +13,7 @@ interface EmailChangeDialogProps {
 
 const EmailChangeDialog: React.FC<EmailChangeDialogProps> = ({ currentEmail }) => {
   const { toast } = useToast();
+  const api = useApi();
   const [newEmail, setNewEmail] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);

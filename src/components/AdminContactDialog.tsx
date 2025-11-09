@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { api } from '@/services/api';
+import { useApi } from '@/contexts/ApiContext';
 import {
   Dialog,
   DialogContent,
@@ -33,6 +33,7 @@ export const AdminContactDialog: React.FC<AdminContactDialogProps> = ({
   const { user } = useAuth();
   const { language } = useLanguage();
   const { toast } = useToast();
+  const api = useApi();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [subject, setSubject] = useState('');

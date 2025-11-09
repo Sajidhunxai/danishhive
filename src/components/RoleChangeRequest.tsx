@@ -4,7 +4,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { api } from '@/services/api';
+import { useApi } from '@/contexts/ApiContext';
 import { useAuth } from '@/hooks/useAuth';
 import { Send } from 'lucide-react';
 
@@ -18,6 +18,7 @@ export const RoleChangeRequest = ({ currentRole }: RoleChangeRequestProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+  const api = useApi();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

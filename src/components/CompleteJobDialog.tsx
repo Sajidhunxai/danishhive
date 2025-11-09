@@ -4,10 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { api } from "@/services/api";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle } from "lucide-react";
+import { useApi } from "@/contexts/ApiContext";
 
 interface CompleteJobDialogProps {
   job: {
@@ -24,6 +24,7 @@ interface CompleteJobDialogProps {
 export const CompleteJobDialog = ({ job, isOpen, onClose, onComplete }: CompleteJobDialogProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const api = useApi();
   const [saving, setSaving] = useState(false);
   const [finalAmount, setFinalAmount] = useState(
     job.budget_max?.toString() || job.budget_min?.toString() || ""

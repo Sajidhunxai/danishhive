@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MapPin, Star, Calendar, ExternalLink, X } from "lucide-react";
-import { api } from "@/services/api";
+import { useApi } from "@/contexts/ApiContext";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 interface Profile {
@@ -43,6 +44,69 @@ interface LanguageSkill {
   proficiency_level: string;
 }
 
+type BackendProfile = {
+  id: string;
+  userId: string;
+  fullName?: string | null;
+  full_name?: string | null;
+  bio?: string | null;
+  avatarUrl?: string | null;
+  avatar_url?: string | null;
+  location?: string | null;
+  hourlyRate?: number | string | null;
+  hourly_rate?: number | string | null;
+  skills?: string[] | string | null;
+  softwareSkills?: string[] | null;
+  availability?: string | null;
+  rating?: number | string | null;
+  ratingCount?: number | string | null;
+  rating_count?: number | string | null;
+  createdAt?: string | null;
+  projects?: BackendProject[] | null;
+};
+
+type BackendProject = {
+  id: string;
+  title?: string | null;
+  description?: string | null;
+  clientName?: string | null;
+  client_name?: string | null;
+  projectUrl?: string | null;
+  project_url?: string | null;
+  imageUrl?: string | null;
+  image_url?: string | null;
+  startDate?: string | null;
+  start_date?: string | null;
+  endDate?: string | null;
+  end_date?: string | null;
+  technologies?: string[] | string | null;
+  stillWorkingHere?: boolean | null;
+  still_working_here?: boolean | null;
+};
+
+type BackendLanguageSkill = {
+  id: string;
+  languageCode?: string | null;
+  language_code?: string | null;
+  languageName?: string | null;
+  language_name?: string | null;
+  proficiencyLevel?: string | null;
+  proficiency_level?: string | null;
+  createdAt?: string | null;
+  created_at?: string | null;
+  userId?: string | null;
+  user_id?: string | null;
+};
+
+interface OpenProject {
+  id: string;
+  title: string;
+  summary: string | null;
+  budget: string | null;
+  location: string | null;
+  projectType: string | null;
+}
+
 interface PublicProfileViewProps {
   userId: string;
 }
@@ -51,67 +115,88 @@ export const PublicProfileView: React.FC<PublicProfileViewProps> = ({ userId }) 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [languageSkills, setLanguageSkills] = useState<LanguageSkill[]>([]);
+  const [otherFreelancers, setOtherFreelancers] = useState<Profile[]>([]);
+  const [openProjects, setOpenProjects] = useState<OpenProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const api = useApi();
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchPublicProfile();
-  }, [userId]);
+  const fetchRecommendations = useCallback(
+    async (currentFreelancerId: string) => {
+      try {
+        const [freelancersResponse, jobsResponse] = await Promise.all([
+          api.profiles.getAllFreelancers({ limit: 6 }).catch((error: unknown) => {
+            console.warn('Unable to load related freelancers', error);
+            return [];
+          }),
+          api.jobs.getAllJobs({ limit: 6, status: 'open' }).catch((error: unknown) => {
+            console.warn('Unable to load open projects', error);
+            return [];
+          }),
+        ]);
 
-  const fetchPublicProfile = async () => {
+        const freelancers = (freelancersResponse || [])
+          .filter((item: any) => item?.id && item.id !== currentFreelancerId)
+          .map((item: any) => buildProfileFromBackend(item as BackendProfile));
+
+        const projects = normalizeOpenProjects(jobsResponse || []);
+
+        setOtherFreelancers(freelancers.slice(0, 4));
+        setOpenProjects(projects.slice(0, 4));
+      } catch (error) {
+        console.error('Error fetching recommendations:', error);
+        setOtherFreelancers([]);
+        setOpenProjects([]);
+      }
+    },
+    [api]
+  );
+
+  const fetchPublicProfile = useCallback(async () => {
     try {
-      // Use secure function to get public profile with access logging
-      const { data: profileData, error: profileError } = await supabase
-        .rpc('get_public_profile_by_id', { _user_id: userId });
+      setLoading(true);
 
-      // Convert array result to single profile object
-      const profile = profileData && profileData.length > 0 ? profileData[0] : null;
+      const response = await api.profiles.getPublicProfile(userId);
+      const profileData = (response?.profile || response) as BackendProfile | null | undefined;
 
-      if (profileError) throw profileError;
-      
-      // Extend profile with missing properties for type compatibility
-      const extendedProfile = profile ? {
-        ...profile,
-        software_skills: profile.skills || [],  // Map skills to software_skills if needed
-        rating: 0, // Default rating since secure function doesn't return this
-        rating_count: 0 // Default rating count since secure function doesn't return this
-      } : null;
-      
-      setProfile(extendedProfile);
+      if (!profileData) {
+        setProfile(null);
+        setProjects([]);
+        setLanguageSkills([]);
+        setOtherFreelancers([]);
+        setOpenProjects([]);
+        return;
+      }
 
-      // Fetch projects
-      const { data: projectsData, error: projectsError } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
+      const freelancerProfile = buildProfileFromBackend(profileData);
+      setProfile(freelancerProfile);
+      setProjects(normalizePortfolioProjects(profileData.projects));
 
-      if (projectsError) throw projectsError;
-      setProjects(projectsData || []);
-
-      // Fetch language skills
       try {
         const languageData = await api.languageSkills.getUserLanguageSkills(userId);
-        // Transform to match expected format
-        const transformed = languageData.map(skill => ({
-          id: skill.id,
-          language_code: skill.languageCode,
-          language_name: skill.languageName,
-          proficiency_level: skill.proficiencyLevel,
-          created_at: skill.createdAt,
-          user_id: skill.userId,
-        }));
-        setLanguageSkills(transformed);
+        setLanguageSkills(normalizeLanguageSkills(languageData));
       } catch (error) {
         console.error('Error fetching language skills:', error);
         setLanguageSkills([]);
       }
+
+      fetchRecommendations(profileData.id);
     } catch (error) {
       console.error('Error fetching public profile:', error);
+      setProfile(null);
+      setProjects([]);
+      setLanguageSkills([]);
+      setOtherFreelancers([]);
+      setOpenProjects([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [api, fetchRecommendations, userId]);
+
+  useEffect(() => {
+    fetchPublicProfile();
+  }, [fetchPublicProfile]);
 
   const getAvailabilityColor = (availability: string | null) => {
     switch (availability) {
@@ -167,13 +252,13 @@ export const PublicProfileView: React.FC<PublicProfileViewProps> = ({ userId }) 
                 <AvatarFallback>
                   {profile.full_name
                     ?.split(' ')
-                    .map(n => n[0])
+                    .map((n) => n[0])
                     .join('')
                     .toUpperCase() || 'FL'}
                 </AvatarFallback>
               </Avatar>
             </div>
-            
+
             <div className="flex-1 space-y-4">
               <div>
                 <h1 className="text-2xl font-bold">{profile.full_name || 'Freelancer'}</h1>
@@ -188,9 +273,7 @@ export const PublicProfileView: React.FC<PublicProfileViewProps> = ({ userId }) 
                     </div>
                   )}
                   {profile.hourly_rate && (
-                    <div className="font-medium">
-                      {profile.hourly_rate} DKK/time
-                    </div>
+                    <div className="font-medium">{profile.hourly_rate} DKK/time</div>
                   )}
                 </div>
               </div>
@@ -205,10 +288,9 @@ export const PublicProfileView: React.FC<PublicProfileViewProps> = ({ userId }) 
                 )}
                 <div className="flex items-center gap-1 text-muted-foreground">
                   <Calendar className="h-4 w-4" />
-                  <span>Medlem siden {new Date(profile.created_at).toLocaleDateString('da-DK', { 
-                    month: 'long', 
-                    year: 'numeric' 
-                  })}</span>
+                  <span>
+                    Medlem siden {new Date(profile.created_at).toLocaleDateString('da-DK', { month: 'long', year: 'numeric' })}
+                  </span>
                 </div>
               </div>
             </div>
@@ -250,13 +332,13 @@ export const PublicProfileView: React.FC<PublicProfileViewProps> = ({ userId }) 
       {profile.software_skills && profile.software_skills.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Software</CardTitle>
+            <CardTitle>Software og værktøjer</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
-              {profile.software_skills.map((software) => (
-                <Badge key={software} variant="secondary">
-                  {software}
+              {profile.software_skills.map((skill) => (
+                <Badge key={skill} variant="secondary">
+                  {skill}
                 </Badge>
               ))}
             </div>
@@ -294,10 +376,7 @@ export const PublicProfileView: React.FC<PublicProfileViewProps> = ({ userId }) 
               {projects.map((project) => (
                 <div key={project.id} className="border rounded-lg overflow-hidden">
                   {project.image_url && (
-                    <div 
-                      className="relative cursor-pointer group"
-                      onClick={() => setSelectedImage(project.image_url)}
-                    >
+                    <div className="relative cursor-pointer group" onClick={() => setSelectedImage(project.image_url)}>
                       <img
                         src={project.image_url}
                         alt={project.title}
@@ -322,25 +401,23 @@ export const PublicProfileView: React.FC<PublicProfileViewProps> = ({ userId }) 
                         </a>
                       )}
                     </div>
-                    
+
                     {project.client_name && (
-                      <p className="text-sm text-muted-foreground mb-2">
-                        Klient: {project.client_name}
-                      </p>
+                      <p className="text-sm text-muted-foreground mb-2">Klient: {project.client_name}</p>
                     )}
-                    
+
                     {(project.start_date || project.end_date || project.still_working_here) && (
                       <p className="text-sm text-muted-foreground mb-2">
                         {project.start_date && new Date(project.start_date).toLocaleDateString('da-DK')}
                         {project.start_date && (project.end_date || project.still_working_here) && ' - '}
-                        {project.still_working_here ? 'Nuværende' : (project.end_date && new Date(project.end_date).toLocaleDateString('da-DK'))}
+                        {project.still_working_here
+                          ? 'Nuværende'
+                          : project.end_date && new Date(project.end_date).toLocaleDateString('da-DK')}
                       </p>
                     )}
-                    
-                    {project.description && (
-                      <p className="text-sm mb-3">{project.description}</p>
-                    )}
-                    
+
+                    {project.description && <p className="text-sm mb-3">{project.description}</p>}
+
                     {project.technologies && project.technologies.length > 0 && (
                       <div className="flex flex-wrap gap-1">
                         {project.technologies.map((tech) => (
@@ -351,6 +428,74 @@ export const PublicProfileView: React.FC<PublicProfileViewProps> = ({ userId }) 
                       </div>
                     )}
                   </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Related Freelancers */}
+      {otherFreelancers.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Se også disse freelancere</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {otherFreelancers.map((freelancer) => (
+                <div key={freelancer.id} className="flex flex-col items-center text-center gap-3 p-4 border rounded-lg">
+                  <Avatar className="h-16 w-16">
+                    <AvatarImage src={freelancer.avatar_url || undefined} />
+                    <AvatarFallback>
+                      {freelancer.full_name
+                        ?.split(' ')
+                        .map((n) => n[0])
+                        .join('')
+                        .toUpperCase() || 'FL'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <h4 className="font-semibold">{freelancer.full_name || 'Freelancer'}</h4>
+                    {freelancer.location && (
+                      <p className="text-sm text-muted-foreground">{freelancer.location}</p>
+                    )}
+                  </div>
+                  {freelancer.hourly_rate && (
+                    <Badge variant="secondary">{freelancer.hourly_rate} DKK/time</Badge>
+                  )}
+                  <Button variant="outline" size="sm" onClick={() => navigate(`/freelancer/${freelancer.id}`)}>
+                    Vis profil
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Open Projects */}
+      {openProjects.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Aktuelle projekter fra virksomheder</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {openProjects.map((project) => (
+                <div key={project.id} className="p-4 border rounded-lg space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold text-lg">{project.title}</h4>
+                    {project.projectType && <Badge variant="outline">{project.projectType}</Badge>}
+                  </div>
+                  {project.summary && <p className="text-sm text-muted-foreground line-clamp-3">{project.summary}</p>}
+                  <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
+                    {project.location && <span>📍 {project.location}</span>}
+                    {project.budget && <span>💰 {project.budget}</span>}
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => navigate('/auth')}>
+                    Ansøg / log ind
+                  </Button>
                 </div>
               ))}
             </div>
@@ -371,11 +516,7 @@ export const PublicProfileView: React.FC<PublicProfileViewProps> = ({ userId }) 
               <X className="h-4 w-4" />
             </Button>
             {selectedImage && (
-              <img
-                src={selectedImage}
-                alt="Forstørret projektbillede"
-                className="w-full h-auto max-h-[80vh] object-contain"
-              />
+              <img src={selectedImage} alt="Forstørret projektbillede" className="w-full h-auto max-h-[80vh] object-contain" />
             )}
           </div>
         </DialogContent>
@@ -383,3 +524,127 @@ export const PublicProfileView: React.FC<PublicProfileViewProps> = ({ userId }) 
     </div>
   );
 };
+
+function buildProfileFromBackend(profileData: BackendProfile): Profile {
+  return {
+    id: profileData.id,
+    user_id: profileData.userId,
+    full_name: profileData.fullName ?? profileData.full_name ?? null,
+    bio: profileData.bio ?? null,
+    avatar_url: profileData.avatarUrl ?? profileData.avatar_url ?? null,
+    location: profileData.location ?? null,
+    skills: normalizeSkills(profileData.skills),
+    software_skills: normalizeSoftwareSkills(profileData),
+    hourly_rate: normalizeNumericField(profileData.hourlyRate ?? profileData.hourly_rate),
+    availability: profileData.availability ?? null,
+    rating: Number(profileData.rating ?? 0),
+    rating_count: Number(profileData.ratingCount ?? profileData.rating_count ?? 0),
+    created_at: profileData.createdAt ?? new Date().toISOString(),
+  };
+}
+
+function normalizeNumericField(value: number | string | null | undefined): number | null {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  const numericValue = typeof value === 'string' ? Number(value) : value;
+  return Number.isFinite(numericValue) ? Number(numericValue) : null;
+}
+
+function normalizeSkills(value: string[] | string | null | undefined): string[] | null {
+  if (!value) {
+    return null;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((skill) => String(skill)).filter((skill) => skill.trim().length > 0);
+  }
+
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) {
+        return parsed.map((skill) => String(skill)).filter((skill) => skill.trim().length > 0);
+      }
+    } catch {
+      // ignored – fall back to comma separation
+    }
+
+    return value
+      .split(',')
+      .map((skill) => skill.trim())
+      .filter((skill) => skill.length > 0);
+  }
+
+  return null;
+}
+
+function normalizeSoftwareSkills(profile: BackendProfile): string[] | null {
+  if (Array.isArray(profile.softwareSkills)) {
+    return profile.softwareSkills.map((skill) => String(skill));
+  }
+
+  return normalizeSkills(profile.skills);
+}
+
+function normalizePortfolioProjects(projects: BackendProject[] | null | undefined): Project[] {
+  if (!projects) {
+    return [];
+  }
+
+  return projects.map((project) => ({
+    id: String(project.id),
+    title: project.title ?? project.clientName ?? 'Projekt',
+    description: project.description ?? null,
+    client_name: project.clientName ?? project.client_name ?? null,
+    project_url: project.projectUrl ?? project.project_url ?? null,
+    image_url: project.imageUrl ?? project.image_url ?? null,
+    start_date: project.startDate ?? project.start_date ?? null,
+    end_date: project.endDate ?? project.end_date ?? null,
+    technologies: normalizeSkills(project.technologies) ?? null,
+    still_working_here: Boolean(project.stillWorkingHere ?? project.still_working_here ?? false),
+  }));
+}
+
+function normalizeLanguageSkills(skills: unknown): LanguageSkill[] {
+  if (!Array.isArray(skills)) {
+    return [];
+  }
+
+  return (skills as BackendLanguageSkill[]).map((skill) => ({
+    id: String(skill.id),
+    language_code: (skill.languageCode ?? skill.language_code ?? 'unknown').toString(),
+    language_name: (skill.languageName ?? skill.language_name ?? 'Ukendt').toString(),
+    proficiency_level: (skill.proficiencyLevel ?? skill.proficiency_level ?? 'unknown').toString(),
+  }));
+}
+
+function normalizeOpenProjects(jobs: unknown): OpenProject[] {
+  if (!Array.isArray(jobs)) {
+    return [];
+  }
+
+  return (jobs as any[]).map((job, index) => {
+    const min = job?.budgetMin ?? job?.budget_min;
+    const max = job?.budgetMax ?? job?.budget_max;
+    let budgetLabel: string | null = null;
+
+    if (min && max) {
+      budgetLabel = `${Number(min).toLocaleString('da-DK')} - ${Number(max).toLocaleString('da-DK')} DKK`;
+    } else if (min) {
+      budgetLabel = `${Number(min).toLocaleString('da-DK')} DKK`;
+    } else if (max) {
+      budgetLabel = `${Number(max).toLocaleString('da-DK')} DKK`;
+    }
+
+    return {
+      id: job?.id ? String(job.id) : `job-${index}`,
+      title: job?.title || 'Projekt',
+      summary: job?.description || null,
+      budget: budgetLabel,
+      location: job?.location || job?.city || null,
+      projectType: job?.projectType || job?.project_type || null,
+    } as OpenProject;
+  });
+}

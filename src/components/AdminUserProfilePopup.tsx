@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import { api } from "@/services/api";
+import { useApi } from "@/contexts/ApiContext";
 import { User, Mail, Phone, MapPin, Building, Calendar, Shield, CreditCard } from "lucide-react";
 
 interface UserProfile {
@@ -42,6 +42,7 @@ export const AdminUserProfilePopup: React.FC<AdminUserProfilePopupProps> = ({
 }) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(false);
+  const api = useApi();
 
   useEffect(() => {
     if (userId && isOpen) {

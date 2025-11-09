@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { api } from '@/services/api';
+import { useApi } from '@/contexts/ApiContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -72,7 +72,8 @@ export const LanguageSkills = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { t } = useLanguage();
-  
+  const api = useApi();
+    
   const [languageSkills, setLanguageSkills] = useState<LanguageSkill[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddLanguage, setShowAddLanguage] = useState(false);

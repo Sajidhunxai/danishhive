@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { api } from '@/services/api';
+import { useApi } from '@/contexts/ApiContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, UserCheck, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
@@ -23,6 +23,7 @@ const AdminUserAnalytics: React.FC = () => {
     verifiedClients: 0,
   });
   const [loading, setLoading] = useState(true);
+  const api = useApi();
 
   useEffect(() => {
     fetchUserStats();

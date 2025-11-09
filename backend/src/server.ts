@@ -76,34 +76,43 @@ app.use(cors({
   exposedHeaders: ['Content-Type', 'Content-Length', 'Cache-Control', 'ETag'],
 }));
 
-// Rate limiting - more lenient for admin endpoints (apply first)
-const adminLimiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutes
-  max: parseInt(process.env.ADMIN_RATE_LIMIT_MAX_REQUESTS || '300'), // Higher limit for admin
-  message: 'Too many admin requests, please try again later.',
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+const enableRateLimiting =
+  process.env.ENABLE_RATE_LIMIT !== 'false' &&
+  process.env.NODE_ENV !== 'development' &&
+  process.env.NODE_ENV !== 'test';
 
-// Rate limiting - general API limit (exclude admin routes)
-const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutes
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100'),
-  message: 'Too many requests from this IP, please try again later.',
-  standardHeaders: true,
-  legacyHeaders: false,
-  skip: (req) => {
-    // Skip rate limiting for admin routes (they have their own limiter)
-    // req.path will be like '/admin/users/with-email' when applied to '/api/'
-    return req.path.startsWith('/admin');
-  }
-});
+if (enableRateLimiting) {
+  // Rate limiting - more lenient for admin endpoints (apply first)
+  const adminLimiter = rateLimit({
+    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutes
+    max: parseInt(process.env.ADMIN_RATE_LIMIT_MAX_REQUESTS || '300'), // Higher limit for admin
+    message: 'Too many admin requests, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
 
-// Apply admin rate limiter first (more specific routes first)
-app.use('/api/admin', adminLimiter);
+  // Rate limiting - general API limit (exclude admin routes)
+  const limiter = rateLimit({
+    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutes
+    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100'),
+    message: 'Too many requests from this IP, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false,
+    skip: (req) => {
+      // Skip rate limiting for admin routes (they have their own limiter)
+      // req.path will be like '/admin/users/with-email' when applied to '/api/'
+      return req.path.startsWith('/admin');
+    }
+  });
 
-// Apply general rate limiter to all other API routes
-app.use('/api/', limiter);
+  // Apply admin rate limiter first (more specific routes first)
+  app.use('/api/admin', adminLimiter);
+
+  // Apply general rate limiter to all other API routes
+  app.use('/api/', limiter);
+} else {
+  console.log('⚠️  Rate limiting disabled (development/test mode).');
+}
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));

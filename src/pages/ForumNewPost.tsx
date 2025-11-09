@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
-import { api } from '@/services/api';
+import { useApi } from '@/contexts/ApiContext';
 
 interface ForumCategory {
   id: string;
@@ -26,6 +26,7 @@ const ForumNewPost: React.FC = () => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const api = useApi();
 
   const hasAccess = userRole === 'freelancer' || userRole === 'admin';
 

@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { api } from "@/services/api";
+import { useApi } from "@/contexts/ApiContext";
 import FreelancerSearch from "@/components/FreelancerSearch";
 import { BackButton } from "@/components/ui/back-button";
 import { ProfileCompletionGuard } from "@/components/ProfileCompletionGuard";
@@ -85,6 +85,7 @@ const ClientDashboard = () => {
   const { user, userRole, loading, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const api = useApi();
   const [myJobs, setMyJobs] = useState<Job[]>([]);
   const [recentApplications, setRecentApplications] = useState<JobApplication[]>([]);
   const [stats, setStats] = useState({

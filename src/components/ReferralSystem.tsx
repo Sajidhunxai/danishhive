@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { api } from "@/services/api";
+import { useApi } from "@/contexts/ApiContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -35,6 +35,7 @@ interface UserProfile {
 const ReferralSystem = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const api = useApi();
   const [referrals, setReferrals] = useState<Referral[]>([]);
   const [bonuses, setBonuses] = useState<ReferralBonus[]>([]);
   const [loading, setLoading] = useState(true);

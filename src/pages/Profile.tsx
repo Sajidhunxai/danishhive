@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { api } from "@/services/api";
+import { useApi } from "@/contexts/ApiContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -149,6 +149,7 @@ const COMMON_SOFTWARE = [
 ];
 
 const Profile = () => {
+  const api = useApi();
   const { user, userRole } = useAuth();
   const { toast } = useToast();
   const { t } = useLanguage();

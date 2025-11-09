@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { api } from '@/services/api';
+import { useApi } from '@/contexts/ApiContext';
 import { useToast } from '@/hooks/use-toast';
 import { AlertTriangle, User } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -21,6 +21,7 @@ export const FreelancerVerificationGuard: React.FC<FreelancerVerificationGuardPr
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const api = useApi();
 
   useEffect(() => {
     const checkVerification = async () => {
@@ -45,7 +46,7 @@ export const FreelancerVerificationGuard: React.FC<FreelancerVerificationGuardPr
     };
 
     checkVerification();
-  }, [user, userRole, onVerificationCheck]);
+  }, [user, userRole, onVerificationCheck, api]);
 
   const handleRedirectToProfile = () => {
     navigate('/complete-profile');
@@ -88,6 +89,7 @@ export const useFreelancerVerification = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const api = useApi();
 
   useEffect(() => {
     const checkVerification = async () => {
@@ -109,7 +111,7 @@ export const useFreelancerVerification = () => {
     };
 
     checkVerification();
-  }, [user, userRole]);
+  }, [user, userRole, api]);
 
   const requireVerification = (action: string = "denne funktion") => {
     if (loading) return false;

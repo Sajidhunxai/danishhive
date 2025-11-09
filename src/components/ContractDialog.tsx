@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { api } from "@/services/api";
+import { useApi } from "@/contexts/ApiContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { FileText, Sparkles } from "lucide-react";
@@ -58,6 +58,7 @@ export const ContractDialog = ({
 }: ContractDialogProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const api = useApi();
   const [loading, setLoading] = useState(false);
   const [templates, setTemplates] = useState<ContractTemplate[]>([]);
   const [selectedJob, setSelectedJob] = useState<string>("");

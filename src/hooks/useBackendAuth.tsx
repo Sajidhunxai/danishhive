@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { api } from "@/services/api";
+import { useApi } from "@/contexts/ApiContext";
 
 interface User {
   id: string;
@@ -54,6 +54,7 @@ interface AuthProviderProps {
 }
 
 export const BackendAuthProvider = ({ children }: AuthProviderProps) => {
+  const api = useApi();
   const [user, setUser] = useState<User | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);

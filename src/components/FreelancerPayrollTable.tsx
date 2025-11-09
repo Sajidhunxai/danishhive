@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { api } from "@/services/api";
+import { useApi } from "@/contexts/ApiContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { 
@@ -41,6 +41,7 @@ export const FreelancerPayrollTable: React.FC<FreelancerPayrollTableProps> = ({
 }) => {
   const { toast } = useToast();
   const { t } = useLanguage();
+  const api = useApi();
   const [freelancers, setFreelancers] = useState<FreelancerPayroll[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState(new Date());

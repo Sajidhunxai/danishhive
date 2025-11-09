@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { api } from '@/services/api';
+import { useApi } from '@/contexts/ApiContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -39,6 +39,7 @@ interface GDPRConsent {
 export const GDPRCompliance = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const api = useApi();
   const [consents, setConsents] = useState<GDPRConsent>({
     necessary: true,
     analytics: false,

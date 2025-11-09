@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Droplets, History } from 'lucide-react';
-import { api } from '@/services/api';
+import { useApi } from '@/contexts/ApiContext';
 import { useAuth } from '@/hooks/useAuth';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -25,6 +25,7 @@ export const HoneyDropsBalance: React.FC<HoneyDropsBalanceProps> = ({ drops, onU
   const [transactions, setTransactions] = useState<HoneyTransaction[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const [loading, setLoading] = useState(false);
+  const api = useApi();
 
   const fetchTransactions = async () => {
     if (!user || !showHistory) return;

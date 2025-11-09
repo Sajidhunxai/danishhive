@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { api } from '@/services/api';
+import { useApi } from '@/contexts/ApiContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -46,6 +46,7 @@ export const ConversationsList: React.FC<ConversationsListProps> = ({
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const { t } = useLanguage();
+  const api = useApi();
   const isFetchingRef = useRef(false);
   
   const fetchConversations = async () => {

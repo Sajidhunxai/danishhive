@@ -8,7 +8,7 @@ import { Upload, Image, Building2, X, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useBackendAuth } from '@/hooks/useBackendAuth';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { api } from '@/services/api';
+import { useApi } from '@/contexts/ApiContext';
 
 interface ProfileImageUploadProps {
   onImageUploaded?: (imageData: { file_url: string; image_type: 'portrait' | 'logo' }) => void;
@@ -23,6 +23,7 @@ export const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({ onImageU
   const { toast } = useToast();
   const { user } = useBackendAuth();
   const { t } = useLanguage();
+  const api = useApi();
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

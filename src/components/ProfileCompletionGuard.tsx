@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { api } from '@/services/api';
+import { useApi } from '@/contexts/ApiContext';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -23,6 +23,7 @@ export const ProfileCompletionGuard: React.FC<ProfileCompletionGuardProps> = ({
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const api = useApi();
 
   useEffect(() => {
     const checkProfileCompletion = async () => {

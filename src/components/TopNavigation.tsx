@@ -4,26 +4,26 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MessageCircle, User, Settings, LogOut, Home, Users, Globe } from 'lucide-react';
+import { MessageCircle, User, Settings, LogOut, Home, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '@/services/api';
+import { useApi } from '@/contexts/ApiContext';
 import { useMessageNotifications } from '@/hooks/useMessageNotifications';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
 
 export const TopNavigation: React.FC = () => {
   const { user, userRole, signOut } = useAuth();
-  const { language, setLanguage } = useLanguage();
+  const { language } = useLanguage();
   const navigate = useNavigate();
   const { unreadCount } = useMessageNotifications(true);
+  const api = useApi();
 
   const texts = {
     da: {
@@ -33,6 +33,8 @@ export const TopNavigation: React.FC = () => {
       logout: 'Log ud',
       home: 'Hjem',
       forum: 'Forum',
+      login: 'Log ind',
+      signup: 'Opret konto',
     },
     en: {
       messages: 'Messages',
@@ -41,41 +43,39 @@ export const TopNavigation: React.FC = () => {
       logout: 'Logout',
       home: 'Home',
       forum: 'Forum',
-    }
+      login: 'Login',
+      signup: 'Sign Up',
+    },
   };
 
   const t = texts[language as keyof typeof texts] || texts.da;
+  const isAuthenticated = Boolean(user);
 
-  const getInitials = (name: string) => {
-    return name
+  const getInitials = (name: string) =>
+    name
       .split(' ')
-      .map(n => n[0])
+      .map((n) => n[0])
       .join('')
       .toUpperCase()
       .slice(0, 2);
-  };
 
   const handleNavigation = (path: string) => {
     navigate(path);
   };
 
   const getHomeRoute = () => {
-    // Always redirect to dashboard based on role
+    if (!isAuthenticated) return '/';
     if (userRole === 'admin') return '/admin';
     if (userRole === 'client') return '/client';
-    return '/'; // Freelancers go to main page with jobs
+    return '/';
   };
 
-  // Show forum link for freelancers and admins
-  const showForumLink = userRole === 'freelancer' || userRole === 'admin';
-
-  if (!user) return null;
+  const showForumLink = isAuthenticated && (userRole === 'freelancer' || userRole === 'admin');
 
   return (
     <nav className="border-b border-border bg-card">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          {/* Logo/Home */}
           <Button
             variant="ghost"
             size="sm"
@@ -86,9 +86,7 @@ export const TopNavigation: React.FC = () => {
             <span className="font-medium">{t.home}</span>
           </Button>
 
-          {/* Right side menu */}
           <div className="flex items-center gap-2">
-            {/* Forum - for freelancers and admins */}
             {showForumLink && (
               <Button
                 variant="ghost"
@@ -101,81 +99,82 @@ export const TopNavigation: React.FC = () => {
               </Button>
             )}
 
-            {/* Messages */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex items-center gap-2 relative"
-              onClick={() => handleNavigation('/messages')}
-            >
-              <div className="relative">
-                <MessageCircle className="h-4 w-4" />
-                {unreadCount > 0 && (
-                  <Badge 
-                    variant="destructive" 
-                    className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs"
-                  >
-                    {unreadCount > 99 ? '99+' : unreadCount}
-                  </Badge>
-                )}
-              </div>
-              {/* <span className="hidden sm:inline">{t.messages}</span>
-              {unreadCount > 0 && (
-                <Badge variant="destructive" className="hidden sm:flex">
-                  {unreadCount}
-                </Badge>
-              )} */}
-            </Button>
+            {isAuthenticated && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex items-center gap-2 relative"
+                onClick={() => handleNavigation('/messages')}
+              >
+                <div className="relative">
+                  <MessageCircle className="h-4 w-4" />
+                  {unreadCount > 0 && (
+                    <Badge
+                      variant="destructive"
+                      className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                    >
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </Badge>
+                  )}
+                </div>
+              </Button>
+            )}
 
-            {/* Language and Logout */}
             <div className="flex items-center gap-3">
               <LanguageSwitcher />
               <ThemeToggle />
-              
             </div>
 
-            {/* User menu */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="flex items-center gap-2">
-                  <Avatar className="h-6 w-6">
-                    {(() => {
-                      const raw = user?.profile?.avatarUrl;
-                      const src = raw
-                        ? (raw.startsWith('http') ? raw : `${api.getBackendUrl()}${raw}`)
-                        : undefined;
-                      return <AvatarImage src={src} />;
-                    })()}
-                    <AvatarFallback className="text-xs">
-                      {getInitials((user?.profile?.fullName || user?.email || 'User').trim())}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="hidden sm:inline text-sm">
-                    {user?.profile?.fullName || user?.email || 'User'}
-                  </span>
-                  {userRole === 'admin' && (
-                    <Badge variant="secondary" className="text-xs">
-                      Admin
-                    </Badge>
-                  )}
+            {isAuthenticated ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                    <Avatar className="h-6 w-6">
+                      {(() => {
+                        const raw = user?.profile?.avatarUrl;
+                        const src = raw ? (raw.startsWith('http') ? raw : `${api.getBackendUrl()}${raw}`) : undefined;
+                        return <AvatarImage src={src} />;
+                      })()}
+                      <AvatarFallback className="text-xs">
+                        {getInitials((user?.profile?.fullName || user?.email || 'User').trim())}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="hidden sm:inline text-sm">
+                      {user?.profile?.fullName || user?.email || 'User'}
+                    </span>
+                    {userRole === 'admin' && (
+                      <Badge variant="secondary" className="text-xs">
+                        Admin
+                      </Badge>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem onClick={() => handleNavigation('/profile')}>
+                    <User className="mr-2 h-4 w-4" />
+                    {t.profile}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleNavigation('/settings')}>
+                    <Settings className="mr-2 h-4 w-4" />
+                    {t.settings}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={signOut}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    {t.logout}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="sm" onClick={() => navigate('/auth')}>
+                  {t.login}
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem onClick={() => handleNavigation('/profile')}>
-                  <User className="mr-2 h-4 w-4" />
-                  {t.profile}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleNavigation('/settings')}>
-                  <Settings className="mr-2 h-4 w-4" />
-                  {t.settings}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={signOut}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  {t.logout}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                <Button size="sm" onClick={() => navigate('/auth')}> {/* Tabs handle sign up selection */}
+                  {t.signup}
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>

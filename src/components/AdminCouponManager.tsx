@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { api } from '@/services/api';
+import { useApi } from '@/contexts/ApiContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
@@ -42,6 +42,7 @@ interface CouponUsage {
 export const AdminCouponManager: React.FC = () => {
   const { toast } = useToast();
   const { t } = useLanguage();
+  const api = useApi();
   const [coupons, setCoupons] = useState<CouponCode[]>([]);
   const [couponUsages, setCouponUsages] = useState<CouponUsage[]>([]);
   const [loading, setLoading] = useState(true);

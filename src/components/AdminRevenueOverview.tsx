@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { api } from "@/services/api";
+import { useApi } from "@/contexts/ApiContext";
 import { useToast } from "@/hooks/use-toast";
 import { AdminReportsManagement } from "@/components/AdminReportsManagement";
 import { AdminImageApproval } from "@/components/AdminImageApproval";
@@ -47,6 +47,7 @@ export const AdminRevenueOverview: React.FC<AdminRevenueOverviewProps> = ({
   });
   const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState(new Date());
+  const api = useApi();
 
   useEffect(() => {
     fetchRevenueData();

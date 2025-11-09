@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { CreditCard, Shield, Check, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { api } from '@/services/api';
+import { useApi } from '@/contexts/ApiContext';
 import { useAuth } from '@/hooks/useAuth';
 
 interface PaymentVerificationProps {
@@ -21,6 +21,7 @@ export const PaymentVerification: React.FC<PaymentVerificationProps> = ({
   const [checkingStatus, setCheckingStatus] = useState(false);
   const [paymentId, setPaymentId] = useState<string | null>(null);
   const { toast } = useToast();
+  const api = useApi();
 
   // Check initial verification status (only once)
   const hasCheckedRef = useRef(false);

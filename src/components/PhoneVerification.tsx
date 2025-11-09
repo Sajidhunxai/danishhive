@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Phone, Shield, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { api } from '@/services/api';
+import { useApi } from '@/contexts/ApiContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface PhoneVerificationProps {
@@ -42,6 +42,7 @@ export const PhoneVerification: React.FC<PhoneVerificationProps> = ({
   const [resendCooldown, setResendCooldown] = useState(0);
   const { toast } = useToast();
   const { t } = useLanguage();
+  const api = useApi();
 
   // Countdown timer for resend functionality
   useEffect(() => {

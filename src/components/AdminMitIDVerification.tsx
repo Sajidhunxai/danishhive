@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { api } from '@/services/api';
+import { useApi } from '@/contexts/ApiContext';
 import { Shield, CheckCircle, AlertTriangle } from 'lucide-react';
 
 interface MitIDVerificationProps {
@@ -22,6 +22,7 @@ export const AdminMitIDVerification: React.FC<MitIDVerificationProps> = ({
   const [loading, setLoading] = useState(false);
   const [verificationNotes, setVerificationNotes] = useState('');
   const { toast } = useToast();
+  const api = useApi();
 
   const handleMitIDVerification = async (verified: boolean) => {
     setLoading(true);

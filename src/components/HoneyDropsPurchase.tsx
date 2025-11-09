@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { api } from '@/services/api';
+import { useApi } from '@/contexts/ApiContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ShoppingCart, Droplets, Star, Sparkles, Gift, Ticket } from 'lucide-react';
@@ -38,6 +38,7 @@ export const HoneyDropsPurchase: React.FC<HoneyDropsPurchaseProps> = ({
   const { user } = useAuth();
   const { toast } = useToast();
   const { t } = useLanguage();
+  const api = useApi();
   const [purchasing, setPurchasing] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<HoneyPackage | null>(null);
   const [couponCode, setCouponCode] = useState('');

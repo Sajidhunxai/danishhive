@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { api } from "@/services/api";
+import { useApi } from "@/contexts/ApiContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { MessageSquare, Briefcase, Euro, MapPin } from "lucide-react";
@@ -51,6 +51,7 @@ export const InviteFreelancerDialog: React.FC<InviteFreelancerDialogProps> = ({
   const { toast } = useToast();
   const { user } = useAuth();
   const { t } = useLanguage();
+  const api = useApi();
 
   const fetchClientJobs = async () => {
     if (!user?.id) return;

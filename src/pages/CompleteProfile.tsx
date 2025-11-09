@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
-import { api } from "@/services/api";
+import { useApi } from "@/contexts/ApiContext";
 
 import { BackButton } from "@/components/ui/back-button";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
@@ -41,6 +41,7 @@ const CompleteProfile = () => {
   const { user, userRole, signOut } = useAuth();
   const { toast } = useToast();
   const { language, setLanguage, t } = useLanguage();
+  const api = useApi();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false); // Prevent double submissions

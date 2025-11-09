@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { api } from "@/services/api";
+import { useApi } from "@/contexts/ApiContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { 
@@ -49,6 +49,7 @@ export const FreelancerPayrollDetail: React.FC<FreelancerPayrollDetailProps> = (
 }) => {
   const { toast } = useToast();
   const { t } = useLanguage();
+  const api = useApi();
   const [monthlyEarnings, setMonthlyEarnings] = useState<MonthlyEarning[]>([]);
   const [loading, setLoading] = useState(true);
 

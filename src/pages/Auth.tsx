@@ -12,6 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { useToast } from "@/components/ui/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useApi } from "@/contexts/ApiContext";
 import { useAuth } from "@/hooks/useAuth";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
@@ -38,6 +39,7 @@ const Auth = () => {
   const { toast } = useToast();
   const { language, setLanguage, t } = useLanguage();
   const { user, signIn, signUp } = useAuth();
+  const api = useApi();
 
   // Calculate age from birthday
   const calculateAge = (birthDate: Date) => {
@@ -243,7 +245,6 @@ const Auth = () => {
     setResetLoading(true);
 
     try {
-      const { api } = await import('@/services/api');
       await api.auth.forgotPassword(email);
 
       toast({

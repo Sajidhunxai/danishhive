@@ -8,6 +8,7 @@ router.get('/me', authenticate, profileController.getMyProfile);
 router.put('/me', authenticate, profileController.updateMyProfile);
 router.get('/freelancers', profileController.getAllFreelancers);
 router.get('/public/:userId', profileController.getPublicProfile); // Public endpoint - no auth required
+router.get('/public/profile/:profileId', profileController.getPublicProfileByProfileId);
 router.get('/:id', profileController.getProfileById);
 router.get('/me/verification', authenticate, profileController.getMyProfileVerification);
 

@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { api } from "@/services/api";
+import { useApi } from "@/contexts/ApiContext";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { AlertTriangle, Flag } from "lucide-react";
@@ -24,6 +24,7 @@ export const ReportProfileDialog: React.FC<ReportProfileDialogProps> = ({
 }) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const api = useApi();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [reportCategory, setReportCategory] = useState<string>("");
