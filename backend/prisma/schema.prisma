@@ -60,11 +60,13 @@ model Profile {
   cvrNumber             String?
   bio                   String?   @db.Text
   skills                Json?
+  softwareSkills        Json?
   hourlyRate            Decimal?  @db.Decimal(10, 2)
   location              String?
   address               String?
   city                  String?
   postalCode            String?
+  bankDetails           Json?
   avatarUrl             String?
   birthday              DateTime?
   paymentVerified       Boolean   @default(false)

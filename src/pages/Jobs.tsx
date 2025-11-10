@@ -1,62 +1,39 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useApi } from "@/contexts/ApiContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/hooks/useAuth";
+import { useJobs } from "@/contexts/JobsContext";
 
-interface PublicJob {
-  id: string;
-  title: string;
-  description: string | null;
-  location: string | null;
-  projectType: string | null;
-  budgetMin: number | null;
-  budgetMax: number | null;
-  status: string | null;
-  deadline: string | null;
-  createdAt: string | null;
-}
+const OPEN_STATUS = "open";
 
 const Jobs: React.FC = () => {
-  const api = useApi();
   const { t } = useLanguage();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { jobs, jobsLoading, jobsError, loadJobs } = useJobs();
 
-  const [jobs, setJobs] = useState<PublicJob[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
+  // Load open jobs on mount.
   useEffect(() => {
-    const fetchJobs = async () => {
-      try {
-        setLoading(true);
-        const jobsResponse = await api.jobs.getAllJobs({ status: 'open' }).catch(() => []);
-        const normalized = Array.isArray(jobsResponse)
-          ? jobsResponse.map((job: any) => normalizeJob(job))
-          : [];
-        const openJobs = normalized.filter(
-          (job) => !job.status || job.status.toLowerCase() === 'open'
-        );
-        setJobs(openJobs);
-      } catch (err) {
-        console.error('Error loading jobs', err);
-        setError(t('jobs.loadError'));
-        setJobs([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+    loadJobs({ status: OPEN_STATUS }).catch(() => {
+      // Errors are handled via context state.
+    });
+  }, [loadJobs]);
 
-    fetchJobs();
-  }, [api, t]);
+  const openJobs = useMemo(
+    () =>
+      jobs.filter(
+        (job) =>
+          !job.status || job.status.toLowerCase() === OPEN_STATUS,
+      ),
+    [jobs],
+  );
 
-  const hasJobs = useMemo(() => jobs.length > 0, [jobs]);
+  const hasJobs = openJobs.length > 0;
 
-  const renderBudget = (job: PublicJob) => {
+  const renderBudget = (job: typeof openJobs[number]) => {
     if (job.budgetMin && job.budgetMax) {
       return `${job.budgetMin.toLocaleString('da-DK')} - ${job.budgetMax.toLocaleString('da-DK')} DKK`;
     }
@@ -90,15 +67,15 @@ const Jobs: React.FC = () => {
           </p>
         </section>
 
-        {loading ? (
+        {jobsLoading ? (
           <div className="flex justify-center py-20">
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
           </div>
-        ) : error ? (
-          <div className="text-center text-destructive">{error}</div>
+        ) : jobsError ? (
+          <div className="text-center text-destructive">{jobsError}</div>
         ) : hasJobs ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {jobs.map((job) => {
+            {openJobs.map((job) => {
               const budgetLabel = renderBudget(job);
               const createdAt = formatDate(job.createdAt);
               const deadline = formatDate(job.deadline);
@@ -140,7 +117,7 @@ const Jobs: React.FC = () => {
                         size="sm"
                         onClick={() => navigate(`/job/${job.id}`)}
                       >
-                        {t('index.view_details')}
+                        {t('jobs.viewDetails')}
                       </Button>
                       {user ? (
                         <Button
@@ -174,24 +151,5 @@ const Jobs: React.FC = () => {
     </div>
   );
 };
-
-function normalizeJob(job: any): PublicJob {
-  const budgetMin = job?.budgetMin ?? job?.budget_min ?? null;
-  const budgetMax = job?.budgetMax ?? job?.budget_max ?? null;
-  const description = job?.description ?? job?.summary ?? null;
-
-  return {
-    id: String(job?.id ?? ''),
-    title: job?.title || 'Projekt',
-    description,
-    location: job?.location ?? job?.city ?? null,
-    projectType: job?.projectType ?? job?.project_type ?? null,
-    budgetMin: typeof budgetMin === 'number' ? budgetMin : budgetMin ? Number(budgetMin) : null,
-    budgetMax: typeof budgetMax === 'number' ? budgetMax : budgetMax ? Number(budgetMax) : null,
-    status: job?.status ?? null,
-    deadline: job?.deadline ?? job?.closingDate ?? job?.closing_date ?? null,
-    createdAt: job?.createdAt ?? job?.created_at ?? job?.postedAt ?? job?.posted_at ?? null,
-  };
-}
 
 export default Jobs;

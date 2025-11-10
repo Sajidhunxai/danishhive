@@ -1,15 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { useApi } from "@/contexts/ApiContext";
 import FreelancerSearch from "@/components/FreelancerSearch";
-import { BackButton } from "@/components/ui/back-button";
 import { ProfileCompletionGuard } from "@/components/ProfileCompletionGuard";
 import { ContractSystem } from "@/components/ContractSystem";
 
@@ -30,271 +26,54 @@ import {
   Send,
   Trash2
 } from "lucide-react";
+import { ClientDashboardProvider, useClientDashboard } from "@/contexts/ClientDashboardContext";
 
-interface Job {
-  id: string;
-  title: string;
-  description: string;
-  status: string;
-  budget_min: number | null;
-  budget_max: number | null;
-  created_at: string;
-  deadline: string | null;
-}
-
-type BackendJob = {
-  id: string;
-  title: string;
-  description: string;
-  status: string;
-  budgetMin?: number | null;
-  budgetMax?: number | null;
-  createdAt: string;
-  deadline?: string | null;
-  budget_min?: number | null;
-  budget_max?: number | null;
-  created_at?: string;
-  freelancerId?: string | null;
-  freelancer_id?: string | null;
-  finalAmount?: number | null;
-  final_amount?: number | null;
-};
-
-type BackendApplication = {
-  id: string;
-  status: string;
-  appliedAt?: string;
-  applied_at?: string;
-  jobId?: string;
-  job_id?: string;
-  applicant?: { fullName?: string | null };
-  applicant_full_name?: string | null;
-};
-
-interface JobApplication {
-  id: string;
-  status: string;
-  applied_at: string;
-  job_id: string;
-  applicant: {
-    full_name: string | null;
+const getStatusBadge = (status: string, translate: (key: string) => string) => {
+  const labels: Record<string, string> = {
+    open: translate("jobs.status.open"),
+    in_progress: translate("jobs.status.in_progress"),
+    completed: translate("jobs.status.completed"),
+    closed: translate("jobs.status.closed"),
   };
-}
 
-const ClientDashboard = () => {
-  const { user, userRole, loading, signOut } = useAuth();
+  const label = labels[status] ?? status;
+
+  switch (status) {
+    case "open":
+      return <Badge className="bg-green-100 text-green-800 border-green-200">{label}</Badge>;
+    case "in_progress":
+      return <Badge className="bg-blue-100 text-blue-800 border-blue-200">{label}</Badge>;
+    case "completed":
+      return <Badge className="bg-gray-100 text-gray-800 border-gray-200">{label}</Badge>;
+    case "closed":
+      return <Badge variant="destructive">{label}</Badge>;
+    default:
+      return <Badge variant="outline">{label}</Badge>;
+  }
+};
+
+const ClientDashboardContent = () => {
+  const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const api = useApi();
-  const [myJobs, setMyJobs] = useState<Job[]>([]);
-  const [recentApplications, setRecentApplications] = useState<JobApplication[]>([]);
-  const [stats, setStats] = useState({
-    totalJobs: 0,
-    openJobs: 0,
-    totalApplications: 0,
-    pendingApplications: 0,
-    totalSpent: 0,
-    totalPayments: 0
-  });
-  const [workedWithFreelancers, setWorkedWithFreelancers] = useState<Array<{ user_id: string; full_name?: string; hourly_rate?: number; skills?: string[] }>>([]);
-  const [recentPayments, setRecentPayments] = useState<Array<{ id: string; description?: string; status?: string; created_at: string; amount: number; currency: string }>>([]);
-  const [showInviteDialog, setShowInviteDialog] = useState(false);
-  const [selectedJobForInvite, setSelectedJobForInvite] = useState<string | null>(null);
+  const { t } = useLanguage();
+  const {
+    myJobs,
+    recentApplications,
+    stats,
+    workedWithFreelancers,
+    recentPayments,
+    showInviteDialog,
+    openInviteDialog,
+    closeInviteDialog,
+    deleteJob,
+    formatBudget,
+  } = useClientDashboard();
 
   useEffect(() => {
     if (!loading && !user) {
       navigate("/auth");
     }
-    // Allow both clients and admin users to access this dashboard
   }, [user, loading, navigate]);
-  const { t } = useLanguage();
-  const fetchingDataRef = useRef(false);
-
-  useEffect(() => {
-    if (user && (userRole === 'client' || userRole === 'admin')) {
-      fetchClientData();
-    }
-  }, [user, userRole]);
-
-  const fetchClientData = async () => {
-    // Prevent concurrent calls
-    if (fetchingDataRef.current) {
-      console.log('fetchClientData already in progress, skipping...');
-      return;
-    }
-    
-    fetchingDataRef.current = true;
-    try {
-      // Fetch user's jobs from backend
-      const jobs: BackendJob[] = await api.jobs.getMyJobs();
-      // Map backend camelCase to local snake_case used by UI
-      const mappedJobs: Job[] = (jobs || []).map((j: BackendJob) => ({
-        id: j.id,
-        title: j.title,
-        description: j.description,
-        status: j.status,
-        budget_min: j.budgetMin ?? null,
-        budget_max: j.budgetMax ?? null,
-        created_at: j.createdAt,
-        deadline: j.deadline ?? null,
-        // preserve original fields if present
-        ...(j.budget_min !== undefined && { budget_min: j.budget_min }),
-        ...(j.budget_max !== undefined && { budget_max: j.budget_max }),
-        ...(j.created_at !== undefined && { created_at: j.created_at }),
-      }));
-      setMyJobs(mappedJobs);
-
-      // Fetch recent applications for user's jobs
-      if (mappedJobs && mappedJobs.length > 0) {
-        const jobIds = mappedJobs.map(job => job.id);
-        // Fetch applications per job and aggregate (limit to first few to reduce calls)
-        const firstFew = jobIds.slice(0, 5);
-        const lists: BackendApplication[][] = await Promise.all(
-          firstFew.map(async (jid) => {
-            try {
-              const apps: BackendApplication[] = await api.applications.getJobApplications(jid);
-              return apps || [] as BackendApplication[];
-            } catch {
-              return [] as BackendApplication[];
-            }
-          })
-        );
-        const flattened = lists.flat().sort((a, b) => new Date(b.appliedAt || b.applied_at || '').getTime() - new Date(a.appliedAt || a.applied_at || '').getTime());
-        const transformedApplications: JobApplication[] = flattened.slice(0, 5).map((app: BackendApplication) => ({
-          id: app.id,
-          status: app.status,
-          applied_at: app.appliedAt || app.applied_at || new Date().toISOString(),
-          job_id: app.jobId || app.job_id || '',
-          applicant: {
-            full_name: app.applicant?.fullName || app.applicant_full_name || null,
-          },
-        }));
-        setRecentApplications(transformedApplications);
-
-        // Calculate stats
-        const totalJobs = mappedJobs.length;
-        const openJobs = mappedJobs.filter(job => job.status === 'open').length;
-        
-        // Count total applications across all jobs
-        // Backend doesn't provide a direct count endpoint; derive from aggregated lists
-        const allLists: BackendApplication[][] = await Promise.all(
-          jobIds.map(async (jid) => {
-            try {
-              const apps: BackendApplication[] = await api.applications.getJobApplications(jid);
-              return apps || [] as BackendApplication[];
-            } catch {
-              return [] as BackendApplication[];
-            }
-          })
-        );
-        const allApps: BackendApplication[] = allLists.flat();
-        const totalApplicationsCount = allApps.length;
-        const pendingApplicationsCount = allApps.filter((a) => a.status === 'pending').length;
-
-        // Calculate total spent (sum of final_amount from completed jobs)
-        const completedJobs = (jobs || []).filter((job: BackendJob) => job.status === 'completed' && (job.finalAmount || job.final_amount));
-        const totalSpent = completedJobs.reduce((sum: number, job: BackendJob) => sum + (job.finalAmount || job.final_amount || 0), 0);
-
-        // Fetch earnings/payments data (not available on backend; set to empty for now)
-        const earningsData: Array<{ id: string; description?: string; status?: string; created_at: string; amount: number; currency: string }> = [];
-        const totalPayments = 0;
-
-        // Get freelancers worked with (unique freelancers from completed jobs)
-        const completedJobsWithFreelancers = (jobs || []).filter((job: BackendJob) => 
-          job.status === 'completed' && (job.freelancerId || job.freelancer_id)
-        );
-        
-        if (completedJobsWithFreelancers.length > 0) {
-          const freelancerIds = [...new Set(completedJobsWithFreelancers.map((job: BackendJob) => job.freelancerId || job.freelancer_id))];
-          // Backend doesn't provide batch profile fetch by userIds; skip for now
-          setWorkedWithFreelancers([]);
-        }
-
-        // Get recent payments/earnings
-        if (earningsData && earningsData.length > 0) {
-          setRecentPayments(earningsData.slice(0, 5));
-        }
-
-        setStats({
-          totalJobs,
-          openJobs,
-          totalApplications: totalApplicationsCount || 0,
-          pendingApplications: pendingApplicationsCount || 0,
-          totalSpent,
-          totalPayments
-        });
-      }
-
-    } catch (error: unknown) {
-      console.error('Error fetching client data:', error);
-      
-      // Handle rate limit errors specifically
-      const err = error as { response?: { status?: number } };
-      if (err.response?.status === 429) {
-        toast({
-          title: 'For mange anmodninger',
-          description: 'Vent venligst et øjeblik og prøv igen.',
-          variant: 'destructive',
-        });
-      } else {
-        toast({
-          title: 'Fejl',
-          description: 'Kunne ikke hente data.',
-          variant: 'destructive',
-        });
-      }
-    } finally {
-      fetchingDataRef.current = false;
-    }
-  };
-
-  const deleteJob = async (jobId: string, jobTitle: string) => {
-    if (!confirm(`Er du sikker på at du vil slette opgaven "${jobTitle}"? Dette kan ikke fortrydes.`)) {
-      return;
-    }
-
-    try {
-      await api.jobs.deleteJob(jobId);
-
-      toast({
-        title: 'Opgave slettet',
-        description: `Opgaven "${jobTitle}" er blevet slettet.`,
-      });
-
-      // Refresh data
-      fetchClientData();
-    } catch (error) {
-      console.error('Error deleting job:', error);
-      toast({
-        title: 'Fejl',
-        description: 'Kunne ikke slette opgaven. Prøv igen senere.',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'open':
-        return <Badge className="bg-green-100 text-green-800 border-green-200">Åben</Badge>;
-      case 'in_progress':
-        return <Badge className="bg-blue-100 text-blue-800 border-blue-200">I gang</Badge>;
-      case 'completed':
-        return <Badge className="bg-gray-100 text-gray-800 border-gray-200">Afsluttet</Badge>;
-      case 'closed':
-        return <Badge variant="destructive">Lukket</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
-
-  const formatBudget = (min: number | null, max: number | null) => {
-    if (!min && !max) return 'Ikke angivet';
-    if (min && max) return `${min.toLocaleString('da-DK')} - ${max.toLocaleString('da-DK')} kr.`;
-    if (min) return `Fra ${min.toLocaleString('da-DK')} kr.`;
-    if (max) return `Op til ${max.toLocaleString('da-DK')} kr.`;
-    return 'Ikke angivet';
-  };
 
   if (loading) {
     return (
@@ -460,7 +239,7 @@ const ClientDashboard = () => {
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <h4 className="font-medium">{job.title}</h4>
-                        {getStatusBadge(job.status)}
+                        {getStatusBadge(job.status, t)}
                       </div>
                       <div className="flex items-center gap-6 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1">
@@ -478,8 +257,7 @@ const ClientDashboard = () => {
                         variant="outline" 
                         size="sm"
                         onClick={() => {
-                          setSelectedJobForInvite(job.id);
-                          setShowInviteDialog(true);
+                          openInviteDialog(job.id);
                         }}
                         className="text-blue-600 border-blue-200 hover:bg-blue-50"
                       >
@@ -500,7 +278,7 @@ const ClientDashboard = () => {
                         onClick={() => navigate(`/job/${job.id}`)}
                       >
                         <Eye className="h-4 w-4 mr-2" />
-                              {t('index.view_details')}
+                              {t('jobs.viewDetails')}
                       </Button>
                       <Button 
                         variant="outline" 
@@ -518,7 +296,8 @@ const ClientDashboard = () => {
                 {myJobs.length > 5 && (
                   <div className="text-center pt-4">
                     <Button variant="outline">
-                      {t('index.view_all_jobs')} ({myJobs.length})
+                      {t('profile.view_all_jobs')} ({myJobs.length})
+
                     </Button>
                   </div>
                 )}
@@ -711,11 +490,11 @@ const ClientDashboard = () => {
                 {t('index.invite_freelancer_description')}
               </p>
               <div className="flex gap-2 justify-end">
-                <Button variant="outline" onClick={() => setShowInviteDialog(false)}>
+                <Button variant="outline" onClick={closeInviteDialog}>
                   {t('index.close')}
                 </Button>
                 <Button onClick={() => {
-                  setShowInviteDialog(false);
+                  closeInviteDialog();
                   window.location.href = '#freelancer-search';
                 }}>
                     {t('index.go_to_freelancer_search')}
@@ -729,5 +508,11 @@ const ClientDashboard = () => {
     </ProfileCompletionGuard>
   );
 };
+
+const ClientDashboard = () => (
+  <ClientDashboardProvider>
+    <ClientDashboardContent />
+  </ClientDashboardProvider>
+);
 
 export default ClientDashboard;

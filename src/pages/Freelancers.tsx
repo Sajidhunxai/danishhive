@@ -1,53 +1,24 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useApi } from "@/contexts/ApiContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-
-interface PublicFreelancer {
-  id: string;
-  fullName: string;
-  avatarUrl: string | null;
-  location: string | null;
-  hourlyRate: number | null;
-  skills: string[];
-  bio: string | null;
-}
+import { useFreelancers } from "@/contexts/FreelancersContext";
 
 const Freelancers: React.FC = () => {
-  const api = useApi();
   const { t } = useLanguage();
   const navigate = useNavigate();
-
-  const [freelancers, setFreelancers] = useState<PublicFreelancer[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { freelancers, freelancersLoading, freelancersError, loadFreelancers } = useFreelancers();
 
   useEffect(() => {
-    const fetchFreelancers = async () => {
-      try {
-        setLoading(true);
-        const response = await api.profiles.getAllFreelancers({ limit: 20 }).catch(() => []);
-        const normalized = Array.isArray(response)
-          ? response.map((freelancer: any) => normalizeFreelancer(freelancer))
-          : [];
-        setFreelancers(normalized);
-      } catch (err) {
-        console.error('Error fetching freelancers', err);
-        setError(t('freelancers.loadError'));
-        setFreelancers([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+    loadFreelancers({ limit: 20 }).catch(() => {
+      // errors managed via context state
+    });
+  }, [loadFreelancers]);
 
-    fetchFreelancers();
-  }, [api, t]);
-
-  if (loading) {
+  if (freelancersLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
@@ -55,10 +26,10 @@ const Freelancers: React.FC = () => {
     );
   }
 
-  if (error) {
+  if (freelancersError) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center text-destructive">
-        {error}
+        {freelancersError}
       </div>
     );
   }
@@ -142,36 +113,4 @@ const Freelancers: React.FC = () => {
     </div>
   );
 };
-
-function normalizeFreelancer(data: any): PublicFreelancer {
-  const skillsValue = data?.skills ?? data?.profile?.skills ?? null;
-  let skills: string[] = [];
-
-  if (Array.isArray(skillsValue)) {
-    skills = skillsValue.map((skill) => String(skill));
-  } else if (typeof skillsValue === 'string') {
-    try {
-      const parsed = JSON.parse(skillsValue);
-      if (Array.isArray(parsed)) {
-        skills = parsed.map((skill) => String(skill));
-      }
-    } catch {
-      skills = skillsValue
-        .split(',')
-        .map((skill) => skill.trim())
-        .filter(Boolean);
-    }
-  }
-
-  return {
-    id: String(data?.userId ?? data?.id ?? ''),
-    fullName: data?.fullName ?? data?.profile?.fullName ?? 'Freelancer',
-    avatarUrl: data?.avatarUrl ?? data?.profile?.avatarUrl ?? null,
-    location: data?.location ?? data?.profile?.location ?? null,
-    hourlyRate: data?.hourlyRate ? Number(data.hourlyRate) : data?.profile?.hourlyRate ? Number(data.profile.hourlyRate) : null,
-    skills,
-    bio: data?.bio ?? data?.profile?.bio ?? null,
-  };
-}
-
 export default Freelancers;

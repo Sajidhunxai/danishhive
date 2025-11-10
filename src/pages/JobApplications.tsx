@@ -1,51 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { useToast } from '@/hooks/use-toast';
-import { useApi } from '@/contexts/ApiContext';
-import { useAuth } from '@/hooks/useAuth';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
-import { JobApplicationRefund } from '@/components/JobApplicationRefund';
-import { 
-  ArrowLeft, 
-  MapPin,
-  DollarSign, 
-  Clock, 
-  Users,
-  Star,
-  Mail,
-  CheckCircle,
-  XCircle,
-  Calendar
-} from 'lucide-react';
-
-interface JobApplication {
-  id: string;
-  cover_letter: string | null;
-  proposed_rate: number | null;
-  availability: string | null;
-  status: string;
-  applied_at: string;
-  applicant: {
-    user_id: string;
-    full_name: string | null;
-    avatar_url: string | null;
-    location: string | null;
-    bio: string | null;
-    skills: string[] | null;
-    hourly_rate: number | null;
-  };
-}
-
-interface Job {
-  id: string;
-  title: string;
-  description: string;
-  client_id: string;
-}
+import React, { useEffect, useMemo, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
+import { useApi } from "@/contexts/ApiContext";
+import { useAuth } from "@/hooks/useAuth";
+import { JobApplicationRefund } from "@/components/JobApplicationRefund";
+import { useJobs } from "@/contexts/JobsContext";
+import { ArrowLeft, MapPin, Clock, Mail, CheckCircle, XCircle } from "lucide-react";
 
 const JobApplications = () => {
   const api = useApi();
@@ -53,130 +17,92 @@ const JobApplications = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const [job, setJob] = useState<Job | null>(null);
-  const [applications, setApplications] = useState<JobApplication[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { getJobState, loadJob, loadJobApplications } = useJobs();
+
+  const jobState = useMemo(() => (id ? getJobState(id) : undefined), [getJobState, id]);
+  const job = jobState?.job ?? null;
+  const applications = jobState?.applications ?? [];
+  const jobLoading = jobState?.loading ?? false;
+  const applicationsLoading = jobState?.applicationsLoading ?? false;
+  const jobError = jobState?.error ?? null;
+
+  const [ownershipChecked, setOwnershipChecked] = useState(false);
   const [selectedApplicantId, setSelectedApplicantId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (id && user) {
-      fetchJobAndApplications();
+    if (!id || !user || ownershipChecked) {
+      return;
     }
-  }, [id, user]);
 
-  const fetchJobAndApplications = async () => {
-    if (!id || !user) return;
-
-    try {
-      // First fetch the job to verify ownership
-      const jobData = await api.jobs.getJobById(id);
-
-      if (!jobData) {
-        toast({
-          title: 'Fejl',
-          description: 'Opgave ikke fundet.',
-          variant: 'destructive',
-        });
-        navigate('/');
-        return;
-      }
-
-      // Check if user is the job owner
-      if (jobData.clientId !== user.id) {
-        toast({
-          title: 'Adgang nægtet',
-          description: 'Du har ikke adgang til at se ansøgninger for denne opgave.',
-          variant: 'destructive',
-        });
-        navigate(`/job/${id}`);
-        return;
-      }
-
-      setJob({
-        id: jobData.id,
-        title: jobData.title,
-        description: jobData.description,
-        client_id: jobData.clientId,
-      });
-
-      // Fetch applications using backend API
-      const applicationsData = await api.applications.getJobApplications(id);
-
-      // Transform the data
-      const transformedApplications = applicationsData.map((app: any) => ({
-        id: app.id,
-        cover_letter: app.coverLetter,
-        proposed_rate: app.proposedRate ? Number(app.proposedRate) : null,
-        availability: null, // Not in backend schema yet
-        status: app.status,
-        applied_at: app.submittedAt,
-        applicant: {
-          user_id: app.freelancer?.id || app.freelancerId,
-          full_name: app.freelancer?.profile?.fullName || null,
-          avatar_url: app.freelancer?.profile?.avatarUrl || null,
-          location: app.freelancer?.profile?.location || null,
-          bio: app.freelancer?.profile?.bio || null,
-          skills: app.freelancer?.profile?.skills ? (typeof app.freelancer.profile.skills === 'string' ? JSON.parse(app.freelancer.profile.skills) : app.freelancer.profile.skills) : null,
-          hourly_rate: app.freelancer?.profile?.hourlyRate ? Number(app.freelancer.profile.hourlyRate) : null,
+    loadJob(id, { includeApplications: true })
+      .then((detail) => {
+        if (!detail) {
+          toast({
+            title: "Fejl",
+            description: "Opgave ikke fundet.",
+            variant: "destructive",
+          });
+          navigate("/");
+          return;
         }
-      }));
 
-      setApplications(transformedApplications);
+        if (detail.clientId !== user.id) {
+          toast({
+            title: "Adgang nægtet",
+            description: "Du har ikke adgang til at se ansøgninger for denne opgave.",
+            variant: "destructive",
+          });
+          navigate(`/job/${id}`);
+          return;
+        }
 
-    } catch (error) {
-      console.error('Error fetching applications:', error);
-      toast({
-        title: 'Fejl',
-        description: 'Kunne ikke hente ansøgninger.',
-        variant: 'destructive',
+        setOwnershipChecked(true);
+      })
+      .catch((error: any) => {
+        console.error("Error loading job applications:", error);
+        toast({
+          title: "Fejl",
+          description: error?.message || "Kunne ikke hente ansøgninger.",
+          variant: "destructive",
+        });
+        navigate("/");
       });
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [id, user, ownershipChecked, loadJob, navigate, toast]);
 
-  const updateApplicationStatus = async (applicationId: string, status: 'accepted' | 'rejected') => {
+  const updateApplicationStatus = async (applicationId: string, status: "accepted" | "rejected") => {
     try {
       await api.applications.updateApplication(applicationId, { status });
 
-      // If accepting an application, trigger refunds for others
-      if (status === 'accepted' && job) {
-        const acceptedApp = applications.find(app => app.id === applicationId);
+      if (status === "accepted" && job) {
+        const acceptedApp = applications.find((app) => app.id === applicationId);
         if (acceptedApp) {
-          // Trigger refund component
-          setSelectedApplicantId(acceptedApp.applicant.user_id);
+          setSelectedApplicantId(acceptedApp.applicantId);
         }
       }
 
-      // Update local state
-      setApplications(prev => 
-        prev.map(app => 
-          app.id === applicationId 
-            ? { ...app, status } 
-            : app
-        )
-      );
+      if (id) {
+        await loadJobApplications(id, { force: true });
+      }
 
       toast({
-        title: 'Succes',
-        description: `Ansøgning ${status === 'accepted' ? 'godkendt' : 'afvist'}!`,
+        title: "Succes",
+        description: `Ansøgning ${status === "accepted" ? "godkendt" : "afvist"}!`,
       });
-
     } catch (error: any) {
-      console.error('Error updating application status:', error);
+      console.error("Error updating application status:", error);
       toast({
-        title: 'Fejl',
-        description: error.message || 'Kunne ikke opdatere ansøgning status.',
-        variant: 'destructive',
+        title: "Fejl",
+        description: error?.message || "Kunne ikke opdatere ansøgning status.",
+        variant: "destructive",
       });
     }
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'accepted':
+      case "accepted":
         return <Badge className="bg-green-100 text-green-800 border-green-200">Godkendt</Badge>;
-      case 'rejected':
+      case "rejected":
         return <Badge variant="destructive">Afvist</Badge>;
       default:
         return <Badge variant="outline">Afventer</Badge>;
@@ -184,14 +110,29 @@ const JobApplications = () => {
   };
 
   const formatRate = (rate: number | null) => {
-    if (!rate) return 'Ikke angivet';
-    return `${rate.toLocaleString('da-DK')} kr./time`;
+    if (!rate) return "Ikke angivet";
+    return `${rate.toLocaleString("da-DK")} kr./time`;
   };
 
-  if (loading) {
+  if (jobLoading || !ownershipChecked) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!job || jobError) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <h2 className="text-2xl font-bold">Opgave ikke fundet</h2>
+          <p className="text-muted-foreground">Vi kunne ikke finde opgaven eller du har ikke adgang.</p>
+          <Button onClick={() => navigate("/")}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Tilbage til forsiden
+          </Button>
+        </div>
       </div>
     );
   }
@@ -200,174 +141,127 @@ const JobApplications = () => {
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto space-y-6">
-          {/* Header */}
           <div className="flex items-center justify-between">
-            <Button 
-              variant="outline" 
-              onClick={() => navigate(`/job/${id}`)}
-              className="flex items-center gap-2"
-            >
+            <Button variant="outline" onClick={() => navigate(`/job/${id}`)} className="flex items-center gap-2">
               <ArrowLeft className="h-4 w-4" />
               Tilbage til opgave
             </Button>
           </div>
 
-          {/* Page Title */}
           <div>
             <h1 className="text-3xl font-bold">Ansøgninger</h1>
-            {job && (
-              <p className="text-muted-foreground mt-2">
-                For opgaven: <span className="font-medium">{job.title}</span>
-              </p>
-            )}
+            <p className="text-muted-foreground mt-2">
+              For opgaven: <span className="font-medium">{job.title}</span>
+            </p>
           </div>
 
-          {/* Applications */}
-          {applications.length === 0 ? (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">Ingen ansøgninger endnu</h3>
-                <p className="text-muted-foreground">
-                  Der er ikke kommet ansøgninger til denne opgave endnu.
-                </p>
-              </CardContent>
-            </Card>
+          <Separator />
+
+          {applicationsLoading ? (
+            <div className="flex justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : applications.length === 0 ? (
+            <div className="text-center text-muted-foreground py-20">Ingen ansøgninger endnu.</div>
           ) : (
-            <div className="space-y-4">
-              {applications.map((application) => (
-                <Card key={application.id}>
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center">
-                          {application.applicant?.avatar_url ? (
-                            <img 
-                              src={application.applicant.avatar_url} 
-                              alt="Ansøger avatar" 
-                              className="w-full h-full rounded-full object-cover"
-                            />
-                          ) : (
-                            <Users className="h-6 w-6 text-muted-foreground" />
-                          )}
+            <div className="space-y-6">
+              {applications.map((application) => {
+                const applicant = application.applicantProfile;
+                return (
+                  <Card key={application.id} className="overflow-hidden">
+                    <CardHeader className="bg-muted/40">
+                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                          <div className="h-12 w-12 rounded-full bg-primary/10 text-primary flex items-center justify-center text-lg font-semibold">
+                            {applicant?.fullName?.charAt(0) || "A"}
+                          </div>
+                          <div>
+                            <CardTitle className="text-xl">{applicant?.fullName || "Anonym ansøger"}</CardTitle>
+                            <CardDescription className="flex items-center gap-2">
+                              <MapPin className="h-4 w-4 text-muted-foreground" />
+                              {applicant?.location || "Lokation ikke angivet"}
+                            </CardDescription>
+                          </div>
                         </div>
-                        <div className="flex-1">
-                          <CardTitle className="text-xl">
-                            {application.applicant?.full_name || 'Anonym ansøger'}
-                          </CardTitle>
-                          <CardDescription className="flex items-center gap-4 mt-1">
-                            <span className="flex items-center gap-1">
-                              <Calendar className="h-4 w-4" />
-                              Ansøgt {new Date(application.applied_at).toLocaleDateString('da-DK')}
-                            </span>
-                            {application.applicant?.location && (
-                              <span className="flex items-center gap-1">
-                                <MapPin className="h-4 w-4" />
-                                {application.applicant.location}
-                              </span>
-                            )}
-                          </CardDescription>
+                        <div className="flex items-center gap-3">
+                          <Badge variant="outline" className="gap-1">
+                            <Clock className="h-3 w-3" />
+                            Ansøgt {new Date(application.appliedAt).toLocaleDateString("da-DK")}
+                          </Badge>
+                          <div>{getStatusBadge(application.status)}</div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        {getStatusBadge(application.status)}
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium text-muted-foreground">Foreslået sats</p>
+                          <p className="text-lg font-semibold">{formatRate(application.proposedRate)}</p>
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium text-muted-foreground">Ansøger ID</p>
+                          <p className="text-lg font-semibold">{application.applicantId}</p>
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium text-muted-foreground">Email</p>
+                          <div className="flex items-center gap-2">
+                            <Mail className="h-4 w-4 text-muted-foreground" />
+                            <span>Ikke angivet</span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </CardHeader>
-                  
-                  <CardContent className="space-y-4">
-                    {/* Applicant Details */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                      <Separator />
+
                       <div>
-                        <h4 className="font-medium mb-2">Foreslået timepris</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {formatRate(application.proposed_rate)}
+                        <p className="text-sm font-medium text-muted-foreground">Ansøgning</p>
+                        <p className="text-muted-foreground leading-relaxed mt-2">
+                          {application.coverLetter || "Ingen besked fra ansøger."}
                         </p>
                       </div>
-                      
-                      {application.availability && (
+
+                      {applicant?.skills && applicant.skills.length > 0 && (
                         <div>
-                          <h4 className="font-medium mb-2">Tilgængelighed</h4>
-                          <p className="text-sm text-muted-foreground">
-                            {application.availability}
-                          </p>
+                          <p className="text-sm font-medium text-muted-foreground mb-2">Kompetencer</p>
+                          <div className="flex flex-wrap gap-2">
+                            {applicant.skills.map((skill, index) => (
+                              <Badge key={index} variant="outline">
+                                {skill}
+                              </Badge>
+                            ))}
+                          </div>
                         </div>
                       )}
-                    </div>
 
-                    {/* Skills */}
-                    {application.applicant?.skills && application.applicant.skills.length > 0 && (
-                      <div>
-                        <h4 className="font-medium mb-2">Kompetencer</h4>
-                        <div className="flex flex-wrap gap-2">
-                          {application.applicant.skills.map((skill, index) => (
-                            <Badge key={index} variant="outline">
-                              {skill}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Cover Letter */}
-                    {application.cover_letter && (
-                      <div>
-                        <h4 className="font-medium mb-2">Følgebrev</h4>
-                        <div className="bg-muted p-4 rounded-lg">
-                          <p className="text-sm whitespace-pre-wrap">
-                            {application.cover_letter}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Bio */}
-                    {application.applicant?.bio && (
-                      <div>
-                        <h4 className="font-medium mb-2">Om ansøgeren</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {application.applicant.bio}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Action Buttons */}
-                    {application.status === 'pending' && (
-                      <div className="flex gap-2 pt-4">
-                        <Button 
-                          onClick={() => updateApplicationStatus(application.id, 'accepted')}
-                          className="flex-1"
-                        >
+                      <div className="flex flex-col md:flex-row gap-3">
+                        <Button className="flex-1" onClick={() => updateApplicationStatus(application.id, "accepted")}>
                           <CheckCircle className="h-4 w-4 mr-2" />
                           Godkend ansøgning
                         </Button>
-                        <Button 
-                          variant="outline"
-                          onClick={() => updateApplicationStatus(application.id, 'rejected')}
+                        <Button
                           className="flex-1"
+                          variant="outline"
+                          onClick={() => updateApplicationStatus(application.id, "rejected")}
                         >
                           <XCircle className="h-4 w-4 mr-2" />
                           Afvis ansøgning
                         </Button>
                       </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
+          )}
+
+          {selectedApplicantId && job && (
+            <JobApplicationRefund jobId={job.id} selectedApplicantId={selectedApplicantId} />
           )}
         </div>
       </div>
-      
-      {/* Refund component for honey drops */}
-      {selectedApplicantId && job && (
-        <JobApplicationRefund 
-          jobId={job.id} 
-          selectedApplicantId={selectedApplicantId} 
-        />
-      )}
     </div>
   );
 };
 
 export default JobApplications;
+

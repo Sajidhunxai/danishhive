@@ -1,94 +1,45 @@
-import React, { useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useApi } from "@/contexts/ApiContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import {
-  User,
-  MapPin,
-  Euro,
-  Star,
-  Globe,
-  Calendar,
-  Briefcase,
-  MessageCircle
-} from "lucide-react";
+import { User, MapPin, Euro, Star, Calendar, MessageCircle } from "lucide-react";
 import { BackButton } from "@/components/ui/back-button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { InviteFreelancerDialog } from "@/components/InviteFreelancerDialog";
+import { useFreelancers } from "@/contexts/FreelancersContext";
 
 const FreelancerProfile = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useLanguage();
-  const api = useApi();
-
-  const [profile, setProfile] = useState<any>(null);
-  const [projects, setProjects] = useState<any[]>([]);
-  const [languageSkills, setLanguageSkills] = useState<any[]>([]);
-  const [jobHistory, setJobHistory] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { getFreelancerState, loadFreelancer } = useFreelancers();
+  const freelancerState = useMemo(
+    () => (userId ? getFreelancerState(userId) : undefined),
+    [getFreelancerState, userId],
+  );
+  const profile = freelancerState?.profile ?? null;
+  const loading = freelancerState?.loading ?? false;
+  const error = freelancerState?.error ?? null;
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (userId) fetchFreelancerData();
-  }, [userId]);
-
-  const fetchFreelancerData = async () => {
-    try {
-      if (!userId) return;
-      const profileData = await api.profiles.getPublicProfile(userId);
-      if (!profileData) {
-        toast({
-          title: t("freelancerProfile.error"),
-          description: t("freelancerProfile.notFoundDesc"),
-          variant: "destructive",
-        });
-        navigate("/");
-        return;
-      }
-
-      const enrichedProfile = {
-        id: profileData.id,
-        user_id: profileData.userId,
-        full_name: profileData.fullName,
-        bio: profileData.bio || null,
-        avatar_url: profileData.avatarUrl || null,
-        location: profileData.location || null,
-        hourly_rate: profileData.hourlyRate ? Number(profileData.hourlyRate) : null,
-        skills: profileData.skills
-          ? typeof profileData.skills === "string"
-            ? JSON.parse(profileData.skills)
-            : profileData.skills
-          : null,
-        availability: "available",
-        rating: 0,
-        rating_count: 0,
-        created_at: profileData.createdAt,
-      };
-
-      setProfile(enrichedProfile);
-      setProjects(profileData.projects || []);
-      setLanguageSkills([]);
-      setJobHistory([]);
-    } catch (error) {
-      console.error("Error fetching freelancer data:", error);
+    if (!userId) return;
+    loadFreelancer(userId).catch((err: any) => {
+      console.error("Error fetching freelancer data:", err);
       toast({
         title: t("common.error"),
         description: t("freelancerProfile.fetchError"),
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
-    }
-  };
+    });
+  }, [userId, loadFreelancer, toast, t]);
 
-  if (loading)
+  if (loading || (!profile && !error)) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-center">
@@ -97,8 +48,8 @@ const FreelancerProfile = () => {
         </div>
       </div>
     );
-
-  if (!profile)
+  }
+  if (!profile || error)
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-center">
@@ -133,15 +84,15 @@ const FreelancerProfile = () => {
             <div className="flex flex-col sm:flex-row gap-6">
               <div className="flex flex-col items-center gap-4">
                 <Avatar className="h-32 w-32">
-                  <AvatarImage src={profile.avatar_url || ""} />
+                  <AvatarImage src={profile.avatarUrl || ""} />
                   <AvatarFallback className="text-2xl">
-                    {profile.full_name?.charAt(0)?.toUpperCase() || "?"}
+                    {profile.fullName?.charAt(0)?.toUpperCase() || "?"}
                   </AvatarFallback>
                 </Avatar>
 
                 <div className="text-center space-y-2">
                   <h2 className="text-xl font-semibold">
-                    {profile.full_name || t("freelancerProfile.unnamed")}
+                    {profile.fullName || t("freelancerProfile.unnamed")}
                   </h2>
                   <Badge
                     variant={
@@ -163,11 +114,11 @@ const FreelancerProfile = () => {
                   </div>
                 )}
 
-                {profile.hourly_rate && (
+                {profile.hourlyRate && (
                   <div className="flex items-center gap-2">
                     <Euro className="h-4 w-4 text-muted-foreground" />
                     <span>
-                      {profile.hourly_rate.toLocaleString("da-DK")} DKK /{" "}
+                      {profile.hourlyRate.toLocaleString("da-DK")} DKK /{" "}
                       {t("freelancerProfile.hour")}
                     </span>
                   </div>
@@ -176,7 +127,7 @@ const FreelancerProfile = () => {
                 <div className="flex items-center gap-2">
                   <Star className="h-4 w-4 text-yellow-400" />
                   <span>
-                    {profile.rating.toFixed(1)} ({profile.rating_count}{" "}
+                    {profile.rating.toFixed(1)} ({profile.ratingCount}{" "}
                     {t("freelancerProfile.reviews")})
                   </span>
                 </div>
@@ -185,14 +136,14 @@ const FreelancerProfile = () => {
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   <span>
                     {t("freelancerProfile.memberSince")}{" "}
-                    {new Date(profile.created_at).toLocaleDateString("da-DK")}
+                    {profile.createdAt ? new Date(profile.createdAt).toLocaleDateString("da-DK") : "-"}
                   </span>
                 </div>
 
                 <div className="pt-4">
                   <InviteFreelancerDialog
-                    freelancerId={profile.user_id}
-                    freelancerName={profile.full_name}
+                    freelancerId={profile.userId}
+                    freelancerName={profile.fullName}
                   >
                     <Button size="lg" className="w-full sm:w-auto">
                       <MessageCircle className="h-4 w-4 mr-2" />
@@ -236,37 +187,40 @@ const FreelancerProfile = () => {
         )}
 
         {/* Projects */}
-        {projects.length > 0 && (
+        {profile.projects.length > 0 && (
           <Card>
             <CardHeader>
               <CardTitle>{t("freelancerProfile.portfolio")}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {projects.map((project: any) => (
-                  <Card key={project.id} className="relative">
-                    {project.image_url && (
-                      <div
-                        className="relative cursor-pointer"
-                        onClick={() => setSelectedImage(project.image_url)}
-                      >
-                        <img
-                          src={project.image_url}
-                          alt={project.title}
-                          className="w-full h-48 object-cover rounded-t-lg hover:opacity-80 transition-opacity"
-                        />
-                        <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity bg-black/20 rounded-t-lg">
-                          <span className="text-white text-sm font-medium">
-                            {t("freelancerProfile.clickToEnlarge")}
-                          </span>
+                {profile.projects.map((project: any) => {
+                  const projectImage = project.image_url ?? project.imageUrl ?? null;
+                  return (
+                    <Card key={project.id} className="relative">
+                      {projectImage && (
+                        <div
+                          className="relative cursor-pointer"
+                          onClick={() => setSelectedImage(projectImage)}
+                        >
+                          <img
+                            src={projectImage}
+                            alt={project.title}
+                            className="w-full h-48 object-cover rounded-t-lg hover:opacity-80 transition-opacity"
+                          />
+                          <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity bg-black/20 rounded-t-lg">
+                            <span className="text-white text-sm font-medium">
+                              {t("freelancerProfile.clickToEnlarge")}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    )}
-                    <CardHeader>
-                      <CardTitle className="text-lg">{project.title}</CardTitle>
-                    </CardHeader>
-                  </Card>
-                ))}
+                      )}
+                      <CardHeader>
+                        <CardTitle className="text-lg">{project.title}</CardTitle>
+                      </CardHeader>
+                    </Card>
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
@@ -280,12 +234,12 @@ const FreelancerProfile = () => {
           <CardContent>
             <p className="text-muted-foreground mb-4">
               {t("freelancerProfile.contactDesc", {
-                name: profile.full_name || t("freelancerProfile.thisFreelancer"),
+                name: profile.fullName || t("freelancerProfile.thisFreelancer"),
               })}
             </p>
             <InviteFreelancerDialog
-              freelancerId={profile.user_id}
-              freelancerName={profile.full_name}
+              freelancerId={profile.userId}
+              freelancerName={profile.fullName}
             >
               <Button size="lg">
                 <MessageCircle className="h-4 w-4 mr-2" />

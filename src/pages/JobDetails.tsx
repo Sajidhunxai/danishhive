@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -9,9 +9,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { BackButton } from "@/components/ui/back-button";
 import { useFreelancerVerification } from '@/components/FreelancerVerificationGuard';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
-import { getJobById, getJobApplications } from '@/api/jobs';
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useJobs } from "@/contexts/JobsContext";
 import { 
   ArrowLeft, 
   MapPin, 
@@ -24,152 +23,37 @@ import {
   MessageSquare
 } from 'lucide-react';
 
-interface Job {
-  id: string;
-  title: string;
-  description: string;
-  skills_required: string[];
-  budget_min: number | null;
-  budget_max: number | null;
-  location: string | null;
-  is_remote: boolean;
-  deadline: string | null;
-  status: string;
-  project_type: string;
-  created_at: string;
-  client_id: string;
-}
-
-interface Profile {
-  full_name: string | null;
-  avatar_url: string | null;
-  location: string | null;
-  city: string | null;
-}
-
-interface JobApplication {
-  id: string;
-  applicant_id: string;
-  cover_letter: string | null;
-  proposed_rate: number | null;
-  availability: string | null;
-  status: string;
-  applied_at: string;
-  applicant_profile: {
-    full_name: string | null;
-    avatar_url: string | null;
-    location: string | null;
-    skills: string[] | null;
-  } | null;
-}
-
 const JobDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, userRole } = useAuth();
   const { requireVerification } = useFreelancerVerification();
-  const [job, setJob] = useState<Job | null>(null);
-  const [clientProfile, setClientProfile] = useState<Profile | null>(null);
   const [clientSpending, setClientSpending] = useState<number>(0);
   const [clientRating, setClientRating] = useState<number | null>(null);
-  const [applications, setApplications] = useState<JobApplication[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { getJobState, loadJob } = useJobs();
   const { t } = useLanguage();
-  const fetchApplications = useCallback(async (jobId: string) => {
-    try {
-      const apps = await getJobApplications(jobId);
-      
-      // Map backend data to frontend format
-      const mappedApplications: JobApplication[] = (apps || []).map((app: any) => ({
-        id: app.id,
-        applicant_id: app.freelancerId,
-        cover_letter: app.coverLetter,
-        proposed_rate: app.proposedRate ? parseFloat(app.proposedRate.toString()) : null,
-        availability: app.availability || null,
-        status: app.status,
-        applied_at: app.submittedAt,
-        applicant_profile: {
-          full_name: app.freelancer?.profile?.fullName || null,
-          avatar_url: app.freelancer?.profile?.avatarUrl || null,
-          location: app.freelancer?.profile?.location || null,
-          skills: Array.isArray(app.freelancer?.profile?.skills) ? app.freelancer.profile.skills : 
-                  (typeof app.freelancer?.profile?.skills === 'string' ? JSON.parse(app.freelancer.profile.skills) : []),
-        },
-      }));
-      
-      setApplications(mappedApplications);
-    } catch (error) {
-      console.error("Error fetching applications:", error);
-      toast({
-        title: "Fejl",
-        description: "Kunne ikke hente ansøgninger.",
-        variant: "destructive",
-      });
-    }
-  }, [toast]);
-
-  const fetchJob = useCallback(async () => {
-    if (!id) return;
-  
-    try {
-      const jobData = await getJobById(id);
-      
-      // Map backend data to frontend format
-      const mappedJob: Job = {
-        id: jobData.id,
-        title: jobData.title,
-        description: jobData.description,
-        skills_required: Array.isArray(jobData.skills) ? jobData.skills : 
-                         (typeof jobData.skills === 'string' ? JSON.parse(jobData.skills) : []),
-        budget_min: jobData.budget ? parseFloat(jobData.budget.toString()) : null,
-        budget_max: jobData.budget ? parseFloat(jobData.budget.toString()) : null,
-        location: jobData.location,
-        is_remote: !jobData.location || jobData.location.toLowerCase().includes('remote'),
-        deadline: jobData.deadline,
-        status: jobData.status,
-        project_type: 'one-time', // Default value
-        created_at: jobData.createdAt,
-        client_id: jobData.clientId,
-      };
-      
-      setJob(mappedJob);
-  
-      // Extract client info
-      const client = jobData.client?.profile;
-      setClientProfile({
-        full_name: client?.fullName || null,
-        avatar_url: client?.avatarUrl || null,
-        location: client?.location || null,
-        city: client?.companyName || null,
-      });
-  
-      // Example derived data - TODO: Calculate from actual data
-      setClientSpending(0);
-      setClientRating(4.5);
-  
-      // Only fetch applications if user is the client
-      if (user && jobData.client?.id === user.id) {
-        await fetchApplications(jobData.id);
-      }
-  
-    } catch (error) {
-      console.error("Error fetching job:", error);
-      toast({
-        title: "Fejl",
-        description: "Kunne ikke hente opgave detaljer.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [id, user, toast, fetchApplications]);
+  const jobState = useMemo(() => (id ? getJobState(id) : undefined), [getJobState, id]);
+  const job = jobState?.job;
+  const applications = jobState?.applications ?? [];
+  const applicationsLoading = jobState?.applicationsLoading ?? false;
+  const jobLoading = jobState?.loading ?? false;
+  const jobError = jobState?.error ?? null;
+  const clientProfile = job?.clientProfile ?? null;
 
   useEffect(() => {
-    if (id) {
-      fetchJob();
+    if (!id) return;
+    loadJob(id, { includeApplications: true }).catch(() => {
+      // errors handled via context state
+    });
+  }, [id, loadJob]);
+
+  useEffect(() => {
+    if (job) {
+      setClientSpending(0);
+      setClientRating(4.5);
     }
-  }, [id, fetchJob]);
+  }, [job]);
 
   const formatBudget = (min: number | null, max: number | null) => {
     if (!min && !max) return t('common.notSpecified');
@@ -199,7 +83,7 @@ const JobDetails = () => {
     }
   };
 
-  if (loading) {
+  if (jobLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -207,12 +91,12 @@ const JobDetails = () => {
     );
   }
 
-  if (!job) {
+  if (!job || jobError) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-2">{t("job.notFound.title")}</h2>
-          <p className="text-muted-foreground mb-4">{t("job.notFound.desc")}</p>
+          <p className="text-muted-foreground mb-4">{jobError ?? t("job.notFound.desc")}</p>
           <Button onClick={() => navigate('/')}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             {t('job.notFound.back')}
@@ -241,11 +125,11 @@ const JobDetails = () => {
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <Clock className="h-4 w-4" />
-                      {t('jobs.posted')} {new Date(job.created_at).toLocaleDateString('da-DK')}
+                      {t('jobs.posted')} {new Date(job.createdAt).toLocaleDateString('da-DK')}
                     </div>
                     <div className="flex items-center gap-1">
                       <Briefcase className="h-4 w-4" />
-                      {job.project_type === 'one-time' ? t('jobs.singleJob') : t('jobs.ongoingProject')}
+                      {job.projectType === 'one-time' ? t('jobs.singleJob') : t('jobs.ongoingProject')}
                     </div>
                   </div>
                 </div>
@@ -261,7 +145,7 @@ const JobDetails = () => {
                   <DollarSign className="h-5 w-5 text-muted-foreground" />
                   <div>
                     <p className="font-medium">Budget</p>
-                    <p className="text-sm text-muted-foreground">{formatBudget(job.budget_min, job.budget_max)}</p>
+                    <p className="text-sm text-muted-foreground">{formatBudget(job.budgetMin, job.budgetMax)}</p>
                   </div>
                 </div>
 
@@ -270,7 +154,7 @@ const JobDetails = () => {
                   <div>
                     <p className="font-medium">{t('jobs.location')}</p>
                     <p className="text-sm text-muted-foreground">
-                      {job.is_remote ? t('jobs.remoteWork') : job.location || t('common.notSpecified')}
+                      {job.isRemote ? t('jobs.remoteWork') : job.location || t('common.notSpecified')}
                     </p>
                   </div>
                 </div>
@@ -295,11 +179,11 @@ const JobDetails = () => {
               </div>
 
               {/* Skills Required */}
-              {job.skills_required && job.skills_required.length > 0 && (
+              {job.skillsRequired && job.skillsRequired.length > 0 && (
                 <div>
                   <h3 className="text-lg font-semibold mb-3">{t('jobs.requiredSkills')}</h3>
                   <div className="flex flex-wrap gap-2">
-                    {job.skills_required.map((skill, index) => (
+                    {job.skillsRequired.map((skill, index) => (
                       <Badge key={index} variant="outline" className="text-black dark:text-white">
                         {skill}
                       </Badge>
@@ -321,9 +205,9 @@ const JobDetails = () => {
             <CardContent>
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center">
-                  {clientProfile?.avatar_url ? (
+                  {clientProfile?.avatarUrl ? (
                     <img 
-                      src={clientProfile.avatar_url} 
+                      src={clientProfile.avatarUrl} 
                       alt="Klient avatar" 
                       className="w-full h-full rounded-full object-cover"
                     />
@@ -333,7 +217,7 @@ const JobDetails = () => {
                 </div>
                 <div className="flex-1">
                   <h4 className="font-medium">
-                    {clientProfile?.full_name ? clientProfile.full_name.split(' ')[0] : 'Anonym klient'}
+                    {clientProfile?.fullName ? clientProfile.fullName.split(' ')[0] : 'Anonym klient'}
                   </h4>
                   
                   {clientRating && clientRating > 4.5 && (
@@ -344,10 +228,10 @@ const JobDetails = () => {
                   )}
                   
                   <div className="space-y-1 mt-2">
-                    {clientProfile?.city && (
+                    {(clientProfile?.location || clientProfile?.companyName) && (
                       <p className="text-sm text-muted-foreground flex items-center gap-1">
                         <MapPin className="h-3 w-3" />
-                        Bopæl: {clientProfile.city}
+                        Bopæl: {clientProfile.location || clientProfile.companyName}
                       </p>
                     )}
                     
@@ -361,7 +245,7 @@ const JobDetails = () => {
           </Card>
 
           {/* Applications Table for Client */}
-          {user && job?.client_id === user?.id && (
+          {user && job?.clientId === user?.id && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -370,7 +254,11 @@ const JobDetails = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {applications.length === 0 ? (
+                {applicationsLoading ? (
+                  <div className="flex justify-center py-6">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+                  </div>
+                ) : applications.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8">
                     Ingen ansøgninger endnu
                   </p>
@@ -392,9 +280,9 @@ const JobDetails = () => {
                           <TableCell>
                             <div className="flex items-center gap-3">
                               <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
-                                {application.applicant_profile?.avatar_url ? (
+                                {application.applicantProfile?.avatarUrl ? (
                                   <img 
-                                    src={application.applicant_profile.avatar_url} 
+                                    src={application.applicantProfile.avatarUrl} 
                                     alt="Ansøger avatar" 
                                     className="w-full h-full rounded-full object-cover"
                                   />
@@ -404,18 +292,18 @@ const JobDetails = () => {
                               </div>
                               <div>
                                 <p className="font-medium">
-                                  {application.applicant_profile?.full_name || 'Anonym ansøger'}
+                                  {application.applicantProfile?.fullName || 'Anonym ansøger'}
                                 </p>
-                                {application.applicant_profile?.skills && (
+                                {application.applicantProfile?.skills && (
                                   <div className="flex flex-wrap gap-1 mt-1">
-                                    {application.applicant_profile.skills.slice(0, 2).map((skill, index) => (
+                                    {application.applicantProfile.skills.slice(0, 2).map((skill, index) => (
                                       <Badge key={index} variant="outline" className="text-xs">
                                         {skill}
                                       </Badge>
                                     ))}
-                                    {application.applicant_profile.skills.length > 2 && (
+                                    {application.applicantProfile.skills.length > 2 && (
                                       <Badge variant="outline" className="text-xs">
-                                        +{application.applicant_profile.skills.length - 2}
+                                        +{application.applicantProfile.skills.length - 2}
                                       </Badge>
                                     )}
                                   </div>
@@ -427,13 +315,13 @@ const JobDetails = () => {
                             <div className="flex items-center gap-1">
                               <MapPin className="h-3 w-3 text-muted-foreground" />
                               <span className="text-sm">
-                                {application.applicant_profile?.location || 'Ikke angivet'}
+                                  {application.applicantProfile?.location || 'Ikke angivet'}
                               </span>
                             </div>
                           </TableCell>
                           <TableCell>
-                            {application.proposed_rate ? (
-                              <span className="font-medium">{application.proposed_rate} kr./time</span>
+                            {application.proposedRate ? (
+                              <span className="font-medium">{application.proposedRate} kr./time</span>
                             ) : (
                               <span className="text-muted-foreground">Ikke angivet</span>
                             )}
@@ -448,7 +336,7 @@ const JobDetails = () => {
                           </TableCell>
                           <TableCell>
                             <span className="text-sm text-muted-foreground">
-                              {new Date(application.applied_at).toLocaleDateString('da-DK')}
+                                {new Date(application.appliedAt).toLocaleDateString('da-DK')}
                             </span>
                           </TableCell>
                         </TableRow>
@@ -461,7 +349,7 @@ const JobDetails = () => {
           )}
 
           {/* Action Buttons for Freelancers */}
-          {user && job?.client_id !== user?.id && (
+          {user && job?.clientId !== user?.id && (
             <Card>
               <CardContent className="pt-6">
                 <div className="space-y-3">

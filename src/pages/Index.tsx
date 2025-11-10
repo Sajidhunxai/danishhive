@@ -209,7 +209,7 @@ const Index = () => {
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-semibold">Udvalgte freelancere</h2>
               <Button variant="link" onClick={() => navigate('/freelancers')} className="px-0">
-                {t('index.see_all_freelancers')}
+                {t('common.viewAll')}
               </Button>
             </div>
 
@@ -266,7 +266,8 @@ const Index = () => {
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-semibold">Aktuelle projekter fra virksomheder</h2>
               <Button variant="link" onClick={() => navigate('/jobs')} className="px-0">
-                {t('index.see_all_projects')}
+                {t('profile.view_all_jobs', { count: featuredProjects.length })}
+
               </Button>
             </div>
 
@@ -295,7 +296,7 @@ const Index = () => {
                         {project.budget && <span>💰 {project.budget}</span>}
                       </div>
                       <Button variant="outline" size="sm" onClick={() => navigate(`/job/${project.id}`)}>
-                        {t('index.view_details')}
+                        {t('jobs.viewDetails')}
                       </Button>
                     </CardContent>
                   </Card>

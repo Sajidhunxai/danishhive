@@ -7,6 +7,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { BackendAuthProvider } from "@/hooks/useBackendAuth";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { JobsProvider } from "@/contexts/JobsContext";
+import { FreelancersProvider } from "@/contexts/FreelancersContext";
 import { TopNavigation } from "@/components/TopNavigation";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import Index from "./pages/Index";
@@ -58,48 +60,55 @@ const App: React.FC = () => {
           <TooltipProvider>
             <LanguageProvider>
               <BackendAuthProvider>
-                <Toaster />
-                <Sonner />
-                <BrowserRouter>
-                  <TopNavigation />
-                  <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/client" element={<ClientDashboard />} />
-                <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/create-job" element={<CreateJob />} />
-                <Route path="/jobs" element={<Jobs />} />
-                <Route path="/freelancers" element={<Freelancers />} />
-                <Route path="/complete-profile" element={<CompleteProfile />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/freelancer/:userId" element={<FreelancerProfile />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/job/:id" element={<JobDetails />} />
-                <Route path="/job/:id/apply" element={<JobApplication />} />
-                <Route path="/job/:id/applications" element={<JobApplications />} />
-                 <Route path="/messages" element={<Messages />} />
-                 <Route path="/verify-email" element={<VerifyEmail />} />
-                 <Route path="/under-18-application" element={<Under18Application />} />
-                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                 <Route path="/terms-of-service" element={<TermsOfService />} />
-                 <Route path="/forum" element={<Forum />} />
-                 <Route path="/forum/category/:categoryId" element={<ForumCategory />} />
-                 <Route path="/forum/post/:postId" element={<ForumPostDetail />} />
-                 <Route path="/forum/new-post" element={<ForumNewPost />} />
-                  <Route path="/forum/category/:categoryId/new-post" element={<ForumNewPost />} />
-                 <Route path="/contracts" element={
-                   <div className="min-h-screen bg-background">
-                     <main className="max-w-7xl mx-auto p-6">
-                       <h1 className="text-3xl font-bold mb-6">Kontrakter</h1>
-                       <ContractSystem />
-                     </main>
-                   </div>
-                 } />
-                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-                  <CookieConsent />
-                </BrowserRouter>
+                <JobsProvider>
+                  <FreelancersProvider>
+                    <Toaster />
+                    <Sonner />
+                    <BrowserRouter>
+                      <TopNavigation />
+                      <Routes>
+                        <Route path="/" element={<Index />} />
+                        <Route path="/client" element={<ClientDashboard />} />
+                        <Route path="/admin" element={<AdminDashboard />} />
+                        <Route path="/create-job" element={<CreateJob />} />
+                        <Route path="/jobs" element={<Jobs />} />
+                        <Route path="/freelancers" element={<Freelancers />} />
+                        <Route path="/complete-profile" element={<CompleteProfile />} />
+                        <Route path="/auth" element={<Auth />} />
+                        <Route path="/profile" element={<Profile />} />
+                        <Route path="/freelancer/:userId" element={<FreelancerProfile />} />
+                        <Route path="/settings" element={<Settings />} />
+                        <Route path="/job/:id" element={<JobDetails />} />
+                        <Route path="/job/:id/apply" element={<JobApplication />} />
+                        <Route path="/job/:id/applications" element={<JobApplications />} />
+                        <Route path="/messages" element={<Messages />} />
+                        <Route path="/verify-email" element={<VerifyEmail />} />
+                        <Route path="/under-18-application" element={<Under18Application />} />
+                        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                        <Route path="/terms-of-service" element={<TermsOfService />} />
+                        <Route path="/forum" element={<Forum />} />
+                        <Route path="/forum/category/:categoryId" element={<ForumCategory />} />
+                        <Route path="/forum/post/:postId" element={<ForumPostDetail />} />
+                        <Route path="/forum/new-post" element={<ForumNewPost />} />
+                        <Route path="/forum/category/:categoryId/new-post" element={<ForumNewPost />} />
+                        <Route
+                          path="/contracts"
+                          element={
+                            <div className="min-h-screen bg-background">
+                              <main className="max-w-7xl mx-auto p-6">
+                                <h1 className="text-3xl font-bold mb-6">Kontrakter</h1>
+                                <ContractSystem />
+                              </main>
+                            </div>
+                          }
+                        />
+                        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                        <Route path="*" element={<NotFound />} />
+                      </Routes>
+                      <CookieConsent />
+                    </BrowserRouter>
+                  </FreelancersProvider>
+                </JobsProvider>
               </BackendAuthProvider>
             </LanguageProvider>
           </TooltipProvider>

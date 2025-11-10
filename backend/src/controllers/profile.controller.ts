@@ -60,6 +60,7 @@ export const updateMyProfile = async (req: AuthRequest, res: Response) => {
       cvrNumber,
       bio,
       skills,
+      softwareSkills,
       hourlyRate,
       location,
       address,
@@ -81,6 +82,24 @@ export const updateMyProfile = async (req: AuthRequest, res: Response) => {
       city,
       postalCode,
     });
+    
+    let parsedSoftwareSkills: string[] | undefined;
+    if (softwareSkills !== undefined) {
+      if (Array.isArray(softwareSkills)) {
+        parsedSoftwareSkills = softwareSkills.map((skill: unknown) => String(skill)).filter((skill) => skill.trim().length > 0);
+      } else if (typeof softwareSkills === 'string') {
+        try {
+          const parsed = JSON.parse(softwareSkills);
+          if (Array.isArray(parsed)) {
+            parsedSoftwareSkills = parsed.map((skill: unknown) => String(skill)).filter((skill) => skill.trim().length > 0);
+          }
+        } catch (parseError) {
+          console.error('Error parsing softwareSkills string:', parseError);
+        }
+      } else if (softwareSkills === null) {
+        parsedSoftwareSkills = [];
+      }
+    }
     
     // Update user fields if provided (phone verification)
     if (phoneNumber !== undefined || phoneVerified !== undefined) {
@@ -120,6 +139,7 @@ export const updateMyProfile = async (req: AuthRequest, res: Response) => {
           cvrNumber,
           bio,
           skills: skills ? JSON.stringify(skills) : undefined,
+          softwareSkills: parsedSoftwareSkills,
           hourlyRate: hourlyRate ? parseFloat(hourlyRate) : undefined,
           location,
           address,
@@ -143,6 +163,7 @@ export const updateMyProfile = async (req: AuthRequest, res: Response) => {
           ...(cvrNumber !== undefined && { cvrNumber }),
           ...(bio !== undefined && { bio }),
           ...(skills && { skills: JSON.stringify(skills) }),
+          ...(parsedSoftwareSkills !== undefined && { softwareSkills: parsedSoftwareSkills }),
           ...(hourlyRate && { hourlyRate: parseFloat(hourlyRate) }),
           ...(location !== undefined && { location }),
           ...(address !== undefined && { address }),

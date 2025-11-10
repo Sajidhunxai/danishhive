@@ -116,6 +116,7 @@ interface ProfileUpdateData {
   location?: string;
   hourlyRate?: number;
   skills?: string[];
+  softwareSkills?: string[];
   phoneNumber?: string;
   phoneVerified?: boolean;
   companyName?: string;
@@ -217,6 +218,27 @@ const Profile = () => {
         } else if (Array.isArray(profileData.skills)) {
           skills = profileData.skills;
         }
+
+        // Parse software skills from backend
+        let softwareSkills: string[] = [];
+        const rawSoftware =
+          profileData.softwareSkills ??
+          // Support legacy snake_case if backend uses it
+          (profileData.software_skills as unknown);
+
+        if (Array.isArray(rawSoftware)) {
+          softwareSkills = rawSoftware.map((skill) => String(skill));
+        } else if (typeof rawSoftware === 'string' && rawSoftware.trim().length > 0) {
+          try {
+            const parsed = JSON.parse(rawSoftware);
+            if (Array.isArray(parsed)) {
+              softwareSkills = parsed.map((skill) => String(skill));
+            }
+          } catch (e) {
+            console.error('Error parsing software skills:', e);
+            softwareSkills = [];
+          }
+        }
         
         // Map backend profile data to frontend interface
         const completeProfile = {
@@ -225,14 +247,14 @@ const Profile = () => {
           full_name: profileData.fullName,
           bio: profileData.bio,
           avatar_url: profileData.avatarUrl,
-          phone: null, // Phone data not in profile response
+          phone: profileData.user?.phoneNumber || null,
           company: profileData.companyName,
-          phone_verified: false, // Phone verification not in profile response
+          phone_verified: profileData.user?.phoneVerified || false,
           phone_verification_code: null, // Not included in API response
           location: profileData.location,
           hourly_rate: profileData.hourlyRate ? parseFloat(profileData.hourlyRate) : null,
           skills: skills,
-          software_skills: [], // Not in current API
+          software_skills: softwareSkills,
           availability: null, // Not in current API
           active_status: true, // Default to active
           total_earnings: profileData.honeyDropsBalance || 0,
@@ -501,6 +523,7 @@ const Profile = () => {
       if (updates.location !== undefined) updateData.location = updates.location;
       if (updates.hourly_rate !== undefined) updateData.hourlyRate = updates.hourly_rate;
       if (updates.skills !== undefined) updateData.skills = updates.skills;
+      if (updates.software_skills !== undefined) updateData.softwareSkills = updates.software_skills;
       if (updates.phone !== undefined) updateData.phoneNumber = updates.phone;
       if (updates.phone_verified !== undefined) updateData.phoneVerified = updates.phone_verified;
       if (updates.company !== undefined) updateData.companyName = updates.company;

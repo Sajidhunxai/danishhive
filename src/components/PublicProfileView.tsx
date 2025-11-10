@@ -581,11 +581,36 @@ function normalizeSkills(value: string[] | string | null | undefined): string[] 
 }
 
 function normalizeSoftwareSkills(profile: BackendProfile): string[] | null {
-  if (Array.isArray(profile.softwareSkills)) {
-    return profile.softwareSkills.map((skill) => String(skill));
+  const raw =
+    (profile as Record<string, unknown>).softwareSkills ??
+    (profile as Record<string, unknown>).software_skills ??
+    null;
+
+  if (!raw) {
+    return null;
   }
 
-  return normalizeSkills(profile.skills);
+  if (Array.isArray(raw)) {
+    return raw.map((skill) => String(skill)).filter((skill) => skill.trim().length > 0);
+  }
+
+  if (typeof raw === "string") {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed.map((skill) => String(skill)).filter((skill) => skill.trim().length > 0);
+      }
+    } catch {
+      // swallow parse error
+    }
+
+    return raw
+      .split(",")
+      .map((skill) => skill.trim())
+      .filter((skill) => skill.length > 0);
+  }
+
+  return null;
 }
 
 function normalizePortfolioProjects(projects: BackendProject[] | null | undefined): Project[] {

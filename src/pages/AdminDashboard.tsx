@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,12 +27,13 @@ import {
   CreditCard,
   Ticket
 } from "lucide-react";
+import { AdminDashboardProvider, useAdminDashboard } from "@/contexts/AdminDashboardContext";
 
-const AdminDashboard = () => {
-  const { user, signOut } = useAuth();
+const AdminDashboardContent = () => {
+  const { user } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("overview");
+  const { activeTab, setActiveTab } = useAdminDashboard();
 
   if (!user) {
     navigate("/auth");
@@ -234,5 +235,11 @@ const AdminDashboard = () => {
     </div>
   );
 };
+
+const AdminDashboard = () => (
+  <AdminDashboardProvider>
+    <AdminDashboardContent />
+  </AdminDashboardProvider>
+);
 
 export default AdminDashboard;

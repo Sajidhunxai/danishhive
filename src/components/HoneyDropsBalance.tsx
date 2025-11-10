@@ -1,10 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Droplets, History } from 'lucide-react';
-import { useApi } from '@/contexts/ApiContext';
-import { useAuth } from '@/hooks/useAuth';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import React, { useState, useEffect, useCallback } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Droplets, History, RefreshCcw } from "lucide-react";
+import { useApi } from "@/contexts/ApiContext";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface HoneyTransaction {
   id: string;
@@ -17,7 +23,7 @@ interface HoneyTransaction {
 
 interface HoneyDropsBalanceProps {
   drops: number;
-  onUpdate: () => void;
+  onUpdate?: () => void | Promise<void>;
 }
 
 export const HoneyDropsBalance: React.FC<HoneyDropsBalanceProps> = ({ drops, onUpdate }) => {
@@ -25,6 +31,7 @@ export const HoneyDropsBalance: React.FC<HoneyDropsBalanceProps> = ({ drops, onU
   const [transactions, setTransactions] = useState<HoneyTransaction[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const api = useApi();
 
   const fetchTransactions = async () => {
@@ -60,6 +67,30 @@ export const HoneyDropsBalance: React.FC<HoneyDropsBalanceProps> = ({ drops, onU
     }
   }, [showHistory, user]);
 
+  const handleRefresh = useCallback(async () => {
+    if (!onUpdate) return;
+    try {
+      setRefreshing(true);
+      await Promise.resolve(onUpdate());
+      // Optionally refresh transaction list if dialog is open
+      if (showHistory) {
+        await fetchTransactions();
+      }
+    } finally {
+      setRefreshing(false);
+    }
+  }, [onUpdate, showHistory]);
+
+  const handleOpenChange = useCallback(
+    (open: boolean) => {
+      setShowHistory(open);
+      if (open && onUpdate) {
+        void Promise.resolve(onUpdate());
+      }
+    },
+    [onUpdate],
+  );
+
   const getTransactionIcon = (type: string) => {
     switch (type) {
       case 'purchase':
@@ -92,9 +123,28 @@ export const HoneyDropsBalance: React.FC<HoneyDropsBalanceProps> = ({ drops, onU
         <span className="font-medium">{drops} honningdråber</span>
       </Badge>
 
-      <Dialog open={showHistory} onOpenChange={setShowHistory}>
+      {onUpdate && (
+        <button
+          type="button"
+          className="text-muted-foreground hover:text-foreground transition-colors"
+          onClick={handleRefresh}
+          disabled={refreshing}
+          aria-label="Opdater honningdråber"
+        >
+          {refreshing ? (
+            <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-current" />
+          ) : (
+            <RefreshCcw className="h-4 w-4" />
+          )}
+        </button>
+      )}
+
+      <Dialog open={showHistory} onOpenChange={handleOpenChange}>
         <DialogTrigger asChild>
-          <button className="text-muted-foreground hover:text-foreground transition-colors">
+          <button
+            type="button"
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
             <History className="h-4 w-4" />
           </button>
         </DialogTrigger>

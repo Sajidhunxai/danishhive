@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,25 +9,12 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { BackButton } from "@/components/ui/back-button";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { ArrowLeft, Send, AlertTriangle } from "lucide-react";
 import { useFreelancerVerification } from "@/components/FreelancerVerificationGuard";
 import { HoneyDropsBalance } from "@/components/HoneyDropsBalance";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useApi } from "@/contexts/ApiContext";
-import { getJobById } from "@/api/jobs";
-interface Job {
-  id: string;
-  title: string;
-  description: string;
-  client_id: string;
-  payment_type: string;
-  budget_min: number | null;
-  budget_max: number | null;
-  skills_required: string[] | null;
-  project_type: string;
-}
-
+import { useJobs } from "@/contexts/JobsContext";
 const JobApplication = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -35,7 +22,7 @@ const JobApplication = () => {
   const { user } = useAuth();
   const api = useApi();
   const { requireVerification } = useFreelancerVerification();
-  const [job, setJob] = useState<Job | null>(null);
+  const { getJobState, loadJob } = useJobs();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [averagePrice, setAveragePrice] = useState<{
@@ -59,6 +46,11 @@ const JobApplication = () => {
 
   const characterCount = getCharacterCount(applicationData.coverLetter);
   const isCharacterCountValid = characterCount >= 500 && characterCount <= 3000;
+  const jobState = useMemo(() => (id ? getJobState(id) : undefined), [getJobState, id]);
+  const job = jobState?.job;
+  const jobLoading = jobState?.loading ?? false;
+  const jobError = jobState?.error ?? null;
+  const [jobUnavailable, setJobUnavailable] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -67,77 +59,35 @@ const JobApplication = () => {
     }
 
     if (id) {
-      fetchJob();
       fetchHoneyDrops();
-    }
-  }, [id, user, navigate]);
-
-  const fetchJob = async () => {
-    if (!id) return;
-
-    try {
-      const jobData = await getJobById(id);
-
-      if (jobData) {
-        // Map backend data to frontend format
-        const mappedJob: Job = {
-          id: jobData.id,
-          title: jobData.title,
-          description: jobData.description,
-          client_id: jobData.clientId,
-          payment_type: jobData.paymentType || 'fixed',
-          budget_min: jobData.budget ? parseFloat(jobData.budget.toString()) : null,
-          budget_max: jobData.budget ? parseFloat(jobData.budget.toString()) : null,
-          skills_required: Array.isArray(jobData.skills) ? jobData.skills : 
-                          (typeof jobData.skills === 'string' ? JSON.parse(jobData.skills) : []),
-          project_type: jobData.projectType || 'one-time',
-        };
-
-        // Only set job if status is open
-        if (jobData.status === 'open') {
-          setJob(mappedJob);
-          // fetchAveragePrice(mappedJob); // TODO: Implement average price calculation via backend
-        } else {
+      loadJob(id)
+        .then((detail) => {
+          if (!detail || detail.status !== "open") {
+            setJobUnavailable(true);
+            toast({
+              title: "Fejl",
+              description: "Opgaven blev ikke fundet eller er ikke længere tilgængelig.",
+              variant: "destructive",
+            });
+            navigate("/");
+          } else {
+            setJobUnavailable(false);
+          }
+        })
+        .catch((error: any) => {
+          console.error("Error fetching job:", error);
           toast({
             title: "Fejl",
-            description:
-              "Opgaven blev ikke fundet eller er ikke længere tilgængelig.",
+            description: error?.message || "Kunne ikke hente opgave detaljer.",
             variant: "destructive",
           });
           navigate("/");
-        }
-      } else {
-        toast({
-          title: "Fejl",
-          description:
-            "Opgaven blev ikke fundet eller er ikke længere tilgængelig.",
-          variant: "destructive",
+        })
+        .finally(() => {
+          setLoading(false);
         });
-        navigate("/");
-      }
-    } catch (error: any) {
-      console.error("Error fetching job:", error);
-      toast({
-        title: "Fejl",
-        description: error.response?.data?.error || "Kunne ikke hente opgave detaljer.",
-        variant: "destructive",
-      });
-      navigate("/");
-    } finally {
-      setLoading(false);
     }
-  };
-
-  const fetchAveragePrice = async (currentJob: Job) => {
-    try {
-      // TODO: Implement average price calculation via backend API
-      // For now, we'll skip this feature as it requires backend support
-      // The backend would need an endpoint like GET /jobs/average-price?projectType=...&skills=...
-      console.log("Average price calculation not yet implemented via backend");
-    } catch (error) {
-      console.error("Error fetching average price:", error);
-    }
-  };
+  }, [id, user, navigate, loadJob, toast]);
 
   const fetchHoneyDrops = async () => {
     if (!user) return;
@@ -292,21 +242,21 @@ const JobApplication = () => {
 
   const getRateLabel = () => {
     if (!job) return t("jobs.suggestedPrice");
-    return job.payment_type === "hourly"
+    return job.paymentType === "hourly"
       ? t("jobs.suggestHourlyRate")
       : t("jobs.suggestPrice");
   };
 
   const getRatePlaceholder = () => {
     if (!job) return "500";
-    return job.payment_type === "hourly"
+    return job.paymentType === "hourly"
       ? "500"
-      : job.budget_min
-      ? job.budget_min.toString()
+      : job.budgetMin
+      ? job.budgetMin.toString()
       : "5000";
   };
 
-  if (loading) {
+  if (loading || jobLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -314,7 +264,7 @@ const JobApplication = () => {
     );
   }
 
-  if (!job) {
+  if (!job || jobUnavailable || jobError) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">

@@ -1,264 +1,56 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
-import { useApi } from "@/contexts/ApiContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, X, MapPin, Calendar, FileText, Shield } from "lucide-react";
+import {
+  ArrowLeft,
+  Plus,
+  X,
+  MapPin,
+  Calendar,
+  FileText,
+  Shield,
+} from "lucide-react";
 import { BackButton } from "@/components/ui/back-button";
 import JobFileUpload from "@/components/JobFileUpload";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { ProfileCompletionGuard } from "@/components/ProfileCompletionGuard";
+import { CreateJobProvider, useCreateJob } from "@/contexts/CreateJobContext";
 
-interface UserProfile {
-  address: string | null;
-  city: string | null;
-  postal_code: string | null;
-  company: string | null;
-}
-
-const CreateJob = () => {
-  const { user } = useAuth();
-  const { toast } = useToast();
+const CreateJobContent = () => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const api = useApi();
-  
-  const [jobData, setJobData] = useState({
-    title: "",
-    description: "",
-    budget_min: "",
-    budget_max: "",
-    deadline: "",
-    location: "",
-    is_remote: true,
-    project_type: "one-time",
-    skills_required: [] as string[],
-    software_required: [] as string[],
-    positions_available: 1,
-    requires_approval: true,
-    payment_type: "fixed_price", // fixed_price or hourly_rate
-    currency: "EUR",
-    is_permanent_consultant: false,
-    hours_per_week: "",
-    contract_duration_weeks: "",
-    company_address: "",
-    location_type: "remote", // "remote", "fixed", or "hybrid"
-    use_company_address: true,
-    remote_restriction_type: "none", // "none", "continent", "country"
-    allowed_continents: [] as string[],
-    allowed_countries: [] as string[]
-  });
-  
-  const [newSkill, setNewSkill] = useState("");
-  const [newSoftware, setNewSoftware] = useState("");
-  const [uploadedFiles, setUploadedFiles] = useState<Array<{
-    id: string;
-    name: string;
-    size: number;
-    url: string;
-  }>>([]);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-
-  // Fetch user profile for company address
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      if (user) {
-        try {
-          const profile = await api.profiles.getMyProfile();
-          
-          if (profile) {
-            setUserProfile(profile);
-            // Auto-populate company address if available
-            if (profile.address && profile.city && profile.postalCode) {
-              const fullAddress = `${profile.address}, ${profile.postalCode} ${profile.city}`;
-              setJobData(prev => ({ 
-                ...prev, 
-                company_address: fullAddress,
-                location: profile.city || prev.location
-              }));
-            }
-          }
-        } catch (error) {
-          console.error('Error fetching profile:', error);
-        }
-      }
-    };
-    
-    fetchUserProfile();
-  }, [user]);
-
-  const addSkill = () => {
-    if (jobData.skills_required.length >= 25) {
-      toast({
-        title: "Maksimum antal færdigheder nået",
-        description: "Du kan højst tilføje 25 færdigheder til en opgave",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (newSkill.trim() && !jobData.skills_required.includes(newSkill.trim())) {
-      setJobData(prev => ({
-        ...prev,
-        skills_required: [...prev.skills_required, newSkill.trim()]
-      }));
-      setNewSkill("");
-    }
-  };
-
-  const removeSkill = (skillToRemove: string) => {
-    setJobData(prev => ({
-      ...prev,
-      skills_required: prev.skills_required.filter(skill => skill !== skillToRemove)
-    }));
-  };
-
-  const addSoftware = () => {
-    if (jobData.software_required.length >= 30) {
-      toast({
-        title: "Maksimum antal software nået",
-        description: "Du kan højst tilføje 30 softwareprogrammer til en opgave",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (newSoftware.trim() && !jobData.software_required.includes(newSoftware.trim())) {
-      setJobData(prev => ({
-        ...prev,
-        software_required: [...prev.software_required, newSoftware.trim()]
-      }));
-      setNewSoftware("");
-    }
-  };
-
-  const removeSoftware = (softwareToRemove: string) => {
-    setJobData(prev => ({
-      ...prev,
-      software_required: prev.software_required.filter(software => software !== softwareToRemove)
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!user) {
-      toast({
-        title: "Fejl",
-        description: "Du skal være logget ind for at oprette en opgave",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Validate minimum requirements
-    if (jobData.skills_required.length < 3) {
-      toast({
-        title: "For få færdigheder",
-        description: "Du skal angive mindst 3 påkrævede færdigheder",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (jobData.software_required.length < 3) {
-      toast({
-        title: "For få softwareprogrammer", 
-        description: "Du skal angive mindst 3 påkrævede softwareprogrammer",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setLoading(true);
-    
-    try {
-      // Calculate budget (use average if min/max provided, or single value)
-      const budget = jobData.budget_min && jobData.budget_max 
-        ? (parseFloat(jobData.budget_min) + parseFloat(jobData.budget_max)) / 2
-        : (jobData.budget_min ? parseFloat(jobData.budget_min) : null);
-
-      // Prepare job data for backend API
-      const jobPayload = {
-        title: jobData.title,
-        description: jobData.description,
-        budget: budget,
-        hourlyRate: jobData.payment_type === "hourly_rate" && jobData.budget_min ? parseFloat(jobData.budget_min) : null,
-        location: jobData.use_company_address && userProfile ? 
-          `${userProfile.city || ''}` : 
-          (jobData.company_address || jobData.location || null),
-        skills: jobData.skills_required || [],
-        deadline: jobData.deadline || null,
-        attachments: uploadedFiles.map(file => ({
-          fileId: file.id,
-          fileName: file.name,
-          fileUrl: file.url,
-          fileSize: file.size,
-        })),
-        // Store extra metadata in attachments/metadata for future use
-        metadata: {
-          budget_min: jobData.budget_min ? parseFloat(jobData.budget_min) : null,
-          budget_max: jobData.budget_max ? parseFloat(jobData.budget_max) : null,
-          is_remote: jobData.is_remote,
-          project_type: jobData.project_type,
-          software_required: jobData.software_required,
-          positions_available: jobData.positions_available,
-          requires_approval: jobData.requires_approval,
-          payment_type: jobData.payment_type,
-          currency: jobData.currency,
-          is_permanent_consultant: jobData.is_permanent_consultant,
-          hours_per_week: jobData.hours_per_week ? parseInt(jobData.hours_per_week) : null,
-          contract_duration_weeks: jobData.contract_duration_weeks ? parseInt(jobData.contract_duration_weeks) : null,
-          remote_restriction_type: jobData.remote_restriction_type,
-          allowed_continents: jobData.allowed_continents.length > 0 ? jobData.allowed_continents : null,
-          allowed_countries: jobData.allowed_countries.length > 0 ? jobData.allowed_countries : null,
-        },
-      };
-
-      // Create job using backend API
-      const createdJob = await api.jobs.createJob(jobPayload);
-
-      // Handle file uploads - move temp files to job folder
-      if (uploadedFiles.length > 0 && createdJob.id) {
-        try {
-          // Move all temp files to the job folder server-side
-          const fileIds = uploadedFiles.map(file => file.id);
-          await api.upload.moveTempFilesToJob(createdJob.id, fileIds);
-        } catch (fileError) {
-          console.error('Error moving files to job folder:', fileError);
-          // Continue even if file move fails - files are still in temp folder
-        }
-      }
-
-      toast({
-        title: "Opgave oprettet!",
-        description: "Din opgave er nu offentliggjort og freelancere kan ansøge",
-      });
-
-      navigate('/client');
-    } catch (error: unknown) {
-      console.error('Error creating job:', error);
-      const errorMessage = error instanceof Error ? error.message : "Kunne ikke oprette opgaven. Prøv igen.";
-      toast({
-        title: "Fejl ved oprettelse",
-        description: errorMessage,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    jobData,
+    setJobData,
+    updateJobData,
+    newSkill,
+    setNewSkill,
+    newSoftware,
+    setNewSoftware,
+    uploadedFiles,
+    setUploadedFiles,
+    loading,
+    userProfile,
+    addSkill,
+    removeSkill,
+    addSoftware,
+    removeSoftware,
+    handleSubmit,
+  } = useCreateJob();
 
   return (
-    <ProfileCompletionGuard>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -285,7 +77,7 @@ const CreateJob = () => {
                 <Input
                   id="title"
                   value={jobData.title}
-                  onChange={(e) => setJobData(prev => ({ ...prev, title: e.target.value }))}
+                  onChange={(e) => updateJobData("title", e.target.value)}
                   placeholder="F.eks. Udvikling af webshop i React"
                   required
                 />
@@ -296,7 +88,7 @@ const CreateJob = () => {
                 <Textarea
                   id="description"
                   value={jobData.description}
-                  onChange={(e) => setJobData(prev => ({ ...prev, description: e.target.value }))}
+                  onChange={(e) => updateJobData("description", e.target.value)}
                   placeholder="Beskriv opgaven i detaljer..."
                   rows={6}
                   required
@@ -307,7 +99,9 @@ const CreateJob = () => {
                 <Label htmlFor="project_type">Projekttype</Label>
                 <Select
                   value={jobData.project_type}
-                  onValueChange={(value) => setJobData(prev => ({ ...prev, project_type: value }))}
+                  onValueChange={(value) =>
+                    updateJobData("project_type", value)
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Vælg projekttype" />
@@ -315,20 +109,29 @@ const CreateJob = () => {
                   <SelectContent>
                     <SelectItem value="one-time">Engangsprojekt</SelectItem>
                     <SelectItem value="ongoing">Løbende samarbejde</SelectItem>
-                    <SelectItem value="fixed-term">Fastperiode kontrakt</SelectItem>
+                    <SelectItem value="fixed-term">
+                      Fastperiode kontrakt
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div>
-                <Label htmlFor="positions_available">Antal personer der søges</Label>
+                <Label htmlFor="positions_available">
+                  Antal personer der søges
+                </Label>
                 <Input
                   id="positions_available"
                   type="number"
                   min="1"
                   max="500"
                   value={jobData.positions_available}
-                  onChange={(e) => setJobData(prev => ({ ...prev, positions_available: parseInt(e.target.value) || 1 }))}
+                  onChange={(e) =>
+                    updateJobData(
+                      "positions_available",
+                      parseInt(e.target.value, 10) || 1
+                    )
+                  }
                   placeholder="1"
                 />
                 <p className="text-sm text-muted-foreground mt-1">
@@ -354,15 +157,17 @@ const CreateJob = () => {
                     <Checkbox
                       id="requires_approval"
                       checked={jobData.requires_approval}
-                      onCheckedChange={(checked) => setJobData(prev => ({ ...prev, requires_approval: !!checked }))}
+                      onCheckedChange={(checked) =>
+                        updateJobData("requires_approval", !!checked)
+                      }
                     />
                     <Label htmlFor="requires_approval" className="text-sm">
                       Kræver godkendelse fra virksomheden først
                     </Label>
                   </div>
                   <p className="text-sm text-muted-foreground ml-6">
-                    {jobData.requires_approval 
-                      ? "Freelancere skal ansøge og vente på din godkendelse før de kan starte" 
+                    {jobData.requires_approval
+                      ? "Freelancere skal ansøge og vente på din godkendelse før de kan starte"
                       : "Freelancere kan acceptere opgaven direkte og starte med det samme"}
                   </p>
                 </div>
@@ -383,7 +188,12 @@ const CreateJob = () => {
                 <Label>Betalingstype</Label>
                 <Select
                   value={jobData.payment_type}
-                  onValueChange={(value) => setJobData(prev => ({ ...prev, payment_type: value }))}
+                  onValueChange={(value) =>
+                    updateJobData(
+                      "payment_type",
+                      value as "fixed_price" | "hourly_rate"
+                    )
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Vælg betalingstype" />
@@ -398,26 +208,38 @@ const CreateJob = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="budget_min">
-                    {jobData.payment_type === "hourly_rate" ? "Minimum timeløn (EUR/time)" : "Minimum budget (EUR)"}
+                    {jobData.payment_type === "hourly_rate"
+                      ? "Minimum timeløn (EUR/time)"
+                      : "Minimum budget (EUR)"}
                   </Label>
                   <Input
                     id="budget_min"
                     type="number"
                     value={jobData.budget_min}
-                    onChange={(e) => setJobData(prev => ({ ...prev, budget_min: e.target.value }))}
-                    placeholder={jobData.payment_type === "hourly_rate" ? "25" : "1000"}
+                    onChange={(e) =>
+                      updateJobData("budget_min", e.target.value)
+                    }
+                    placeholder={
+                      jobData.payment_type === "hourly_rate" ? "25" : "1000"
+                    }
                   />
                 </div>
                 <div>
                   <Label htmlFor="budget_max">
-                    {jobData.payment_type === "hourly_rate" ? "Maximum timeløn (EUR/time)" : "Maximum budget (EUR)"}
+                    {jobData.payment_type === "hourly_rate"
+                      ? "Maximum timeløn (EUR/time)"
+                      : "Maximum budget (EUR)"}
                   </Label>
                   <Input
                     id="budget_max"
                     type="number"
                     value={jobData.budget_max}
-                    onChange={(e) => setJobData(prev => ({ ...prev, budget_max: e.target.value }))}
-                    placeholder={jobData.payment_type === "hourly_rate" ? "50" : "5000"}
+                    onChange={(e) =>
+                      updateJobData("budget_max", e.target.value)
+                    }
+                    placeholder={
+                      jobData.payment_type === "hourly_rate" ? "50" : "5000"
+                    }
                   />
                 </div>
               </div>
@@ -426,7 +248,9 @@ const CreateJob = () => {
                 <Checkbox
                   id="is_permanent_consultant"
                   checked={jobData.is_permanent_consultant}
-                  onCheckedChange={(checked) => setJobData(prev => ({ ...prev, is_permanent_consultant: !!checked }))}
+                  onCheckedChange={(checked) =>
+                    updateJobData("is_permanent_consultant", !!checked)
+                  }
                 />
                 <Label htmlFor="is_permanent_consultant">Fast konsulent</Label>
               </div>
@@ -441,18 +265,24 @@ const CreateJob = () => {
                       min="1"
                       max="40"
                       value={jobData.hours_per_week}
-                      onChange={(e) => setJobData(prev => ({ ...prev, hours_per_week: e.target.value }))}
+                      onChange={(e) =>
+                        updateJobData("hours_per_week", e.target.value)
+                      }
                       placeholder="20"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="contract_duration_weeks">Kontraktvarighed (uger)</Label>
+                    <Label htmlFor="contract_duration_weeks">
+                      Kontraktvarighed (uger)
+                    </Label>
                     <Input
                       id="contract_duration_weeks"
                       type="number"
                       min="1"
                       value={jobData.contract_duration_weeks}
-                      onChange={(e) => setJobData(prev => ({ ...prev, contract_duration_weeks: e.target.value }))}
+                      onChange={(e) =>
+                        updateJobData("contract_duration_weeks", e.target.value)
+                      }
                       placeholder="12"
                     />
                   </div>
@@ -465,7 +295,7 @@ const CreateJob = () => {
                   id="deadline"
                   type="date"
                   value={jobData.deadline}
-                  onChange={(e) => setJobData(prev => ({ ...prev, deadline: e.target.value }))}
+                  onChange={(e) => updateJobData("deadline", e.target.value)}
                 />
               </div>
             </CardContent>
@@ -484,79 +314,109 @@ const CreateJob = () => {
                 <Label>Arbejdsplads</Label>
                 <Select
                   value={jobData.location_type}
-                  onValueChange={(value) => setJobData(prev => ({ 
-                    ...prev, 
-                    location_type: value,
-                    is_remote: value === "remote" 
-                  }))}
+                  onValueChange={(value) =>
+                    setJobData((prev) => ({
+                      ...prev,
+                      location_type: value as "remote" | "hybrid" | "fixed",
+                      is_remote: value === "remote",
+                    }))
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Vælg arbejdsplads type" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="remote">Fjernarbejde</SelectItem>
-                    <SelectItem value="hybrid">Hybrid (både fjern og lokation)</SelectItem>
+                    <SelectItem value="hybrid">
+                      Hybrid (både fjern og lokation)
+                    </SelectItem>
                     <SelectItem value="fixed">Fast lokation</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              {(jobData.location_type === "fixed" || jobData.location_type === "hybrid") && (
+              {(jobData.location_type === "fixed" ||
+                jobData.location_type === "hybrid") && (
                 <div className="space-y-4">
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="use_company_address"
                       checked={jobData.use_company_address}
-                      onCheckedChange={(checked) => setJobData(prev => ({ ...prev, use_company_address: !!checked }))}
+                      onCheckedChange={(checked) =>
+                        setJobData((prev) => ({
+                          ...prev,
+                          use_company_address: !!checked,
+                        }))
+                      }
                     />
-                    <Label htmlFor="use_company_address">Brug virksomhedsadresse fra profil</Label>
+                    <Label htmlFor="use_company_address">
+                      Brug virksomhedsadresse fra profil
+                    </Label>
                   </div>
-                  
+
                   {!jobData.use_company_address && (
                     <div>
                       <Label htmlFor="company_address">Arbejdsadresse *</Label>
                       <Textarea
                         id="company_address"
                         value={jobData.company_address}
-                        onChange={(e) => setJobData(prev => ({ ...prev, company_address: e.target.value }))}
+                        onChange={(e) =>
+                          setJobData((prev) => ({
+                            ...prev,
+                            company_address: e.target.value,
+                          }))
+                        }
                         placeholder="F.eks. Nørregade 10, 1165 København K, Danmark"
                         rows={3}
                         required={!jobData.use_company_address}
                       />
                     </div>
                   )}
-                  
+
                   {jobData.use_company_address && userProfile && (
                     <div className="p-3 bg-muted rounded-md">
-                      <Label className="text-sm font-medium">Valgt adresse:</Label>
+                      <Label className="text-sm font-medium">
+                        Valgt adresse:
+                      </Label>
                       <p className="text-sm text-muted-foreground mt-1">
-                        {userProfile.address ? `${userProfile.address}, ${userProfile.postal_code} ${userProfile.city}` : 'Ingen adresse fundet i profil'}
+                        {userProfile.address
+                          ? `${userProfile.address}, ${userProfile.postalCode ?? ""} ${userProfile.city ?? ""}`
+                          : "Ingen adresse fundet i profil"}
                       </p>
                     </div>
                   )}
                 </div>
               )}
 
-              {(jobData.location_type === "remote" || jobData.location_type === "hybrid") && (
+              {(jobData.location_type === "remote" ||
+                jobData.location_type === "hybrid") && (
                 <div className="space-y-4">
                   <div>
                     <Label>Geografisk begrænsning</Label>
                     <Select
                       value={jobData.remote_restriction_type}
-                      onValueChange={(value) => setJobData(prev => ({ 
-                        ...prev, 
-                        remote_restriction_type: value,
-                        allowed_continents: [],
-                        allowed_countries: []
-                      }))}
+                      onValueChange={(value) =>
+                        setJobData((prev) => ({
+                          ...prev,
+                        remote_restriction_type: value as "none" | "continent" | "country",
+                          allowed_continents: [],
+                          allowed_countries: [],
+                        }))
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Vælg geografisk begrænsning" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">Ingen begrænsning (globalt)</SelectItem>
-                        <SelectItem value="continent">Begræns til kontinent(er)</SelectItem>
-                        <SelectItem value="country">Begræns til land(e)</SelectItem>
+                        <SelectItem value="none">
+                          Ingen begrænsning (globalt)
+                        </SelectItem>
+                        <SelectItem value="continent">
+                          Begræns til kontinent(er)
+                        </SelectItem>
+                        <SelectItem value="country">
+                          Begræns til land(e)
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -567,9 +427,12 @@ const CreateJob = () => {
                       <Select
                         onValueChange={(value) => {
                           if (!jobData.allowed_continents.includes(value)) {
-                            setJobData(prev => ({
+                            setJobData((prev) => ({
                               ...prev,
-                              allowed_continents: [...prev.allowed_continents, value]
+                              allowed_continents: [
+                                ...prev.allowed_continents,
+                                value,
+                              ],
                             }));
                           }
                         }}
@@ -579,8 +442,12 @@ const CreateJob = () => {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="Europe">Europa</SelectItem>
-                          <SelectItem value="North America">Nordamerika</SelectItem>
-                          <SelectItem value="South America">Sydamerika</SelectItem>
+                          <SelectItem value="North America">
+                            Nordamerika
+                          </SelectItem>
+                          <SelectItem value="South America">
+                            Sydamerika
+                          </SelectItem>
                           <SelectItem value="Asia">Asien</SelectItem>
                           <SelectItem value="Africa">Afrika</SelectItem>
                           <SelectItem value="Oceania">Oceanien</SelectItem>
@@ -589,17 +456,25 @@ const CreateJob = () => {
                       {jobData.allowed_continents.length > 0 && (
                         <div className="flex flex-wrap gap-2 mt-2">
                           {jobData.allowed_continents.map((continent) => (
-                            <div key={continent} className="flex items-center gap-1 bg-primary/10 text-primary px-2 py-1 rounded-md text-sm">
+                            <div
+                              key={continent}
+                              className="flex items-center gap-1 bg-primary/10 text-primary px-2 py-1 rounded-md text-sm"
+                            >
                               {continent}
                               <Button
                                 type="button"
                                 variant="ghost"
                                 size="sm"
                                 className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
-                                onClick={() => setJobData(prev => ({
-                                  ...prev,
-                                  allowed_continents: prev.allowed_continents.filter(c => c !== continent)
-                                }))}
+                                onClick={() =>
+                                  setJobData((prev) => ({
+                                    ...prev,
+                                    allowed_continents:
+                                      prev.allowed_continents.filter(
+                                        (c) => c !== continent
+                                      ),
+                                  }))
+                                }
                               >
                                 <X className="h-3 w-3" />
                               </Button>
@@ -616,9 +491,12 @@ const CreateJob = () => {
                       <Select
                         onValueChange={(value) => {
                           if (!jobData.allowed_countries.includes(value)) {
-                            setJobData(prev => ({
+                            setJobData((prev) => ({
                               ...prev,
-                              allowed_countries: [...prev.allowed_countries, value]
+                              allowed_countries: [
+                                ...prev.allowed_countries,
+                                value,
+                              ],
                             }));
                           }
                         }}
@@ -632,7 +510,9 @@ const CreateJob = () => {
                           <SelectItem value="Norway">Norge</SelectItem>
                           <SelectItem value="Finland">Finland</SelectItem>
                           <SelectItem value="Germany">Tyskland</SelectItem>
-                          <SelectItem value="United Kingdom">Storbritannien</SelectItem>
+                          <SelectItem value="United Kingdom">
+                            Storbritannien
+                          </SelectItem>
                           <SelectItem value="Netherlands">Holland</SelectItem>
                           <SelectItem value="France">Frankrig</SelectItem>
                           <SelectItem value="Spain">Spanien</SelectItem>
@@ -648,17 +528,25 @@ const CreateJob = () => {
                       {jobData.allowed_countries.length > 0 && (
                         <div className="flex flex-wrap gap-2 mt-2">
                           {jobData.allowed_countries.map((country) => (
-                            <div key={country} className="flex items-center gap-1 bg-primary/10 text-primary px-2 py-1 rounded-md text-sm">
+                            <div
+                              key={country}
+                              className="flex items-center gap-1 bg-primary/10 text-primary px-2 py-1 rounded-md text-sm"
+                            >
                               {country}
                               <Button
                                 type="button"
                                 variant="ghost"
                                 size="sm"
                                 className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
-                                onClick={() => setJobData(prev => ({
-                                  ...prev,
-                                  allowed_countries: prev.allowed_countries.filter(c => c !== country)
-                                }))}
+                                onClick={() =>
+                                  setJobData((prev) => ({
+                                    ...prev,
+                                    allowed_countries:
+                                      prev.allowed_countries.filter(
+                                        (c) => c !== country
+                                      ),
+                                  }))
+                                }
                               >
                                 <X className="h-3 w-3" />
                               </Button>
@@ -672,12 +560,23 @@ const CreateJob = () => {
               )}
 
               <div>
-                <Label htmlFor="location">Yderligere lokationsinformation (valgfri)</Label>
+                <Label htmlFor="location">
+                  Yderligere lokationsinformation (valgfri)
+                </Label>
                 <Input
                   id="location"
                   value={jobData.location}
-                  onChange={(e) => setJobData(prev => ({ ...prev, location: e.target.value }))}
-                  placeholder={jobData.location_type === "remote" ? "F.eks. Tidszone præferencer, mødetider" : "F.eks. Mødesal på 3. sal, parkering tilgængelig"}
+                  onChange={(e) =>
+                    setJobData((prev) => ({
+                      ...prev,
+                      location: e.target.value,
+                    }))
+                  }
+                  placeholder={
+                    jobData.location_type === "remote"
+                      ? "F.eks. Tidszone præferencer, mødetider"
+                      : "F.eks. Mødesal på 3. sal, parkering tilgængelig"
+                  }
                 />
               </div>
             </CardContent>
@@ -694,11 +593,13 @@ const CreateJob = () => {
                   value={newSkill}
                   onChange={(e) => setNewSkill(e.target.value)}
                   placeholder="Tilføj færdighed (f.eks. React, Node.js, Design)"
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
+                  onKeyPress={(e) =>
+                    e.key === "Enter" && (e.preventDefault(), addSkill())
+                  }
                   disabled={jobData.skills_required.length >= 25}
                 />
-                <Button 
-                  type="button" 
+                <Button
+                  type="button"
                   onClick={addSkill}
                   disabled={jobData.skills_required.length >= 25}
                 >
@@ -746,11 +647,13 @@ const CreateJob = () => {
                   value={newSoftware}
                   onChange={(e) => setNewSoftware(e.target.value)}
                   placeholder="Tilføj software (f.eks. Adobe Photoshop, Figma, VS Code)"
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSoftware())}
+                  onKeyPress={(e) =>
+                    e.key === "Enter" && (e.preventDefault(), addSoftware())
+                  }
                   disabled={jobData.software_required.length >= 30}
                 />
-                <Button 
-                  type="button" 
+                <Button
+                  type="button"
                   onClick={addSoftware}
                   disabled={jobData.software_required.length >= 30}
                 >
@@ -759,7 +662,8 @@ const CreateJob = () => {
               </div>
 
               <div className="text-sm text-muted-foreground">
-                {jobData.software_required.length}/30 softwareprogrammer tilføjet
+                {jobData.software_required.length}/30 softwareprogrammer
+                tilføjet
                 {jobData.software_required.length < 3 && (
                   <span className="text-destructive ml-2">
                     (Minimum 3 påkrævet)
@@ -788,7 +692,7 @@ const CreateJob = () => {
           </Card>
 
           {/* Submit */}
-          <JobFileUpload 
+          <JobFileUpload
             onFilesChange={setUploadedFiles}
             uploadedFiles={uploadedFiles}
           />
@@ -797,7 +701,7 @@ const CreateJob = () => {
             <Button
               type="button"
               variant="outline"
-              onClick={() => navigate('/client')}
+              onClick={() => navigate("/client")}
             >
               Annuller
             </Button>
@@ -808,8 +712,15 @@ const CreateJob = () => {
         </form>
       </div>
     </div>
-    </ProfileCompletionGuard>
   );
 };
+
+const CreateJob = () => (
+  <ProfileCompletionGuard>
+    <CreateJobProvider>
+      <CreateJobContent />
+    </CreateJobProvider>
+  </ProfileCompletionGuard>
+);
 
 export default CreateJob;
