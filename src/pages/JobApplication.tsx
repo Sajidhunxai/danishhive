@@ -441,8 +441,8 @@ const JobApplication = () => {
 
           <div className="text-center">
             <p className="text-xs text-muted-foreground">
-              Ved at sende din ansøgning accepterer du vores vilkår og
-              betingelser
+              {t("job.apply.termsNote")}
+              
             </p>
           </div>
         </div>

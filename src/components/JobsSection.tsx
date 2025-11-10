@@ -210,7 +210,7 @@ const JobsSection = () => {
   };
 
   const formatBudget = (min: number | null, max: number | null) => {
-    if (!min && !max) return "Budget ikke angivet";
+    if (!min && !max) return t("common.noBudget");
     if (min && max) return `${min.toLocaleString()} - ${max.toLocaleString()} DKK`;
     if (min) return `Fra ${min.toLocaleString()} DKK`;
     if (max) return `Op til ${max.toLocaleString()} DKK`;

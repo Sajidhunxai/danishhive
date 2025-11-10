@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ProfileCompletionGuardProps {
   children: React.ReactNode;
@@ -24,6 +25,7 @@ export const ProfileCompletionGuard: React.FC<ProfileCompletionGuardProps> = ({
   const navigate = useNavigate();
   const { toast } = useToast();
   const api = useApi();
+  const { t } = useLanguage();
 
   useEffect(() => {
     const checkProfileCompletion = async () => {
@@ -74,10 +76,11 @@ export const ProfileCompletionGuard: React.FC<ProfileCompletionGuardProps> = ({
 
           if (!isComplete && requireComplete) {
             toast({
-              title: "Profil Ikke Fuldført",
-              description: "Du skal fuldføre din profil for at få adgang til denne funktion",
+              title: t("profileIncomplete.title"),
+              description: t("profileIncomplete.description"),
               variant: "destructive",
             });
+            
             navigate(redirectTo);
           }
         } catch (error) {

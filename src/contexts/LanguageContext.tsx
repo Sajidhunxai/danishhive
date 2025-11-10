@@ -131,6 +131,8 @@ const translations = {
     "common.name": "Navn",
     "common.email": "Email",
     "common.post": "Post",
+    "common.ratePerHour": "DKK/time",
+    "common.noBudget": "Budget ikke angivet",
 
     // Payment
     "payment.method": "Betalingsmetode",
@@ -211,7 +213,16 @@ const translations = {
     "language.arabic": "Arabisk",
     "language.chinese": "Kinesisk",
     "language.japanese": "Japansk",
+    //Landing
 
+    "landing.loginOrSignup": "Log ind eller opret konto",
+    "landing.exploreFreelancers": "Udforsk freelancere",
+    "landing.featuredFreelancers": "Udvalgte freelancere",
+    "landing.viewProfile": "Se profil",
+    "landing.noPublicFreelancers":
+      "Der er endnu ingen offentlige freelancere at vise.",
+    "landing.currentProjects": "Aktuelle projekter fra virksomheder",
+    "landing.noPublicProjects": "Der er ingen offentlige projekter lige nu.",
     // Loading states
     "loading.jobs": "Indlæser opgaver...",
     "loading.languages": "Indlæser sprog...",
@@ -818,9 +829,13 @@ const translations = {
     "profile.send_request": "Send anmodning",
     "profile.view_as_others_title": "Sådan ser andre din profil",
     "profile.enlarged_project_image": "Forstørret projektbillede",
-
+    "profileIncomplete.title": "Profil Ikke Fuldført",
+    "profileIncomplete.description":
+      "Du skal fuldføre din profil for at få adgang til denne funktion",
     // Index page
     "index.welcome": "Velkommen til Danish Hive",
+    "index.welcomeDesc":
+      "Oplev Danmarks freelancermarkedsplads for kreative og professionelle talenter. Gennemse profiler,projekter og virksomheder helt uden at logge ind.",
     "index.subtitle":
       "Danmarks førende platform for freelancere og virksomheder",
     "index.logged_in_as": "Logget ind som",
@@ -904,8 +919,7 @@ const translations = {
     "index.manage_your_contracts":
       "Manage your contracts and view the status of ongoing and completed agreements",
 
-    "index.overview_of_your_created_jobs":
-      "Overview of your created jobs",
+    "index.overview_of_your_created_jobs": "Overview of your created jobs",
     "index.newest_applications_to_your_jobs":
       "Newest applications to your jobs",
 
@@ -925,9 +939,11 @@ const translations = {
     "jobs.pending": "Pending",
     "jobs.paid": "Paid",
     "freelancers.marketTitle": "Freelancers",
-    "freelancers.marketSubtitle": "Discover talented freelancers and find the right match for your project.",
+    "freelancers.marketSubtitle":
+      "Discover talented freelancers and find the right match for your project.",
     "freelancers.noFreelancers": "There are no freelancers to show right now.",
-    "freelancers.loadError": "We couldn't load freelancers. Please try again later.",
+    "freelancers.loadError":
+      "We couldn't load freelancers. Please try again later.",
     "freelancers.viewProfile": "View profile",
     "freelancers.hourlyRateLabel": "DKK/hour",
 
@@ -945,8 +961,7 @@ const translations = {
     "freelancerSearch.noResults":
       "No freelancers found matching the selected criteria.",
     "freelancerSearch.adjustCriteria": "Try adjusting your search criteria.",
-    "freelancerSearch.noFreelancersYet":
-      "No freelancers available yet.",
+    "freelancerSearch.noFreelancersYet": "No freelancers available yet.",
     "freelancerSearch.unnamed": "Unnamed",
     "freelancerSearch.hourlyRate": "DKK/hour",
     "freelancerSearch.available": "Available",
@@ -997,8 +1012,7 @@ const translations = {
     "freelancerProfile.portfolio": "Portfolio",
     "freelancerProfile.clickToEnlarge": "Click to enlarge",
     "freelancerProfile.interested": "Interested in collaboration?",
-    "freelancerProfile.contactDesc":
-      "Contact {name} to discuss your project.",
+    "freelancerProfile.contactDesc": "Contact {name} to discuss your project.",
     "freelancerProfile.thisFreelancer": "this freelancer",
     "freelancerProfile.enlargedImage": "Enlarged project image",
     "freelancerProfile.notFound": "Freelancer not found",
@@ -1032,12 +1046,11 @@ const translations = {
       "Message should be between 100 and 300 characters",
     "inviteFreelancer.sendError": "Could not send invitations",
     "inviteFreelancer.sentTitle": "Invitations sent!",
-    "inviteFreelancer.sentDesc":
-      "{count} invitation(s) sent to {name}",
+    "inviteFreelancer.sentDesc": "{count} invitation(s) sent to {name}",
     "inviteFreelancer.budgetFrom": "From {amount} DKK",
     "inviteFreelancer.budgetUpTo": "Up to {amount} DKK",
     "inviteFreelancer.noBudget": "Budget not specified",
-    "chat.sendHint": "Press Enter to send, Shift+Enter for new line"
+    "chat.sendHint": "Press Enter to send, Shift+Enter for new line",
   },
   en: {
     // Auth translations
@@ -1142,6 +1155,8 @@ const translations = {
     "common.name": "Name",
     "common.email": "Email",
     "common.post": "Post",
+    "common.ratePerHour": "DKK/hour",
+    "common.noBudget": "Budget not specified",
 
     // payment
     "payment.method": "Payment Method",
@@ -1484,12 +1499,25 @@ const translations = {
     "profile.total_earnings": "Total Earnings",
     "profile.highly_recommended": "Highly recommended bee",
     "profile.language_skills": "Language Skills",
+    "profileIncomplete.title": "Profile Incomplete",
+    "profileIncomplete.description":
+      "You must complete your profile to access this feature",
 
     // Language levels
     "language.beginner": "Beginner",
     "language.intermediate": "Intermediate",
     "language.advanced": "Advanced",
     "language.native": "Native",
+
+    //Landing
+    "landing.loginOrSignup": "Log in or create an account",
+    "landing.exploreFreelancers": "Explore freelancers",
+    "landing.featuredFreelancers": "Featured freelancers",
+    "landing.viewProfile": "View profile",
+    "landing.noPublicFreelancers":
+      "There are no public freelancers to display yet.",
+    "landing.currentProjects": "Current projects from companies",
+    "landing.noPublicProjects": "There are no public projects right now.",
 
     // Language names
     "language.danish": "Danish",
@@ -1502,6 +1530,16 @@ const translations = {
     "language.arabic": "Arabic",
     "language.chinese": "Chinese",
     "language.japanese": "Japanese",
+    //Landing
+
+    "landing.loginOrSignup": "Log ind eller opret konto",
+    "landing.exploreFreelancers": "Udforsk freelancere",
+    "landing.featuredFreelancers": "Udvalgte freelancere",
+    "landing.viewProfile": "Se profil",
+    "landing.noPublicFreelancers":
+      "Der er endnu ingen offentlige freelancere at vise.",
+    "landing.currentProjects": "Aktuelle projekter fra virksomheder",
+    "landing.noPublicProjects": "Der er ingen offentlige projekter lige nu.",
 
     // Loading states
     "loading.jobs": "Loading jobs...",
@@ -1840,6 +1878,8 @@ const translations = {
 
     // Index page
     "index.welcome": "Welcome to Danish Hive",
+    "index.welcomeDesc":
+      "Experience Denmark's leading freelancer marketplace for creative and professional talent. Browse profiles, projects, and companies without logging in.",
     "index.subtitle":
       "Denmark's leading platform for freelancers and businesses",
     "index.logged_in_as": "Logged in as",
@@ -1939,9 +1979,11 @@ const translations = {
     "jobs.pending": "Pending",
     "jobs.paid": "Paid",
     "freelancers.marketTitle": "Freelancers",
-    "freelancers.marketSubtitle": "Discover talented freelancers and find the right match for your project.",
+    "freelancers.marketSubtitle":
+      "Discover talented freelancers and find the right match for your project.",
     "freelancers.noFreelancers": "There are no freelancers to show right now.",
-    "freelancers.loadError": "We couldn't load freelancers. Please try again later.",
+    "freelancers.loadError":
+      "We couldn't load freelancers. Please try again later.",
     "freelancers.available": "Available",
     "freelancers.busy": "Busy",
     "freelancers.unavailable": "Unavailable",
@@ -1990,8 +2032,7 @@ const translations = {
     "freelancerProfile.portfolio": "Portfolio",
     "freelancerProfile.clickToEnlarge": "Click to enlarge",
     "freelancerProfile.interested": "Interested in collaboration?",
-    "freelancerProfile.contactDesc":
-      "Contact {name} to discuss your project.",
+    "freelancerProfile.contactDesc": "Contact {name} to discuss your project.",
     "freelancerProfile.thisFreelancer": "this freelancer",
     "freelancerProfile.enlargedImage": "Enlarged project image",
     "freelancerProfile.notFound": "Freelancer not found",
@@ -2029,7 +2070,7 @@ const translations = {
     "inviteFreelancer.budgetFrom": "From {amount} DKK",
     "inviteFreelancer.budgetUpTo": "Up to {amount} DKK",
     "inviteFreelancer.noBudget": "Budget not specified",
-    "chat.sendHint": "Press Enter to send, Shift+Enter for new line"
+    "chat.sendHint": "Press Enter to send, Shift+Enter for new line",
   },
   zh: {
     // Auth translations
@@ -2133,6 +2174,8 @@ const translations = {
     "common.name": "姓名",
     "common.email": "电子邮件",
     "common.post": "邮寄",
+    "common.ratePerHour": "DKK/小时",
+    "common.noBudget": "未指定预算",
 
     // payemnt
     "payment.method": "付款方式",
@@ -2444,6 +2487,15 @@ const translations = {
     "language.chinese": "中文",
     "language.japanese": "日语",
 
+    //landing
+    "landing.loginOrSignup": "登录或创建账户",
+    "landing.exploreFreelancers": "探索自由职业者",
+    "landing.featuredFreelancers": "精选自由职业者",
+    "landing.viewProfile": "查看资料",
+    "landing.noPublicFreelancers": "目前还没有公开的自由职业者可展示。",
+    "landing.currentProjects": "来自公司的当前项目",
+    "landing.noPublicProjects": "目前没有公开项目。",
+
     // Loading states
     "loading.jobs": "加载任务中...",
     "loading.languages": "加载语言中...",
@@ -2684,9 +2736,13 @@ const translations = {
     "profile.send_request": "发送请求",
     "profile.view_as_others_title": "他人如何查看您的资料",
     "profile.enlarged_project_image": "放大的项目图片",
+    "profileIncomplete.title": "个人资料未完成",
+    "profileIncomplete.description": "您必须完成个人资料才能使用此功能",
 
     // Index page
     "index.welcome": "欢迎来到 Danish Hive",
+    "index.welcomeDesc":
+      "体验丹麦领先的自由职业者市场，浏览个人资料、项目和公司，无需登录。",
     "index.subtitle": "丹麦领先的自由职业者和企业平台",
     "index.logged_in_as": "登录为",
     "index.go_to_client": "前往客户仪表板",
@@ -2883,7 +2939,8 @@ const translations = {
     "jobs.loadError": "无法加载项目，请稍后重试。",
     "jobs.applyNow": "立即申请",
     "freelancers.marketTitle": "自由职业者",
-    "freelancers.marketSubtitle": "探索优秀的自由职业者，为您的项目找到合适的人选。",
+    "freelancers.marketSubtitle":
+      "探索优秀的自由职业者，为您的项目找到合适的人选。",
     "freelancers.noFreelancers": "目前没有自由职业者可供显示。",
     "freelancers.loadError": "无法加载自由职业者，请稍后重试。",
     "freelancers.viewProfile": "查看资料",
@@ -2986,8 +3043,7 @@ const translations = {
     "inviteFreelancer.budgetFrom": "从 {amount} DKK 起",
     "inviteFreelancer.budgetUpTo": "最高 {amount} DKK",
     "inviteFreelancer.noBudget": "未指定预算",
-    "chat.sendHint": "按 Enter 发送，Shift+Enter 换行"
-
+    "chat.sendHint": "按 Enter 发送，Shift+Enter 换行",
   },
   hi: {
     // Auth translations
@@ -3093,6 +3149,8 @@ const translations = {
     "common.name": "नाम",
     "common.email": "ईमेल",
     "common.post": "डाक",
+    "common.ratePerHour": "DKK/घंटा",
+    "common.noBudget": "बजट निर्दिष्ट नहीं है",
 
     // payemnt
     "payment.method": "भुगतान विधि",
@@ -3449,6 +3507,16 @@ const translations = {
     "language.chinese": "चीनी",
     "language.japanese": "जापानी",
 
+    //Landing
+    "landing.loginOrSignup": "लॉग इन करें या खाता बनाएं",
+    "landing.exploreFreelancers": "फ्रीलांसरों का अन्वेषण करें",
+    "landing.featuredFreelancers": "विशेष फ्रीलांसर",
+    "landing.viewProfile": "प्रोफ़ाइल देखें",
+    "landing.noPublicFreelancers":
+      "अभी तक कोई सार्वजनिक फ्रीलांसर उपलब्ध नहीं हैं।",
+    "landing.currentProjects": "कंपनियों के वर्तमान प्रोजेक्ट",
+    "landing.noPublicProjects": "अभी कोई सार्वजनिक प्रोजेक्ट उपलब्ध नहीं हैं।",
+
     // Loading states
     "loading.jobs": "काम लोड हो रहे हैं...",
     "loading.languages": "भाषाएं लोड हो रही हैं...",
@@ -3675,9 +3743,14 @@ const translations = {
     "profile.send_request": "अनुरोध भेजें",
     "profile.view_as_others_title": "दूसरे आपकी प्रोफ़ाइल को कैसे देखते हैं",
     "profile.enlarged_project_image": "बढ़ाई गई प्रोजेक्ट छवि",
+    "profileIncomplete.title": "प्रोफ़ाइल अधूरी है",
+    "profileIncomplete.description":
+      "इस सुविधा तक पहुँचने के लिए आपको अपनी प्रोफ़ाइल पूरी करनी होगी",
 
     // Index page
     "index.welcome": "Danish Hive में आपका स्वागत है",
+    "index.welcomeDesc":
+      "रचनात्मक और पेशेवर प्रतिभाओं के लिए डेनमार्क का फ्रीलांसर मार्केटप्लेस खोजें। प्रोफाइल, प्रोजेक्ट और कंपनियाँ बिना लॉगिन किए देखें।",
     "index.subtitle":
       "Denmark का फ्रीलांसरों और व्यवसायों के लिए अग्रणी प्लेटफॉर्म",
     "index.logged_in_as": "लॉग इन किया गया",
@@ -3730,7 +3803,42 @@ const translations = {
       "सभी छवियों को आपकी प्रोफ़ाइल पर दिखने से पहले प्रशासक अनुमोदन की आवश्यकता होती है।",
     "image.supportedFormats":
       "समर्थित प्रारूप: JPG, PNG, GIF। अधिकतम आकार: 5MB।",
+    // Complete Profile page
 
+    "completeProfile.title": "अपनी {role} प्रोफ़ाइल पूरी करें",
+    "completeProfile.client": "क्लाइंट",
+    "completeProfile.freelancer": "फ्रीलांसर",
+    "completeProfile.welcome":
+      "डेनिश हिव में आपका स्वागत है! अपनी प्रोफ़ाइल भरें और शुरू करें।",
+    "completeProfile.goToDashboard": "डैशबोर्ड पर जाएं",
+    "completeProfile.error": "त्रुटि",
+    "completeProfile.notLoggedIn":
+      "आपको अपनी प्रोफ़ाइल पूरी करने के लिए लॉग इन करना होगा",
+    "completeProfile.europeanOnly": "केवल यूरोपीय फ्रीलांसर",
+    "completeProfile.europeanOnlyDesc":
+      "कृपया यूरोपीय फ्रीलांसर के रूप में प्लेटफ़ॉर्म पर रजिस्टर करें।",
+    "completeProfile.missingInfo1": "अज्ञात जानकारी - पहला चरण",
+    "completeProfile.missingInfo1Desc":
+      "सभी आवश्यक फ़ील्ड भरें और अपना फ़ोन नंबर सत्यापित करें",
+    "completeProfile.missingInfo2": "अज्ञात जानकारी - दूसरा चरण",
+    "completeProfile.missingInfo2Desc":
+      "सभी भुगतान जानकारी भरें और अपना भुगतान तरीका सत्यापित करें",
+    "completeProfile.phoneNotVerified": "फ़ोन सत्यापित नहीं किया गया",
+    "completeProfile.phoneNotVerifiedDesc":
+      "आपको आगे बढ़ने से पहले अपना फ़ोन नंबर सत्यापित करना होगा",
+    "completeProfile.paymentNotVerified": "भुगतान सत्यापित नहीं किया गया",
+    "completeProfile.paymentNotVerifiedDesc":
+      "आपको आगे बढ़ने से पहले अपना भुगतान तरीका सत्यापित करना होगा",
+    "completeProfile.allFieldsRequired": "सभी आवश्यक फ़ील्ड भरें",
+    "completeProfile.phoneAlreadyRegistered":
+      "यह फ़ोन नंबर अन्य उपयोगकर्ता के साथ पहले से रजिस्टर किया गया है",
+    "completeProfile.completionError": "पूर्णता त्रुटि",
+    "completeProfile.profileCompleted": "प्रोफ़ाइल पूरी की गई!",
+    "completeProfile.profileCompletedDesc":
+      "आपकी प्रोफ़ाइल बनाई गई और सत्यापित की गई है। डेनिश हिव में आपका स्वागत है!",
+    "completeProfile.land": "देश",
+    "completeProfile.fullName": "पूरा नाम",
+    "completeProfile.fullNamePlaceholder": "अपना पूरा नाम",
     // CVR Lookup
     "cvr.noCVR": "CVR नंबर नहीं है (निजी व्यक्ति के रूप में काम कर रहे हैं)",
 
@@ -3744,22 +3852,36 @@ const translations = {
     "cvr.invalidCVR": "अमान्य CVR नंबर",
     "cvr.lookupFailed": "CVR खोज विफल",
     "cvr.lookupSuccess": "कंपनी मिली",
-
+    "cvr.companyNamePlaceholder": "अपनी कंपनी का नाम",
+    "cvr.invalidCVRDesc": "CVR नंबर 8 अंकों का होना चाहिए",
+    "cvr.lookupFailedDesc": "इस CVR नंबर से कंपनी नहीं मिली",
+    "cvr.lookupSuccessDesc": "कंपनी जानकारी स्वचालित रूप से भरी गई है",
     // Phone Verification
+    "phone.countryCode": "देश कोड",
+    "phone.number": "फ़ोन नंबर",
     "phone.verification": "फ़ोन सत्यापन",
     "phone.sendCode": "कोड भेजें",
     "phone.verifyCode": "कोड सत्यापित करें",
     "phone.codeSent": "सत्यापन कोड भेजा गया",
+    "phone.codeSentDesc": "अपने फ़ोन पर सत्यापन कोड वाला SMS देखें",
     "phone.verificationSuccess": "फ़ोन नंबर सत्यापित हुआ",
+    "phone.verificationSuccessDesc": "आपका फ़ोन नंबर अब सत्यापित है",
     "phone.verificationFailed": "सत्यापन असफल",
+    "phone.verificationFailedDesc": "गलत सत्यापन कोड। पुनः प्रयास करें।",
     "phone.invalidNumber": "अमान्य फ़ोन नंबर",
-    "phone.resendCode": "कोड दोबारा भेजें",
+    "phone.invalidNumberDesc": "एक वैध फ़ोन नंबर दर्ज करें",
+    "phone.resendIn": "{seconds} सेकंड बाद पुनः भेजें",
+    "phone.uploading": "अपलोड हो रहा है...",
     // Address Autocomplete
     "address.label": "पता",
     "address.search": "अपना पता खोजें...",
     "address.noResults": "कोई पता नहीं मिला",
     "address.selectAddress": "पता चुनें",
+
     // Profile Image Upload
+    "image.portrait": "肖像",
+    "image.logo": "公司标志",
+    "image.imageType": "छवि प्रकार",
     "image.profileImage": "प्रोफ़ाइल छवि (वैकल्पिक)",
     "image.selectImage": "छवि चुनें",
     "image.uploadForApproval": "अनुमोदन के लिए अपलोड करें",
@@ -3825,9 +3947,11 @@ const translations = {
     "jobs.pending": "लंबित",
     "jobs.paid": "भुगतान किया गया",
     "freelancers.marketTitle": "Freelancers",
-    "freelancers.marketSubtitle": "Discover talented freelancers and find the right match for your project.",
+    "freelancers.marketSubtitle":
+      "Discover talented freelancers and find the right match for your project.",
     "freelancers.noFreelancers": "There are no freelancers to show right now.",
-    "freelancers.loadError": "We couldn't load freelancers. Please try again later.",
+    "freelancers.loadError":
+      "We couldn't load freelancers. Please try again later.",
     "freelancers.available": "Available",
     "freelancers.busy": "Busy",
     "freelancers.unavailable": "Unavailable",
@@ -3876,8 +4000,7 @@ const translations = {
     "freelancerProfile.portfolio": "Portfolio",
     "freelancerProfile.clickToEnlarge": "Click to enlarge",
     "freelancerProfile.interested": "Interested in collaboration?",
-    "freelancerProfile.contactDesc":
-      "Contact {name} and discuss your project.",
+    "freelancerProfile.contactDesc": "Contact {name} and discuss your project.",
     "freelancerProfile.thisFreelancer": "This freelancer",
     "freelancerProfile.enlargedImage": "Enlarged project image",
     "freelancerProfile.notFound": "Freelancer not found",
@@ -3890,8 +4013,7 @@ const translations = {
     "inviteFreelancer.freelancer": "Freelancer",
     "inviteFreelancer.loadingJobs": "Loading your jobs...",
     "inviteFreelancer.noJobs": "No active jobs",
-    "inviteFreelancer.noJobsDesc":
-      "You have no open jobs to invite to.",
+    "inviteFreelancer.noJobsDesc": "You have no open jobs to invite to.",
     "inviteFreelancer.selectJobs": "Select jobs to invite:",
     "inviteFreelancer.remote": "Remote",
     "inviteFreelancer.deadline": "Deadline",
@@ -3907,8 +4029,7 @@ const translations = {
     "inviteFreelancer.sendInvitations": "Send {count} invitations",
     "inviteFreelancer.error": "Error",
     "inviteFreelancer.fetchError": "Could not load your jobs",
-    "inviteFreelancer.selectJobError":
-      "Select at least one job to invite",
+    "inviteFreelancer.selectJobError": "Select at least one job to invite",
     "inviteFreelancer.messageLengthError":
       "Message length should be between 100 and 300 characters",
     "inviteFreelancer.sendError": "Failed to send invitations",
@@ -3917,7 +4038,7 @@ const translations = {
     "inviteFreelancer.budgetFrom": "From {amount} DKK",
     "inviteFreelancer.budgetUpTo": "Up to {amount} DKK",
     "inviteFreelancer.noBudget": "Budget not specified",
-    "chat.sendHint": "Press Enter to send, Shift+Enter for new line"
+    "chat.sendHint": "Press Enter to send, Shift+Enter for new line",
   },
 };
 

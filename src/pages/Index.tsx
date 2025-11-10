@@ -190,24 +190,23 @@ const Index = () => {
       <div className="min-h-screen bg-background">
         <main className="max-w-7xl mx-auto p-6 space-y-12">
           <section className="text-center space-y-4 py-12">
-            <h1 className="text-4xl font-bold">Velkommen til Danish Hive</h1>
+            <h1 className="text-4xl font-bold">{t('index.welcome')}</h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Oplev Danmarks freelancermarkedsplads for kreative og professionelle talenter. Gennemse profiler,
-              projekter og virksomheder – helt uden at logge ind.
+            {t('index.welcomeDesc')}
             </p>
             <div className="flex items-center justify-center gap-3 flex-wrap">
               <Button size="lg" onClick={() => navigate('/auth')}>
-                Log ind eller opret konto
+                {t('landing.loginOrSignup')}
               </Button>
               <Button variant="outline" size="lg" onClick={() => window.scrollTo({ top: 600, behavior: 'smooth' })}>
-                Udforsk freelancere
+                {t('landing.exploreFreelancers')}
               </Button>
             </div>
           </section>
 
           <section className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-semibold">Udvalgte freelancere</h2>
+              <h2 className="text-2xl font-semibold">{t('landing.featuredFreelancers')}</h2>
               <Button variant="link" onClick={() => navigate('/freelancers')} className="px-0">
                 {t('common.viewAll')}
               </Button>
@@ -245,17 +244,17 @@ const Index = () => {
                         </div>
                       </div>
                       {freelancer.hourlyRate && (
-                        <Badge variant="secondary">{freelancer.hourlyRate} DKK/time</Badge>
+                        <Badge variant="secondary">{freelancer.hourlyRate} {t('common.ratePerHour')}</Badge>
                       )}
                       <Button variant="outline" size="sm" onClick={() => navigate(`/freelancer/${freelancer.id}`)}>
-                        Se profil
+                        {t('landing.viewProfile')}
                       </Button>
                     </CardContent>
                   </Card>
                 ))}
                 {featuredFreelancers.length === 0 && !publicLoading && (
                   <div className="col-span-full text-center text-muted-foreground py-6">
-                    Der er endnu ingen offentlige freelancere at vise.
+                    {t('landing.noPublicFreelancers')}
                   </div>
                 )}
               </div>
@@ -264,7 +263,7 @@ const Index = () => {
 
           <section className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-semibold">Aktuelle projekter fra virksomheder</h2>
+              <h2 className="text-2xl font-semibold">{t('landing.currentProjects')}</h2>
               <Button variant="link" onClick={() => navigate('/jobs')} className="px-0">
                 {t('profile.view_all_jobs', { count: featuredProjects.length })}
 
@@ -303,7 +302,7 @@ const Index = () => {
                 ))}
                 {featuredProjects.length === 0 && !publicLoading && (
                   <div className="col-span-full text-center text-muted-foreground py-6">
-                    Der er ingen offentlige projekter lige nu.
+                    {t('landing.noPublicProjects')}
                   </div>
                 )}
               </div>

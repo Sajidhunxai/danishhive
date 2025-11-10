@@ -46,6 +46,26 @@ export const TopNavigation: React.FC = () => {
       login: 'Login',
       signup: 'Sign Up',
     },
+    hi: {
+      messages: 'संदेश',
+      profile: 'प्रोफ़ाइल',
+      settings: 'सेटिंग्स',
+      logout: 'लॉग आउट',
+      home: 'होम',
+      forum: 'फोरम',
+      login: 'लॉग इन',
+      signup: 'साइन अप',
+    },
+    zh: {
+      messages: '消息',
+      profile: '个人资料',
+      settings: '设置',
+      logout: '退出登录',
+      home: '首页',
+      forum: '论坛',
+      login: '登录',
+      signup: '注册',
+    },
   };
 
   const t = texts[language as keyof typeof texts] || texts.da;
