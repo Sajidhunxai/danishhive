@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle } from "lucide-react";
 import { useApi } from "@/contexts/ApiContext";
-
+import { useLanguage } from "@/contexts/LanguageContext"; 
 interface CompleteJobDialogProps {
   job: {
     id: string;
@@ -30,7 +30,7 @@ export const CompleteJobDialog = ({ job, isOpen, onClose, onComplete }: Complete
     job.budget_max?.toString() || job.budget_min?.toString() || ""
   );
   const [completionNotes, setCompletionNotes] = useState("");
-
+  const { t } = useLanguage(); 
   const handleComplete = async () => {
     if (!user || !finalAmount) {
       toast({
@@ -75,17 +75,18 @@ export const CompleteJobDialog = ({ job, isOpen, onClose, onComplete }: Complete
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <CheckCircle className="h-5 w-5 text-green-600" />
-            Markér som Fuldført
+            {t("completeJob.title")} {/* "Mark as Completed" */}
           </DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-4">
           <div className="bg-muted/50 p-3 rounded-lg">
-            <p className="font-medium text-sm">Opgave:</p>
+            <p className="font-medium text-sm">{t("completeJob.task")}:</p> {/* "Job" */}
             <p className="text-sm text-muted-foreground">{job.title}</p>
             {(job.budget_min || job.budget_max) && (
               <p className="text-sm text-muted-foreground mt-1">
-                Budget: {job.budget_min && `${job.budget_min} DKK`}
+                {t("completeJob.budget")}:{" "}
+                {job.budget_min && `${job.budget_min} DKK`}
                 {job.budget_min && job.budget_max && " - "}
                 {job.budget_max && `${job.budget_max} DKK`}
               </p>
@@ -93,7 +94,7 @@ export const CompleteJobDialog = ({ job, isOpen, onClose, onComplete }: Complete
           </div>
 
           <div>
-            <Label htmlFor="final_amount">Freelancer beløb (EUR) *</Label>
+            <Label htmlFor="final_amount">{t("completeJob.freelancerAmount")}</Label>
             <Input
               id="final_amount"
               type="number"
@@ -104,23 +105,27 @@ export const CompleteJobDialog = ({ job, isOpen, onClose, onComplete }: Complete
               className="mt-1"
             />
             <div className="text-xs text-muted-foreground mt-1 space-y-1">
-              <p>Dette beløb går til freelanceren</p>
+              <p>{t("completeJob.amountHint")}</p>
               {finalAmount && parseFloat(finalAmount) > 0 && (
                 <div className="bg-blue-50 border border-blue-200 p-2 rounded text-blue-700">
-                  <p><strong>Platform gebyr (15%):</strong> €{(parseFloat(finalAmount) * 0.15).toFixed(2)}</p>
-                  <p><strong>Total klient betaling:</strong> €{(parseFloat(finalAmount) * 1.15).toFixed(2)}</p>
+                  <p>
+                    <strong>{t("completeJob.platformFee", { fee: (parseFloat(finalAmount) * 0.15).toFixed(2) })}</strong>
+                  </p>
+                  <p>
+                    <strong>{t("completeJob.totalClient", { total: (parseFloat(finalAmount) * 1.15).toFixed(2) })}</strong>
+                  </p>
                 </div>
               )}
             </div>
           </div>
 
           <div>
-            <Label htmlFor="notes">Noter (valgfri)</Label>
+            <Label htmlFor="notes">{t("completeJob.notes")}</Label>
             <Textarea
               id="notes"
               value={completionNotes}
               onChange={(e) => setCompletionNotes(e.target.value)}
-              placeholder="Eventuelle noter om opgavens fuldførelse..."
+              placeholder={t("completeJob.notesPlaceholder")}
               className="mt-1"
               rows={3}
             />
@@ -128,26 +133,26 @@ export const CompleteJobDialog = ({ job, isOpen, onClose, onComplete }: Complete
 
           <div className="bg-green-50 border border-green-200 p-3 rounded-lg">
             <p className="text-sm text-green-700">
-              💰 <strong>Betalingsstruktur:</strong> 
+              💰 <strong>{t("completeJob.paymentStructure")}</strong>
             </p>
             <ul className="text-sm text-green-700 mt-1 space-y-1 ml-4">
-              <li>• Freelancer modtager det angivne beløb</li>
-              <li>• Platform gebyr (15%) tilføjes automatisk til klientens regning</li>
-              <li>• Indtægter registreres i betalingsperioden (19. til 19.)</li>
-              <li>• Udbetales som løn den 1. i næste måned</li>
+              <li>{t("completeJob.paymentList.freelancer")}</li>
+              <li>{t("completeJob.paymentList.fee")}</li>
+              <li>{t("completeJob.paymentList.record")}</li>
+              <li>{t("completeJob.paymentList.payout")}</li>
             </ul>
           </div>
 
           <div className="flex gap-2 pt-2">
-            <Button 
-              onClick={handleComplete} 
+            <Button
+              onClick={handleComplete}
               disabled={saving || !finalAmount}
               className="flex-1"
             >
-              {saving ? "Gemmer..." : "Markér som Fuldført"}
+              {saving ? t("completeJob.saving") : t("completeJob.save")}
             </Button>
             <Button variant="outline" onClick={onClose}>
-              Annuller
+              {t("completeJob.cancel")}
             </Button>
           </div>
         </div>

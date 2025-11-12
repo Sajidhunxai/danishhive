@@ -480,7 +480,32 @@ const translations = {
       "💡 Gennemsnitspris for lignende opgaver: {min} - {max} kr. (baseret på {count} gennemførte opgaver)",
     "job.apply.termsNote":
       "Ved at sende din ansøgning accepterer du vores vilkår og betingelser",
-
+    //complete job dialog
+    "completeJob.title": "Markér som Fuldført",
+    "completeJob.task": "Opgave",
+    "completeJob.budget": "Budget",
+    "completeJob.freelancerAmount": "Freelancer beløb (EUR) *",
+    "completeJob.amountHint": "Dette beløb går til freelanceren",
+    "completeJob.platformFee": "Platform gebyr (15%): €{fee}",
+    "completeJob.totalClient": "Total kundens betaling: €{total}",
+    "completeJob.notes": "Noter (valgfri)",
+    "completeJob.notesPlaceholder":
+      "Eventuelle noter om opgavens fuldførelse...",
+    "completeJob.paymentStructure": "💰 Betalingsstruktur:",
+    "completeJob.paymentList.freelancer":
+      "• Freelanceren modtager det angivne beløb",
+    "completeJob.paymentList.fee":
+      "• Platformgebyr (15%) tilføjes automatisk til kundens faktura",
+    "completeJob.paymentList.record":
+      "• Indtægter registreres i betalingsperioden (19. til 19.)",
+    "completeJob.paymentList.payout":
+      "• Udbetales som løn den 1. i næste måned",
+    "completeJob.save": "Markér som Fuldført",
+    "completeJob.cancel": "Annuller",
+    "completeJob.saving": "Gemmer...",
+    "completeJob.errorEmpty": "Udfyld venligst det endelige beløb",
+    "completeJob.success":
+      "Opgave markeret som fuldført. Indtægt vil blive tilføjet automatisk.",
     // Complete Profile page
     "completeProfile.title": "Fuldfør Din {role} Profil",
     "completeProfile.client": "Klient",
@@ -1429,7 +1454,32 @@ const translations = {
     "job.apply.termsNote":
       "By submitting your application, you agree to our terms and conditions",
     "index.overview_of_your_created_jobs": "Overview of your created jobs",
+    //complete job dialog
+    "completeJob.title": "Mark as Completed",
+    "completeJob.task": "Job",
+    "completeJob.budget": "Budget",
+    "completeJob.freelancerAmount": "Freelancer Amount (EUR) *",
+    "completeJob.amountHint": "This amount goes to the freelancer",
+    "completeJob.platformFee": "Platform fee (15%): €{fee}",
+    "completeJob.totalClient": "Total client payment: €{total}",
+    "completeJob.notes": "Notes (optional)",
+    "completeJob.notesPlaceholder": "Any notes about the job completion...",
+    "completeJob.paymentStructure": "💰 Payment structure:",
+    "completeJob.paymentList.freelancer":
+      "• The freelancer receives the specified amount",
+    "completeJob.paymentList.fee":
+      "• A 15% platform fee is automatically added to the client's bill",
+    "completeJob.paymentList.record":
+      "• Earnings are recorded during the payment cycle (19th to 19th)",
+    "completeJob.paymentList.payout":
+      "• Payout is made on the 1st of the next month",
 
+    "completeJob.save": "Mark as Completed",
+    "completeJob.cancel": "Cancel",
+    "completeJob.saving": "Saving...",
+    "completeJob.errorEmpty": "Please enter the final amount",
+    "completeJob.success":
+      "Job marked as completed. Earnings will be added automatically.",
     // Cookies
     "cookies.title": "We use cookies",
     "cookies.description":
@@ -2481,7 +2531,27 @@ const translations = {
       "💡 类似任务的平均价格：{min} - {max} 丹麦克朗（基于 {count} 个已完成任务）",
     "job.apply.termsNote": "提交申请即表示您同意我们的条款和条件",
     "job.overview_of_your_created_jobs": "您创建的任务概览",
+    //complete job dialog
+    "completeJob.title": "标记为已完成",
+    "completeJob.task": "任务",
+    "completeJob.budget": "预算",
+    "completeJob.freelancerAmount": "自由职业者金额（欧元）*",
+    "completeJob.amountHint": "此金额将支付给自由职业者",
+    "completeJob.platformFee": "平台费用（15%）：€{fee}",
+    "completeJob.totalClient": "客户总支付：€{total}",
+    "completeJob.notes": "备注（可选）",
+    "completeJob.notesPlaceholder": "填写任务完成的相关备注...",
+    "completeJob.paymentStructure": "💰 支付结构：",
+    "completeJob.paymentList.freelancer": "• 自由职业者将收到指定金额",
+    "completeJob.paymentList.fee": "• 平台费用（15%）将自动添加到客户账单中",
+    "completeJob.paymentList.record": "• 收益将在付款周期内记录（19日至19日）",
+    "completeJob.paymentList.payout": "• 将在下个月1日发放工资",
 
+    "completeJob.save": "标记为已完成",
+    "completeJob.cancel": "取消",
+    "completeJob.saving": "正在保存...",
+    "completeJob.errorEmpty": "请输入最终金额",
+    "completeJob.success": "任务已标记为完成。收益将自动添加。",
     // cookies
     "cookies.title": "我们使用 Cookie",
     "cookies.description":
@@ -3507,6 +3577,32 @@ const translations = {
       "आपके द्वारा बनाई गई नौकरियों का अवलोकन",
     "index.overview_of_your_created_jobs":
       "आपके द्वारा बनाई गई नौकरियों का अवलोकन",
+    //complete job dialog
+    "completeJob.title": "पूर्ण के रूप में चिह्नित करें",
+    "completeJob.task": "कार्य",
+    "completeJob.budget": "बजट",
+    "completeJob.freelancerAmount": "फ्रीलांसर राशि (EUR) *",
+    "completeJob.amountHint": "यह राशि फ्रीलांसर को दी जाएगी",
+    "completeJob.platformFee": "प्लेटफ़ॉर्म शुल्क (15%): €{fee}",
+    "completeJob.totalClient": "कुल क्लाइंट भुगतान: €{total}",
+    "completeJob.notes": "नोट्स (वैकल्पिक)",
+    "completeJob.notesPlaceholder":
+      "कार्य पूर्ण होने से संबंधित कोई भी नोट्स...",
+    "completeJob.paymentStructure": "💰 भुगतान संरचना:",
+    "completeJob.paymentList.freelancer":
+      "• फ़्रीलांसर को निर्दिष्ट राशि प्राप्त होगी",
+    "completeJob.paymentList.fee":
+      "• ग्राहक के बिल में स्वचालित रूप से 15% प्लेटफ़ॉर्म शुल्क जोड़ा जाएगा",
+    "completeJob.paymentList.record":
+      "• आय को भुगतान चक्र (19 से 19 तक) में दर्ज किया जाएगा",
+    "completeJob.paymentList.payout":
+      "• भुगतान अगले महीने की 1 तारीख को किया जाएगा",
+    "completeJob.save": "पूर्ण के रूप में चिह्नित करें",
+    "completeJob.cancel": "रद्द करें",
+    "completeJob.saving": "सहेजा जा रहा है...",
+    "completeJob.errorEmpty": "कृपया अंतिम राशि दर्ज करें",
+    "completeJob.success":
+      "कार्य को पूर्ण के रूप में चिह्नित किया गया है। कमाई स्वचालित रूप से जोड़ी जाएगी।",
     // Setting
     "settings.forRealVerification": "वास्तविक सत्यापन के लिए।",
     "settings.mitidDeveloperAPI": "MitID डेवलपर API",
