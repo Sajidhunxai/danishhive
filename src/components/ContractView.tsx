@@ -293,7 +293,7 @@ export const ContractView = ({
                   {contract.deadline && (
                     <div className="flex items-center gap-2 text-sm">
                       <Calendar className="h-4 w-4" />
-                      <span>Deadline: {new Date(contract.deadline).toLocaleDateString('da-DK')}</span>
+                      <span>{t("contracts.deadline")}: {new Date(contract.deadline).toLocaleDateString('da-DK')}</span>
                     </div>
                   )}
                   <div className="flex items-center gap-2 text-sm">

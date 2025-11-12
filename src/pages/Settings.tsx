@@ -275,10 +275,11 @@ const Settings = () => {
   const updateEmail = async () => {
     if (!newEmail || newEmail === user?.email) {
       toast({
-        title: "Fejl",
-        description: "Indtast en ny email adresse",
+        title: t("toast.error"),
+        description: t("toast.profileFetchError"),
         variant: "destructive",
       });
+      
       return;
     }
 

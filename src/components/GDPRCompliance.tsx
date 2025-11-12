@@ -63,9 +63,16 @@ export const GDPRCompliance = () => {
     localStorage.setItem('gdpr-consents', JSON.stringify(newConsents));
     
     toast({
-      title: "Samtykke opdateret",
-      description: `${type === 'analytics' ? 'Analyse' : type === 'marketing' ? 'Marketing' : 'Præferencer'} cookies ${value ? 'aktiveret' : 'deaktiveret'}`,
+      title: t("gdpr.toastUpdated"),
+      description: `${t(
+        type === 'analytics'
+          ? 'gdpr.analytics'
+          : type === 'marketing'
+          ? 'gdpr.marketing'
+          : 'gdpr.preferences'
+      )} ${value ? t('gdpr.enabled') : t('gdpr.disabled')}`,
     });
+    
   };
 
   const exportUserData = async () => {
@@ -90,14 +97,15 @@ export const GDPRCompliance = () => {
       URL.revokeObjectURL(url);
 
       toast({
-        title: "Data eksporteret",
-        description: "Dine data er downloadet som JSON fil",
+        title: t("gdpr.exportSuccess"),
+        description: t("gdpr.exportDescription"),
       });
+      
     } catch (error: any) {
       console.error('Export error:', error);
       toast({
-        title: "Eksport fejlede",
-        description: error.message || "Der opstod en fejl ved eksport af data",
+        title: t("gdpr.exportError"),
+        description: error.message || t("gdpr.exportErrorDesc"),
         variant: "destructive",
       });
     } finally {
@@ -113,9 +121,10 @@ export const GDPRCompliance = () => {
       await api.gdpr.deleteAccount('DELETE');
 
       toast({
-        title: "Konto slettet",
-        description: "Din konto og alle tilknyttede data er permanent slettet",
+        title: t("gdpr.deleteSuccess"),
+        description: t("gdpr.deleteDesc"),
       });
+      
       
       // Redirect to auth page after deletion
       setTimeout(() => {
@@ -205,7 +214,7 @@ export const GDPRCompliance = () => {
                 size="sm"
                 onClick={() => updateConsent('analytics', !consents.analytics)}
               >
-                {consents.analytics ? 'Aktiveret' : 'Deaktiveret'}
+                {consents.analytics ? t("gdpr.enabled") : t("gdpr.disabled")}
               </Button>
             </div>
 
@@ -219,7 +228,7 @@ export const GDPRCompliance = () => {
                 size="sm"
                 onClick={() => updateConsent('marketing', !consents.marketing)}
               >
-                {consents.marketing ? 'Aktiveret' : 'Deaktiveret'}
+                {consents.marketing ? t("gdpr.enabled") : t("gdpr.disabled")}
               </Button>
             </div>
 
@@ -233,7 +242,7 @@ export const GDPRCompliance = () => {
                 size="sm"
                 onClick={() => updateConsent('preferences', !consents.preferences)}
               >
-                {consents.preferences ? 'Aktiveret' : 'Deaktiveret'}
+                {consents.preferences ? t("gdpr.enabled") : t("gdpr.disabled")}
               </Button>
             </div>
           </div>
@@ -304,7 +313,7 @@ export const GDPRCompliance = () => {
                     disabled={deleting}
                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                   >
-                    {deleting ? 'Sletter...' : 'Slet Permanent'}
+                    {deleting ? t("gdpr.deleting") : t("gdpr.deletePermanent")}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
