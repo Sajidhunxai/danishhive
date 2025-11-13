@@ -462,7 +462,7 @@ const translations = {
     "job.apply.title": "Ansøg om opgave",
     "job.apply.subtitle": "Din ansøgning",
     "job.apply.coverLetter": "Følgebrev *",
-    "job.apply.charCount": "{count} tegn (500-3000 tegn påkrævet)",
+    "job.apply.charCount": "tegn (500-3000 tegn påkrævet)",
     "job.apply.coverLetter.placeholder":
       "Beskriv hvorfor du er den rette til denne opgave...",
     "job.apply.coverLetter.help":
@@ -1435,7 +1435,7 @@ const translations = {
     "job.apply.title": "Apply for Job",
     "job.apply.subtitle": "Your Application",
     "job.apply.coverLetter": "Cover Letter *",
-    "job.apply.charCount": "{count} characters (500–3000 required)",
+    "job.apply.charCount": "characters (500–3000 required)",
     "job.apply.coverLetter.placeholder":
       "Describe why you're the right fit for this job...",
     "job.apply.coverLetter.help":
@@ -2515,7 +2515,7 @@ const translations = {
     "job.apply.title": "申请任务",
     "job.apply.subtitle": "您的申请",
     "job.apply.coverLetter": "求职信 *",
-    "job.apply.charCount": "{count} 个字符（需要 500–3000 个）",
+    "job.apply.charCount": " 个字符（需要 500–3000 个）",
     "job.apply.coverLetter.placeholder": "描述为什么您是此任务的理想人选...",
     "job.apply.coverLetter.help":
       "告诉客户您的经验以及您将如何完成任务。可以使用表情符号和特殊字符。",
@@ -3555,7 +3555,7 @@ const translations = {
     "job.apply.title": "कार्य के लिए आवेदन करें",
     "job.apply.subtitle": "आपका आवेदन",
     "job.apply.coverLetter": "कवर लेटर *",
-    "job.apply.charCount": "{count} अक्षर (500–3000 आवश्यक)",
+    "job.apply.charCount": "अक्षर (500–3000 आवश्यक)",
     "job.apply.coverLetter.placeholder":
       "बताएँ कि आप इस कार्य के लिए सही उम्मीदवार क्यों हैं...",
     "job.apply.coverLetter.help":
