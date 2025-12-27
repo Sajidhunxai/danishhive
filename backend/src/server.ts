@@ -38,7 +38,7 @@ import translationRoutes from './routes/translation.routes';
 dotenv.config();
 
 const app: Application = express();
-const PORT = process.env.PORT || 5000;
+const PORT = parseInt(process.env.PORT || '5000', 10);
 
 // Security middleware - configure helmet to allow images from cross-origin
 app.use(helmet({
@@ -176,11 +176,12 @@ app.use((err: unknown, req: express.Request, res: express.Response, next: expres
 });
 
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🔗 API URL: http://localhost:${PORT}`);
+  console.log(`🔗 API URL: http://0.0.0.0:${PORT}`);
 });
+
 
 export default app;
 
